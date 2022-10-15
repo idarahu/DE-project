@@ -6,3 +6,4 @@
 - Graph queries
 - Graph types of relationships (?)
 - Data transformation and enrichment
+- Pipeline diagram
