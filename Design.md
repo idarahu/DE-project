@@ -2,6 +2,26 @@
 
 
 ## DWH
+
+### Queries
+- Getting authors (or ranking them)
+    - with the most publications in a given year, scientific domain and/or publication venue
+    - with the most citations in a given year, scientific domain and/or publication venue
+    - with the highest h-index in a given year, scientific domain and/or publication venue
+    - with the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
+- Getting institutions (or ranking them)
+    - with the most publications in a given year, scientific domain and/or publication venue
+    - that have the highest impact in scientific world (institutions that have papers which have been cited the most in a given year, scientific domain and/or publication venue)
+- Getting publications (or ranking them)
+    - with the  most citations in a given year, scientific domain and/or publication venue
+- Getting journals (or ranking them)
+    - with the highest h-index in a given year and/or scientific domain 
+- What are the year's hottest topics (categories of scientific disciplines)?
+- How does the number of publications on a given topic change during a given time frame (histograms of the number of publications on a given topic over a given period of time)?
+- Who is the author whose h-index has increased the most during the given time?
+- Which journal h-index has increased the most during the given time?
+
+### Schema
 Our designed data warehouse (DWH) for storing data about scientific publications would have the following schema containing a fact table "PUBLICATIONS" and five dimension tables: "AUTHORS", "AUTHORS' AFFILIATIONS", "PUBLICATION VENUES", "SCIENTIFIC DOMAINS" and "TIME".
 
 ![image](https://user-images.githubusercontent.com/102286655/199743726-0b463af2-a1e9-4ea5-b0b7-6fa78740bc0d.png)
@@ -17,23 +37,6 @@ Dimension table "PUBLICATION VENUES" will store data about the venues of the pub
 In the dimension table "SCIENTIFIC DOMAINS", the categories (three levels) of scientific disciplines of publications will be gathered. Again, the bridge table will be used to overcome the shortcomings related to many-to-many relationships between publications and scientific domains (one publication can belong to many scientific domains, and many publications can have the same domain).
 
 The "TIME" dimension will hold all the relevant (from the BI point of view) time information about the publications. Besides the timestamp of the publication, it also has separate fields for year, month and day. 
-
-
-
-
-### Queries
-
-### Schema
-
-Entities:
-- Author
-- Publication
-- Affiliation
-- ScientificDomain
-- Venue
-
-
-### Change Management Policy
 
 ### Technologies
 
