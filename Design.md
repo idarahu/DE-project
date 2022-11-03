@@ -7,7 +7,7 @@
 - Getting authors (or ranking them)
     - with the most publications in a given year, scientific domain and/or publication venue
     - with the most citations in a given year, scientific domain and/or publication venue
-    - with the highest h-index in a give time period
+    - with the highest h-index in a given time period
     - with the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
 - Getting institutions (or ranking them)
     - with the most publications in a given year, scientific domain and/or publication venue
