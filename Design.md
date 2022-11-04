@@ -68,6 +68,7 @@ Based on the existing data, three different tools for this task are considered f
 
 It is important to note that all the publications where essential data (like DOI together with authors and/or title) is missing will be dropped because this may lead to inconsistencies in the final data. (It means if it is  impossible to identify the publication unambiguously, all the data about it will be discarded.) 
 
+![pipeline](https://user-images.githubusercontent.com/102286655/199941802-d27d457b-207d-46dd-986b-19828c6d8efc.png)
 
 ## DWH
 
