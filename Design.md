@@ -5,6 +5,68 @@
 
 Because data is the core of the data pipeline in the first chapter of the design document, the dataset given for this project is briefly introduced. Also, the main ideas and concepts, together with some examples of how the data will be enriched and transformed before loading it into the data warehouse (DWH) and a graph database (DB), are covered. In the second part of the document, the DWH schema and BI queries that this DWH will answer are discussed. And last but not least, in the third part, all the information about graph DB, including entities and relationships together with relevant queries, is considered.
 
+## Data
+ArXiv is the open-access archive for scholarly articles from a wide range of different scientific fields. The dataset given for the project contains metadata of the original ArXiv data, i.e. metadata of papers in the ArXiv. 
+The metadata is given in JSON format and contains the following fields:
+- id – publication ArXiv ID
+- submitter – the name of the person who submitted the paper/corresponding author
+- authors – list of the names of the authors of the paper (in some cases, this field includes additional information about the affiliations of the authors)
+- title – the title of the publication
+- comments – additional information about the paper (such as the number of figures, tables and pages)
+- journal-ref – information about the journal where the article was published
+- doi – Digital Object Identifier (DOI) of the paper
+- report-no – institution's locally assigned publication number
+- categories – categories/tags in the ArXiv system, i.e. field of the current study
+- license – license information
+- abstract – abstract of the publication
+- versions – history of the versions (version number together with timestamp/date)
+- update_date – timestamp of the last update in ArXiv
+- authors_parsed – previous authors field in the parsed form
+
+In this project's scope, the fields of submitter, authors, title, journal-ref, doi, categories and versions will be used (all the others will be dropped). 
+The undermentioned steps will be carried out to enrich the existing data with relevant and essential information. 
+1.	Getting the additional information (its type, references/number of references, citations/number of citations, the total number of pages, and different attributes that are relevant for journal articles, such as an issue number) about the publication
+
+Based on the existing data, three different tools for this task are considered for all the publications. (If possible, all of them will be used simultaneously.) 
+    
+   -	If the field of DOI is not NULL, then the Crossref REST API is used:
+    
+   ![image](https://user-images.githubusercontent.com/102286655/199840996-3b10496b-18e6-497a-8100-5089abff5a39.png)
+    
+   *Figure 1 Example of retrieving the publication type based on DOI by using the Crossref REST API*
+    
+   ![image](https://user-images.githubusercontent.com/102286655/199841136-cf3a8129-4d35-468a-bb20-e9c39a9be722.png)
+    
+   *Figure 2 Example of retrieving the number of references based on DOI by using the Crossref REST API*
+    
+   -	If the field DOI is not NULL, also the OpenCitations API will be used:
+    
+   ![image](https://user-images.githubusercontent.com/102286655/199841956-267ae779-12cb-45e6-bf08-b0b6cf296249.png)
+
+   *Figure 3 Example of retrieving the number of citations based on DOI by using the OpenCitations API*
+    
+   -	If the DOI is missing, but the title and authors of the publications are given, then scholarly, which is a module that allows retrieving author and publication information from Google Scholar, is used:
+    
+   ![image](https://user-images.githubusercontent.com/102286655/199842112-83eab679-d950-4330-81cb-3a7c2cd74891.png)
+ 
+   *Figure 4 Example of retrieving the number of citations based on title by using the scholarly module*
+
+2.	Getting more information about the authors (for example, their real-life h-index or their full names)
+    
+   The scholarly module will be used:
+    
+   ![image](https://user-images.githubusercontent.com/102286655/199842215-e1675d72-dec9-4568-9557-22fb71552e06.png)
+
+   *Figure 5 Example of retrieving the author's real-life h-index by using a scholarly module*
+
+3.	Resolving ambiguous or abbreviated conference or journal names
+    
+    The same tools mentioned above will be used.
+4.	Normalising the field of study
+    
+    For that, each ArXiv category will be mapped against the Scientific Disciplines classification table (https://confluence.egi.eu/display/EGIG/Scientific+Disciplines)
+
+It is important to note that all the publications where essential data (like DOI together with authors and/or title) is missing will be dropped because this may lead to inconsistencies in the final data. (It means if it is  impossible to identify the publication unambiguously, all the data about it will be discarded.) 
 
 
 ## DWH
