@@ -72,7 +72,7 @@ While designing the data pipeline, data storage is another key component that ne
 
 ![pipeline](https://user-images.githubusercontent.com/102286655/199941802-d27d457b-207d-46dd-986b-19828c6d8efc.png)
 
-*Figure 6 Overall pipeline design*
+*Figure 6 Design of the data pipeline*
 ## DWH
 
 ### Queries
