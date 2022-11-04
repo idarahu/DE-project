@@ -105,7 +105,7 @@ Based on the formulated BI queries, the proper schema of a data warehouse for st
 
 The fact table "PUBLICATIONS" will store the primary keys of dimension tables (or dimension group keys in cases where bridge tables are used) as foreign keys together with additional information about the record (see Table 1 for more details). 
 | Attribute | Explanation |
-| --- | --- |
+| --- | ------------------------------------ |
 | authors_group_key	| the "AUTHORS" dimension group key; is required to get information about the authors of the publication |
 | affiliations_group_key | the "AUTHORS' AFFILIATIONS" dimension group key; is required to get information about the affiliations of the authors of the publication |
 | venue_ID | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published |
@@ -129,6 +129,7 @@ The fact table "PUBLICATIONS" will store the primary keys of dimension tables (o
 | is_current_snapshot | the flag to indicate if the row represents the current state of the fact; is updated when we add a new row for this pipeline occurrence |
 | snapshot_valid_from | the date this row became effective |
 | snapshot_valid_to | the date this row expired; is updated when a new row is added |
+
 <sup>a</sup>It is important to note that not all additional information fields are applicable in all cases. For example, workshop materials do not have an issue number. In these situations, the field will be filled as not-applicable.
 
 
