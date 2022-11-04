@@ -104,6 +104,7 @@ Based on the formulated BI queries, the proper schema of a data warehouse for st
 *Figure 7 Schema of DWH*
 
 The fact table "PUBLICATIONS" will store the primary keys of dimension tables (or dimension group keys in cases where bridge tables are used) as foreign keys together with additional information about the record (see Table 1 for more details). 
+
 *Table 1 Attributes of the fact table together with explanations*
 | Attribute | Explanation |
 | --- | --------------------------------------------------- |
