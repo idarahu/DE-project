@@ -77,7 +77,7 @@ While designing the data pipeline, data storage is another key component that ne
 
 ## DWH
 
-After thoroughly investigating the data to understand what parts of it are usable for the project, it is possible to phrase the BI queries that would be the basis for developing a data warehouse.
+After thoroughly investigating the data to understand what parts of it are usable for the project, it is possible to phrase the BI queries that would be the basis for developing a data warehouse. In the subsequent sections, the BI queries and the schema of DWH are discussed.
 ### Queries
 - Getting authors (or ranking them)
     - with the most publications in a given year, scientific domain and/or publication venue
