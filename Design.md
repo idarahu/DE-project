@@ -6,9 +6,9 @@
 Because data is the core of the data pipeline in the first chapter of the design document, the dataset given for this project is briefly introduced. Also, the main ideas and concepts, together with some examples of how the data will be enriched and transformed before loading it into the data warehouse (DWH) and a graph database (DB), are covered. In the second part of the document, the DWH schema and BI queries that this DWH will answer are discussed. And last but not least, in the third part, all the information about graph DB, including entities and relationships together with relevant queries, is considered.
 
 ## Data
-ArXiv is the open-access archive for scholarly articles from a wide range of different scientific fields. The dataset given for the project contains metadata of the original ArXiv data, i.e. metadata of papers in the ArXiv. 
+ArXiv is the open-access archive for scholarly articles from a wide range of different scientific fields. The dataset given for the project contains metadata of the original arXiv data, i.e. metadata of papers in the arXiv. 
 The metadata is given in JSON format and contains the following fields:
-- id – publication ArXiv ID
+- id – publication arXiv ID
 - submitter – the name of the person who submitted the paper/corresponding author
 - authors – list of the names of the authors of the paper (in some cases, this field includes additional information about the affiliations of the authors)
 - title – the title of the publication
@@ -16,11 +16,11 @@ The metadata is given in JSON format and contains the following fields:
 - journal-ref – information about the journal where the article was published
 - doi – Digital Object Identifier (DOI) of the paper
 - report-no – institution's locally assigned publication number
-- categories – categories/tags in the ArXiv system, i.e. field of the current study
+- categories – categories/tags in the arXiv system, i.e. field of the current study
 - license – license information
 - abstract – abstract of the publication
 - versions – history of the versions (version number together with timestamp/date)
-- update_date – timestamp of the last update in ArXiv
+- update_date – timestamp of the last update in arXiv
 - authors_parsed – previous authors field in the parsed form
 
 In this project's scope, the fields of submitter, authors, title, journal-ref, doi, categories and versions will be used (all the others will be dropped). 
@@ -64,7 +64,8 @@ Based on the existing data, three different tools for this task are considered f
     The same tools mentioned above will be used.
 4.	Normalising the field of study
     
-    For that, each ArXiv category will be mapped against the Scientific Disciplines classification table (https://confluence.egi.eu/display/EGIG/Scientific+Disciplines)
+    For that, each arXiv category will be mapped against the Scientific Disciplines classification table (https://confluence.egi.eu/display/EGIG/Scientific+Disciplines)
+    For example, if the value in the arXiv category field is "cs.AI" after the mapping, besides this tag, there would be three new tags: major_field: "natural sciences", sub_category: "computer sciences" and exact_category: "artificial intelligence".
 
 It is important to note that all the publications where essential data (like DOI together with authors and/or title) is missing will be dropped because this may lead to inconsistencies in the final data. (It means if it is  impossible to identify the publication unambiguously, all the data about it will be discarded.) 
 
