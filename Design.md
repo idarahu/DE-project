@@ -99,7 +99,7 @@ After thoroughly investigating the data to understand what parts of it are usabl
 ### Schema
 Based on the formulated BI queries, the proper schema of a data warehouse for storing data about scientific publications would contain a fact table, "PUBLICATIONS", and five dimension tables: "AUTHORS", "AUTHORS' AFFILIATIONS", "PUBLICATION VENUES", "SCIENTIFIC DOMAINS" and "TIME" (see Figure 7).
 
-![star_schema](https://user-images.githubusercontent.com/102286655/199987877-336639b1-e4bf-4c88-95aa-eadc92060641.png)
+![DWH_schema](https://user-images.githubusercontent.com/102286655/200015163-e535a0f8-ff05-4413-955a-dffff9633396.png)
 
 *Figure 7 Schema of DWH*
 
