@@ -103,7 +103,34 @@ Based on the formulated BI queries, the proper schema of a data warehouse for st
 
 *Figure 7 Schema of DWH*
 
-The fact table "PUBLICATIONS" will store the primary keys of dimension tables (or dimension group keys in cases where bridge tables are used) as foreign keys together with additional information (DOI, title, type ("journal article", "conference material", etc.), number of authors, corresponding author, language, volume, issue, page numbers in the venue, total number of pages) about the record. It is important to note that not all additional information fields are applicable in all cases. For example, workshop materials do not have an issue number. In these situations, the field will be filled as not-applicable.
+The fact table "PUBLICATIONS" will store the primary keys of dimension tables (or dimension group keys in cases where bridge tables are used) as foreign keys together with additional information about the record (see Table 1 for more details). 
+| Attribute | Explanation |
+| --- | --- |
+| authors_group_key	| the "AUTHORS" dimension group key; is required to get information about the authors of the publication |
+| affiliations_group_key | the "AUTHORS' AFFILIATIONS" dimension group key; is required to get information about the affiliations of the authors of the publication |
+| venue_ID | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published |
+| domain_group_key | the "SCIENTIFIC DOMAINS" dimension group key; is required to get information about the field of study |
+| time_ID | the primary key of the "TIME" dimension; is required to query when the publication was published (time information about the last version in the arXiv dataset at the moment when data was added to the DWH) |
+| DOI | Digital Object Identifier (DOI) of the paper |
+| title | the title of the publication |
+| type | type ("journal article", "conference material", etc.) of the publication |
+| number_of_authors | number of authors |
+| submitter | the name of the person who submitted the paper/corresponding author |
+| language | the language of the publication |
+| volume | volume number; applicable when the paper is published in the journal<sup>a</sup> | 
+| issue | issue number; applicable when the paper is published in the journal<sup>a</sup> |
+| page_numbers | publication page numbers in the journal or the other published scientific papers collection<sup>a</sup> |
+| number_of_pages | total number of pages of the publication |
+| number_of_reference | number of publications that present publication cites |
+| no_versions_arXiv | number of versions of the current publication in the arXiv dataset; since the arXiv dataset is updated frequently, this field may change – a new version of the publication may be published |
+| date_of_first_version | date when the first version (version v1 in arXiv) was created; is required for measuring the time interval between the first and current version of the publication |
+| number_of_citations | number of publications that cite the present publication; this field may change over time |
+| The following attributes are added for historical tracking. |
+| is_current_snapshot | the flag to indicate if the row represents the current state of the fact; is updated when we add a new row for this pipeline occurrence |
+| snapshot_valid_from | the date this row became effective |
+| snapshot_valid_to | the date this row expired; is updated when a new row is added |
+<sup>a</sup>It is important to note that not all additional information fields are applicable in all cases. For example, workshop materials do not have an issue number. In these situations, the field will be filled as not-applicable.
+
 
 In the dimension table "AUTHORS", all the relevant data about the publications' authors (name and h-index) will be stored. The difference between fields "h_index_real" and "h_index_calculated" is that the first h-index is retrieved by an API call and refers to the real-life h-index that the author has. The second h-index is calculated based on the data added to the DWH. The reason to keep both is that it is one way to immediately see if there is an error in the data pipeline – a calculated h-index could never be higher than a real-life one. Since one author can have several publications and one publication can have several authors (many-to-many relationship), the bridge table will be used to connect the author's dimension with specific facts. Additionally, an author's h-index (both of them) is a variable that changes over time. For BI queries (for example, getting the author whose h-index increased the most during the last year), tracking that change is essential. Therefore, the type 2 slowly changing dimensions concept is used – when the author's h-index changes, a new dimension record is generated. At the same time, the old record will be assigned a non-active effective date, and the new record will be assigned an active effective date. The bridge table will also contain effective and expiration timestamps to avoid incorrect linkages between authors and publications.
 
