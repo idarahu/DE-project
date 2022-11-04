@@ -97,9 +97,11 @@ After thoroughly investigating the data to understand what parts of it are usabl
 - Which journal h-index has increased the most during the given time?
 
 ### Schema
-Our designed data warehouse (DWH) for storing data about scientific publications would have the following schema containing a fact table "PUBLICATIONS" and five dimension tables: "AUTHORS", "AUTHORS' AFFILIATIONS", "PUBLICATION VENUES", "SCIENTIFIC DOMAINS" and "TIME".
+Based on the formulated BI queries, the proper schema of a data warehouse for storing data about scientific publications would contain a fact table, "PUBLICATIONS", and five dimension tables: "AUTHORS", "AUTHORS' AFFILIATIONS", "PUBLICATION VENUES", "SCIENTIFIC DOMAINS" and "TIME" (see Figure 7).
 
 ![image](https://user-images.githubusercontent.com/102286655/199743726-0b463af2-a1e9-4ea5-b0b7-6fa78740bc0d.png)
+
+*Figure 7 Schema of DWH*
 
 The fact table "PUBLICATIONS" will store the primary keys of dimension tables (or dimension group keys in cases where bridge tables are used) as foreign keys together with additional information (DOI, title, type ("journal article", "conference material", etc.), number of authors, corresponding author, language, volume, issue, page numbers in the venue, total number of pages) about the record. It is important to note that not all additional information fields are applicable in all cases. For example, workshop materials do not have an issue number. In these situations, the field will be filled as not-applicable.
 
