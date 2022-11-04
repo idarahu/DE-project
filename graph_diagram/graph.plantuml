@@ -3,28 +3,58 @@
 scale 2
 
 circle Publication
-circle Author
-circle Affiliation
-circle Venue
-circle ScientificDomain
+note top of Publication
+doi
+title
+year
+venue
+end note
 
-Publication --> Author : published_by
+circle Author
+note top of Author
+full_name
+h_index
+end note
+
+circle Affiliation
+note bottom of Affiliation
+name
+place
+end note
+
+circle Venue
+note bottom of Venue
+issn
+name
+h_index
+end note
+
+circle ScientificDomain
+note bottom of ScientificDomain
+major_field
+sub_category
+exact_category
+arxiv_category
+end note
+
+' Publication --> Author : published_by
 Author --> Publication : author_of
 Author -> Author : collaborates_with
-Affiliation --> Author : employs
+' Affiliation --> Author : employs
 Author --> Affiliation : works_at
+note bottom on link: {date}
 Publication --> Venue : published_in
-Venue --> Publication : publishes
-Venue --> ScientificDomain : covers
+' Venue --> Publication : publishes
+' Venue --> ScientificDomain : covers
 ScientificDomain --> Venue : covered_by
 Publication --> ScientificDomain : belongs_to
-ScientificDomain --> Publication : contains
+' ScientificDomain --> Publication : contains
 Affiliation --> ScientificDomain : covers
-ScientificDomain --> Affiliation : covered_by
-Publication --> Publication : cites
+' ScientificDomain --> Affiliation : covered_by
+' Publication --> Publication : cites
 Publication --> Publication : cited_by
 Affiliation --> Venue : publishes_in
-Venue --> Affiliation : publishes
+' Venue --> Affiliation : publishes
 Affiliation --> Affiliation : collaborates_with
 
 @enduml

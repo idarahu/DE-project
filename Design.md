@@ -153,7 +153,9 @@ The "TIME" dimension will hold all the relevant (from the BI point of view) time
 
 ## Graph
 
-To design the graph database, we use the labeled property graph model, because we like to think of nodes as objects with properties. It makes the graph look more concise than using the RDF model. The database is designed to be able to answer the following queries:
+To design the graph database, we used the labeled property graph model instead of RDF. It makes the graph look more concise and allows to specify properties next to nodes and edges. 
+
+The database is designed to answer queries about relationships between authors (co-authorship), between authors and affiliations (employment), publications and scientific domains, and publications and venues. This is a sample list of queries that a user might be intrested in:
 
 - Getting an author
     - who collaborates with a given author
@@ -180,7 +182,7 @@ To design the graph database, we use the labeled property graph model, because w
     - that publishes for a given affiliation
     - that publishes for a given author
 
-Besides that, we also want to answer:
+Besides that, we also want to answer questions like these:
 
 - What's a community of authors
     - that covers a given scientific domain?
@@ -192,53 +194,40 @@ Besides that, we also want to answer:
 
 ### Schema
 
+The property graph diagram below shows entities of the database and their relationships. The entities are represented as nodes, the relationships are represented as directed edges, and properties are displayed as notes on a yellow background. All entities contain properties relevant to queries above. One of the edges, `(:Author)-[:works_at {date}]->(:Affiliation)`, also contains a property to indicate that the relationship is temporal and that might be important for some queries. Nodes like `(:Author)`, `(:Affiliation)`, and `(:Publication)` can have self loops to indicate co-authorship, employment, and self-citations, respectively.
+
 ![Graph Schema](graph_diagram/out/graph/Graph.png)
 
 #### Entities with properties
 
-- Author
-    - DWH ID
-    - Name
-- Publication
-    - DWH ID
-    - Title
-    - Year
-    - Venue
-    - DOI
-- Affiliation
-    - DWH ID
-    - Name
-- ScientificDomain
-    - DWH ID
-    - Name
-- Venue
-    - DWH ID
-    - Name
+| Entity | Properties |
+| --- | --- |
+| Author | full_name, h_index |
+| Affiliation | name, place |
+| Publication | doi, title, year |
+| ScientificDomain | major_field, sub_category, exact_category, arxiv_category |
+| Venue | issn, name, h_index |
+
 
 #### Relationships
 
-- `AUTHOR_OF` (Author)-[:AUTHOR_OF]->(Paper)
-- `COLLABORATES_WITH` (Author)-[:COLLABORATES_WITH]->(Author)
-- `WORKS_AT` (Author)-[:WORKS_AT]->(Affiliation)
+- AUTHOR_OF: `(:Author)-[:AUTHOR_OF]->(:Publication)`
+- COLLABORATES_WITH: `(:Author)-[:COLLABORATES_WITH]->(:Author)`
+- WORKS_AT: `(:Author)-[:WORKS_AT {date}]->(:Affiliation)`
 
-- `PUBLISHED_IN` (Publication)-[:PUBLISHED_IN]->(Venue)
-- `PUBLISHED_BY` (Publication)-[:PUBLISHED_BY]->(Author)
-- `CITED_BY` (Publication)-[:CITED_BY]->(Publication)]
-- `CITES` (Publication)-[:CITES]->(Publication)
-- `BELONGS_TO` (Publication)-[:COVERS]->(ScientificDomain)
+- PUBLISHED_IN: `(:Publication)-[:PUBLISHED_IN]->(:Venue)`
+- BELONGS_TO: `(:Publication)-[:COVERS]->(:ScientificDomain)`
+- CITED_BY: `(:Publication)-[:CITED_BY]->(:Publication)]`
 
-- `COVERS` (Affiliation)-[:COVERS]->(ScientificDomain)
-- `EMPLOYS` (Affiliation)-[:EMPLOYS]->(Author)
-- `COLLABORATES_WITH` (Affiliation)-[:COLLABORATES_WITH]->(Affiliation)
-- `PUBLISHED_IN` (Affiliation)-[:PUBLISHED_IN]->(Venue)
+- COVERS: `(:Affiliation)-[:COVERS]->(:ScientificDomain)`
+- PUBLISHES_IN: `(:Affiliation)-[:PUBLISHES_IN]->(:Venue)`
+- COLLABORATES_WITH: `(:Affiliation)-[:COLLABORATES_WITH]->`(:Affiliation)
 
-- `COVERED_BY` (ScientificDomain)-[:COVERED_BY]->(Affiliation)
-- `COVERED_BY` (ScientificDomain)-[:COVERED_BY]->(Venue)
-- `CONTAINS` (ScientificDomain)-[:CONTAINS]->(Publication)
+- COVERED_BY: `(:ScientificDomain)-[:COVERED_BY]->(:Venue)`
 
 ### Technologies
 
-Neo4j with Cypher as query language.
+To implement the graph model, we plan to use Neo4j with Cypher as the query language. Neo4j is an ACID-compliant transactional database widely used for graph data with native graph storage and processing. It supports the property graph model and is widely used in the industry while being developed since 2007 by Neo4j, Inc. 
 
 ## Data Transformation
 
