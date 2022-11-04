@@ -14,7 +14,7 @@ and [table partitioning](https://www.postgresql.org/docs/current/ddl-partitionin
 
 
 ### Citus
-However, the build-in features delivers a powerful tool,
+However, the PostgresSQL build-in features delivers a powerful tool,
 but for better analytical query processing and potential database growth the [Citus](https://github.com/citusdata/citus) extension would be also used in solution.
 Citus is a postgres extension that support sharding, paralleling SQL across multiple nodes [supported and owned](https://www.citusdata.com/about/our-story/) by Microsoft. It delivers insanely fast performance. Even with real-time data ingest and billions of rows of data.
 The idea of Citus extension is originally designed as OLAP solution based on PostgreSQL.
