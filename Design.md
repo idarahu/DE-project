@@ -68,8 +68,11 @@ Based on the existing data, three different tools for this task are considered f
 
 It is important to note that all the publications where essential data (like DOI together with authors and/or title) is missing will be dropped because this may lead to inconsistencies in the final data. (It means if it is  impossible to identify the publication unambiguously, all the data about it will be discarded.) 
 
+While designing the data pipeline, data storage is another key component that needs to be kept in mind. This project uses the approach where the data will be stored in the up-to-date database to simulate the real-life setup where constant data updates are required because of its volatile nature (the number of citations of the publications changes, there could be a new version of the publication and so on). It means that instead of just having a single branch in the pipeline that ingests, transforms, and enriches the new data, there will be another separate branch to update the already existing data. In the following figure, the overall pipeline design is shown.
+
 ![pipeline](https://user-images.githubusercontent.com/102286655/199941802-d27d457b-207d-46dd-986b-19828c6d8efc.png)
 
+*Figure 6 Overall pipeline design*
 ## DWH
 
 ### Queries
