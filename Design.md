@@ -34,7 +34,7 @@ Based on the existing data, three different tools for this task are considered f
    -	If the field of DOI is not NULL, then the Crossref REST API is used:
 
 ```python
-crossref _results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysRevA.75.043613')
+crossref_results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysRevA.75.043613')
 print(crossref_results['type'])
 ```    
    ![image](https://user-images.githubusercontent.com/102286655/199840996-3b10496b-18e6-497a-8100-5089abff5a39.png)
