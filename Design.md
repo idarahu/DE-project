@@ -128,7 +128,7 @@ The fact table "PUBLICATIONS" will store the primary keys of dimension tables (o
 | date_of_first_version | date when the first version (version v1 in arXiv) was created; is required for measuring the time interval between the first and current version of the publication |
 | number_of_citations | number of publications that cite the present publication; this field may change over time |
 | <td colspan=1>The following attributes are added for historical tracking. |
-| is_current_snapshot | the flag to indicate if the row represents the current state of the fact; is updated when we add a new row for this pipeline occurrence |
+| is_current_snapshot | the flag to indicate if the row represents the current state of the fact; is updated when a new row is added |
 | snapshot_valid_from | the date this row became effective |
 | snapshot_valid_to | the date this row expired; is updated when a new row is added |
 
