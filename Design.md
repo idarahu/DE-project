@@ -155,7 +155,7 @@ The "TIME" dimension will hold all the relevant (from the BI point of view) time
 
 ## Graph
 
-To design the graph database, we used the labeled property graph model instead of RDF. It makes the graph look more concise and allows to specify properties next to nodes and edges. 
+To design the graph database, the labeled property graph model is used instead of RDF. It makes the graph look more concise and allows to specify properties next to nodes and edges. 
 
 The database is designed to answer queries about relationships between authors (co-authorship), between authors and affiliations (employment), publications and scientific domains, and publications and venues. This is a sample list of queries that a user might be intrested in:
 
@@ -184,21 +184,33 @@ The database is designed to answer queries about relationships between authors (
     - that publishes for a given affiliation
     - that publishes for a given author
 
-Besides that, we also want to answer questions like these:
+Besides that, the schema supports more complex analytical questions:
 
-- What's a community of authors
+- What is the most influential publication:
+    - in a given year?
+    - in a given scientific domain?
+    - in a given venue?
+    - in a given affiliation?
+- What is a community of authors
     - that covers a given scientific domain?
     - that publishes in a given publication venue?
     - that publishes for a given affiliation?
-- What author has the most self-citations (citations to other others from the same affiliation)?
+- What author has the most self-citations (citations to other authors from the same affiliation)?
 - What author has the most collaborations?
-- Is there a connection between collaborators and where they publish their papers?
+- Is there a connection between co-authors and where they publish their papers?
+- What is the missing link between two authors from different affiliations who have not collaborated yet?
+
+For the analytical questions, a number of graph algorithms is used. For example, to find the most influential publication or author, the ArticleRank algorithm is used provided by the Neo4j Graph Data Science Library plugin. Communities can be detected by community detection algorithms, e.g., Luvain or K-Means Clustering. To find a connection between two authors or missing link between them, the path finding algorithms are used, A* or Yen's Shortest Path. 
+
 
 ### Schema
 
-The property graph diagram below shows entities of the database and their relationships. The entities are represented as nodes, the relationships are represented as directed edges, and properties are displayed as notes on a yellow background. All entities contain properties relevant to queries above. One of the edges, `(:Author)-[:works_at {date}]->(:Affiliation)`, also contains a property to indicate that the relationship is temporal and that might be important for some queries. Nodes like `(:Author)`, `(:Affiliation)`, and `(:Publication)` can have self loops to indicate co-authorship, employment, and self-citations, respectively.
+The property graph diagram below shows entities of the database and their relationships. The entities are represented as nodes, the relationships are represented as directed edges, node properties are specified inside nodes, and edge properties are displayed as notes on a yellow background. 
+
+All entities contain properties relevant to queries above. One of the edges, `(:Author)-[:works_at {date}]->(:Affiliation)`, also contains a property to indicate that the relationship is temporal and that might be important for some queries. Nodes like `(:Author)`, `(:Affiliation)`, and `(:Publication)` can have self loops to indicate co-authorship, employment, and self-citations, respectively.
 
 ![Graph Schema](graph_diagram/out/graph/Graph.png)
+![Graph Schema](graph_diagram/out/graph/Graph2.png)
 
 #### Entities with properties
 
@@ -229,7 +241,7 @@ The property graph diagram below shows entities of the database and their relati
 
 ### Technologies
 
-To implement the graph model, we plan to use Neo4j with Cypher as the query language. Neo4j is an ACID-compliant transactional database widely used for graph data with native graph storage and processing. It supports the property graph model and is widely used in the industry while being developed since 2007 by Neo4j, Inc. 
+To implement the graph model, the Neo4j graph database engines will be used with Cypher as the query language. Neo4j is an ACID-compliant transactional database widely used for graph data with native graph storage and processing. It supports the property graph model and is widely used in the industry while being developed since 2007 by Neo4j, Inc. 
 
 ## Data Transformation
 

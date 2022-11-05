@@ -1,0 +1,48 @@
+@startuml Graph2
+
+scale 2
+hide methods
+
+entity Publication {
+    doi
+    title
+    year
+    venue
+}
+
+entity Author {
+    full_name
+    h_index
+}
+
+entity Affiliation {
+    name
+    place
+}
+
+entity Venue {
+    issn
+    name
+    h_index
+}
+
+entity ScientificDomain {
+    major_field
+    sub_category
+    exact_category
+    arxiv_category
+}
+
+Author --> Publication : author_of
+Author -> Author : collaborates_with
+Author --> Affiliation : works_at
+note bottom on link: {date}
+Publication --> Venue : published_in
+ScientificDomain --> Venue : covered_by
+Publication --> ScientificDomain : belongs_to
+Affiliation --> ScientificDomain : covers
+Publication --> Publication : cited_by
+Affiliation --> Venue : publishes_in
+Affiliation --> Affiliation : collaborates_with
+
+@enduml
