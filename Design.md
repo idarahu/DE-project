@@ -1,8 +1,8 @@
 # Design
 <p align="center">
-"You can have data without information, 
+<b>"You can have data without information, 
     but you cannot have information without data." 
-    — Daniel Keys Moran
+    — Daniel Keys Moran</b>
 </p>
 
 Because data is the core of the data pipeline in the first chapter of the design document, the dataset given for this project is briefly introduced. Also, the main ideas and concepts, together with some examples of how the data will be enriched and transformed before loading it into the data warehouse (DWH) and a graph database (DB), are covered. In the second part of the document, the DWH schema and BI queries that this DWH will answer are discussed. And last but not least, in the third part, all the information about graph DB, including entities and relationships together with relevant queries, is considered.
