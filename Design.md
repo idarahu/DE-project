@@ -32,23 +32,45 @@ The undermentioned steps will be carried out to enrich the existing data with re
 Based on the existing data, three different tools for this task are considered for all the publications. (If possible, all of them will be used simultaneously.) 
     
    -	If the field of DOI is not NULL, then the Crossref REST API is used:
-    
+
+```python
+crossref _results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysRevA.75.043613')
+print(crossref_results['type'])
+```    
    ![image](https://user-images.githubusercontent.com/102286655/199840996-3b10496b-18e6-497a-8100-5089abff5a39.png)
-    
+
    *Figure 1 Example of retrieving the publication type based on DOI by using the Crossref REST API*
+
     
+```python
+crossref_results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysReVA. 75.043613')
+print(crossref_results['reference-count'])
+```
+
    ![image](https://user-images.githubusercontent.com/102286655/199841136-cf3a8129-4d35-468a-bb20-e9c39a9be722.png)
     
    *Figure 2 Example of retrieving the number of references based on DOI by using the Crossref REST API*
     
    -	If the field DOI is not NULL, also the OpenCitations API will be used:
-    
+
+```python
+client = opencitingpy.client.Client()
+open_citation_result = client.get_citation_count ('10.1103/PhysReVA.75.043613')
+print(open_citation_result)
+```
+
    ![image](https://user-images.githubusercontent.com/102286655/199841956-267ae779-12cb-45e6-bf08-b0b6cf296249.png)
 
    *Figure 3 Example of retrieving the number of citations based on DOI by using the OpenCitations API*
     
    -	If the DOI is missing, but the title and authors of the publications are given, then scholarly, which is a module that allows retrieving author and publication information from Google Scholar, is used:
-    
+
+```python
+search_query = scholarly.search_pubs('Pairwise comparisons of typological profiles (of languages)')
+pub_result = next(search_query)
+print(pub_result['num_citations'])
+```
+
    ![image](https://user-images.githubusercontent.com/102286655/199842112-83eab679-d950-4330-81cb-3a7c2cd74891.png)
  
    *Figure 4 Example of retrieving the number of citations based on title by using the scholarly module*
@@ -56,7 +78,14 @@ Based on the existing data, three different tools for this task are considered f
 2.	Getting more information about the authors (for example, their real-life h-index or their full names)
     
    The scholarly module will be used:
-    
+
+```python
+search query = scholarly.search_author('S. Wichmann')
+first_author_result = next(search_query)
+author = scholarly.fill(first_author_result)
+print(author['hindex'])
+```
+
    ![image](https://user-images.githubusercontent.com/102286655/199842215-e1675d72-dec9-4568-9557-22fb71552e06.png)
 
    *Figure 5 Example of retrieving the author's real-life h-index by using a scholarly module*
