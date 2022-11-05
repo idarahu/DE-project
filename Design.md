@@ -43,7 +43,7 @@ print(crossref_results['type'])
 
     
 ```python
-crossref_results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysReVA. 75.043613')
+crossref_results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysReVA.75.043613')
 print(crossref_results['reference-count'])
 ```
 
@@ -80,7 +80,7 @@ print(pub_result['num_citations'])
    The scholarly module will be used:
 
 ```python
-search query = scholarly.search_author('S. Wichmann')
+search_query = scholarly.search_author('S. Wichmann')
 first_author_result = next(search_query)
 author = scholarly.fill(first_author_result)
 print(author['hindex'])
