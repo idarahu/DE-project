@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  citus-db:
+    container_name: "${COMPOSE_PROJECT_NAME:-citus}"
+    image: "citusdata/citus:11.1.5"
+    environment: &AUTH
+      POSTGRES_USER: "${CITUS_USER:-postgres}"
+      POSTGRES_PASSWORD: "${CITUS_PASSWORD}"
+      PGUSER: "${CITUS_USER:-postgres}"
+      PGPASSWORD: "${CITUS_PASSWORD}"
+    volumes:
+      - citus-data:/data/postgres
+      - ./data/wh-init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:${CITUS_PORT}"
+    networks:
+      - citus
+    restart: unless-stopped
+
+networks:
+  citus:
+    driver: bridge
+
+volumes:
+  citus-data:
