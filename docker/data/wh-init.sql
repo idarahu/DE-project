@@ -23,7 +23,7 @@ create table if not exists warehouse.publications (
 );
 
 create table if not exists warehouse.authors (
-    id bigint not null default nextval('wh'),
+    id bigint not null default nextval('wh') primary key,
     first_name text not null,
     last_name text not null,
     full_name text not null,
@@ -34,16 +34,62 @@ create table if not exists warehouse.authors (
 );
 
 create table if not exists warehouse.institution (
-    id bigint not null default nextval('wh'),
+    id bigint not null default nextval('wh') primary key,
     name text not null,
     address text not null
 );
 
 create table if not exists warehouse.scientific_domain (
-    id bigint not null default nextval('wh'),
+    id bigint not null default nextval('wh') primary key,
     major_field text not null,
     sub_category text not null,
     exact_category text not null,
     arxivx_category text not null
 );
+
+create table if not exists warehouse.publication_author (
+    id bigint not null default nextval('wh') primary key,
+    publication_id bigint not null,
+    author_id bigint not null,
+    valid_from bigint not null,
+    valid_to bigint,
+    CONSTRAINT fk_author_publication_publications FOREIGN KEY(publication_id) REFERENCES warehouse.publications(id),
+    CONSTRAINT fk_author_publication_authors FOREIGN KEY(author_id) REFERENCES warehouse.authors(id)
+);
+
+create table if not exists warehouse.publication_domain (
+    id bigint not null default nextval('wh') primary key,
+    publication_id bigint not null,
+    domain_id bigint not null,
+    CONSTRAINT fk_publication_domain_publications FOREIGN KEY(publication_id) REFERENCES warehouse.publications(id),
+    CONSTRAINT fk_publication_domain_domain FOREIGN KEY(domain_id) REFERENCES warehouse.scientific_domain(id)
+);
+
+create table if not exists warehouse.publication_institution (
+    id bigint not null default nextval('wh') primary key,
+    publication_id bigint not null,
+    institution_id bigint not null,
+    CONSTRAINT fk_publication_institution_publications FOREIGN KEY(publication_id) REFERENCES warehouse.publications(id),
+    CONSTRAINT fk_publication_institution_institution FOREIGN KEY(institution_id) REFERENCES warehouse.institution(id)
+);
+
+create table if not exists warehouse.publication_venues (
+    id bigint not null default nextval('wh') primary key,
+    publication_id bigint not null,
+    full_name text not null,
+    abbreviation text not null,
+    type text not null,
+    h_index_calculated text not null,
+    valid_from timestamp not null,
+    valid_to timestamp,
+    CONSTRAINT fk_publication_venues_publications FOREIGN KEY(publication_id) REFERENCES warehouse.publications(id)
+);
+
+create table if not exists warehouse.publication_time (
+    id bigint not null default nextval('wh') primary key,
+    date date not null,
+    publication_id bigint not null,
+    CONSTRAINT fk_publication_time_publications FOREIGN KEY(publication_id) REFERENCES warehouse.publications(id)
+);
+
 
