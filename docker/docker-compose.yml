@@ -2,7 +2,7 @@ version: "3"
 
 services:
   citus-db:
-    container_name: "${COMPOSE_PROJECT_NAME:-citus}"
+    container_name: "${CITUS_COMPOSE_PROJECT_NAME:-citus}"
     image: "citusdata/citus:11.1.5"
     environment: &AUTH
       POSTGRES_USER: "${CITUS_USER:-postgres}"
