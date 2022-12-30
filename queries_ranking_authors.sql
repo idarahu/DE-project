@@ -1,13 +1,3 @@
--- Ranking authors
--- 1 with the most publications in a given year, scientific domain and/or publication venue
--- 2 with the most citations in a given year, scientific domain and/or publication venue
--- 3 with the highest h-index in a given time period
--- 4 with the broadest horizon (authors who have written papers in the largest amount of different scientific domains) 
-
-
-
-
--- 1
 -- Ranking authors with the most publications in a given year
 SELECT 
 	aut.full_name, 
@@ -83,14 +73,16 @@ ORDER BY num_of_publications DESC;
 
 
 
--- 2
+
 -- Ranking authors with the most citations in a given year
 SELECT 
 	aut.full_name, 
 	SUM(pub.number_of_citations) AS number_of_citations
 FROM 
 	(
-		SELECT -- Only look at the latest DOI (multiple rows can have same DOI). Otherwise citations of same paper are countet multiple times.
+		-- Only look at the latest DOI (multiple rows can have same DOI). 
+		-- Otherwise citations of same paper are counted multiple times.
+		SELECT
 			DISTINCT ON (pu.doi)
 			pu.id AS pub_id
 		FROM warehouse.publications pu
@@ -114,7 +106,9 @@ SELECT
 	SUM(pub.number_of_citations) AS number_of_citations
 FROM 
 	(
-		SELECT -- Only look at the latest DOI (multiple rows can have same DOI). Otherwise citations of same paper are countet multiple times.
+		-- Only look at the latest DOI (multiple rows can have same DOI). 
+		-- Otherwise citations of same paper are counted multiple times.
+		SELECT
 			DISTINCT ON (pu.doi)
 			pu.id AS pub_id
 		FROM warehouse.publications pu
@@ -137,7 +131,9 @@ SELECT
 	SUM(pub.number_of_citations) AS number_of_citations
 FROM 
 	(
-		SELECT -- Only look at the latest DOI (multiple rows can have same DOI). Otherwise citations of same paper are countet multiple times.
+		-- Only look at the latest DOI (multiple rows can have same DOI). 
+		-- Otherwise citations of same paper are counted multiple times.
+		SELECT 
 			DISTINCT ON (pu.doi)
 			pu.id AS pub_id
 		FROM warehouse.publications pu
@@ -159,7 +155,9 @@ SELECT
 	SUM(pub.number_of_citations) AS number_of_citations
 FROM 
 	(
-		SELECT -- Only look at the latest DOI (multiple rows can have same DOI). Otherwise citations of same paper are countet multiple times.
+		-- Only look at the latest DOI (multiple rows can have same DOI). 
+		-- Otherwise citations of same paper are counted multiple times.
+		SELECT 
 			DISTINCT ON (pu.doi)
 			pu.id AS pub_id
 		FROM warehouse.publications pu
@@ -224,17 +222,3 @@ FROM warehouse.authors aut
 	AND pub_domain.domain_id = scientific_domain.id
 GROUP BY aut.id
 ORDER BY num_of_domains DESC;
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
