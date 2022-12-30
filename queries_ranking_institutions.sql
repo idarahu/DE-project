@@ -1,10 +1,3 @@
--- 	 Ranking institutions
---   1 With the most publications in a given year, scientific domain and/or publication venue
---   2 That have the highest impact in the scientific world (institutions that have papers
---     which have been cited the most in a given year, scientific domain and/or publication venue)
-
-
--- 1
 -- Ranking institutions with the most publications in a given year
 SELECT 
 	inst.name, 
@@ -82,17 +75,18 @@ GROUP BY aut.id
 ORDER BY num_of_publications DESC;
 
 
+-----------------------------------------------------------------------------------------------------------
 
 
-
--- 2
 -- Ranking institutions with the most citations in a given year, scientific domain, and in publication venue
 SELECT 
 	inst.name, 
 	SUM(pub.number_of_citations) AS number_of_citations
 FROM 
 	(
-		SELECT -- Only look at the latest DOI (multiple rows can have same DOI). Otherwise citations of same paper are counted multiple times.
+		-- Only look at the latest DOI (multiple rows can have same DOI). 
+		-- Otherwise citations of same paper are counted multiple times.
+		SELECT 
 			DISTINCT ON (pu.doi)
 			pu.id AS pub_id
 		FROM warehouse.publications pu
