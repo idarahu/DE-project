@@ -11,6 +11,8 @@ ON pub.id = pub_time.publication_id
 	AND pub_auth.author_id = aut.id
 WHERE 
 	DATE_PART('year', pub_time.date::date) = 'year_val'
+	-- the following is possibly faster
+	--timestamp >= '2020-01-01 00:00:00'::timestamp AND timestamp < '2021-01-01 00:00:00'::timestamp
 GROUP BY aut.id
 ORDER BY num_of_publications DESC;
 
