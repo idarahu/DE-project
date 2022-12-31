@@ -1,7 +1,7 @@
 -- Ranking venues/journals with the highest h-index in a given time period
 SELECT pub_venues.full_name, pub_venues.h_index FROM (
 	SELECT 
-		DISTINCT ON (venue.id)
+		DISTINCT ON (venue.full_name)
 		venue.full_name AS full_name,
 		venue.h_index_calculated AS h_index
 	FROM warehouse.publication_venues venue
