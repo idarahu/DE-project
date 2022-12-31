@@ -92,14 +92,14 @@ INSERT INTO warehouse.publication_domain(
 VALUES (1, 1);
 	
 -- Bridge: publication X institution (all fields required)
-INSERT INTO warehouse.publication_domain(
+INSERT INTO warehouse.publication_institution(
     publication_id,
     institution_id,
 )
 VALUES (1, 1);
-	
+
 -- Venues
-INSERT INTO warehouse.authors(
+INSERT INTO warehouse.publication_venues(
     publication_id,
     full_name,
     abbreviation,
@@ -108,11 +108,11 @@ INSERT INTO warehouse.authors(
     valid_from,
     valid_to
 )
-VALUES ('publication_id', 'full_name', 'abbreviation', 'type', 
+VALUES ('publication_id', 'full_name', 'abbreviation', 'type',
 		'h_index_calculated', 'valid_from', 'valid_to');
 
 -- Venues (required)
-INSERT INTO warehouse.authors(
+INSERT INTO warehouse.publication_venues(
     publication_id,
     full_name,
     abbreviation,
@@ -120,30 +120,12 @@ INSERT INTO warehouse.authors(
     h_index_calculated,
     valid_from
 )
-VALUES ('publication_id', 'full_name', 'abbreviation', 'type', 
+VALUES ('publication_id', 'full_name', 'abbreviation', 'type',
 		'h_index_calculated', 'valid_from');
-	
+
 -- Time (all fields required)
-INSERT INTO warehouse.publication_domain(
+INSERT INTO warehouse.publication_time(
 	date,
     publication_id
 )
 VALUES ('date', 1);
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
