@@ -5,12 +5,8 @@ SELECT pub_venues.full_name, pub_venues.h_index FROM (
 		venue.full_name AS full_name,
 		venue.h_index_calculated AS h_index
 	FROM warehouse.publication_venues venue
-	WHERE 
-		('date2' BETWEEN venue.valid_from AND venue.valid_to)
-		OR
-		('date1' BETWEEN venue.valid_from AND venue.valid_to)
-		OR
-		('date1' <= venue.valid_from AND 'date2' >= venue.valid_to)
+	WHERE
+	    (venue.valid_from, venue.valid_to) OVERLAPS ('2012-01-01'::DATE, '2012-04-12'::DATE);
 	ORDER BY venue.valid_to DESC
 ) pub_venues
 ORDER BY pub_venues.h_index DESC;

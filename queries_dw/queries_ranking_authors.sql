@@ -195,12 +195,8 @@ SELECT au.full_name, au.h_index FROM (
 		aut.full_name AS full_name,
 		aut.h_index_real AS h_index
 	FROM warehouse.authors aut
-	WHERE 
-		('date2' BETWEEN aut.valid_from AND aut.valid_to)
-		OR
-		('date1' BETWEEN aut.valid_from AND aut.valid_to)
-		OR
-		('date1' <= aut.valid_from AND 'date2' >= aut.valid_to)
+	WHERE
+	    (aut.valid_from, aut.valid_to) OVERLAPS ('2012-01-01'::DATE, '2012-04-12'::DATE);
 	ORDER BY aut.valid_to DESC
 ) au
 ORDER BY au.h_index_real DESC;
