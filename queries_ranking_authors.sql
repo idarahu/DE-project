@@ -189,7 +189,7 @@ ORDER BY number_of_citations DESC;
 -- Ranking authors with the highest h-index in a given time period
 SELECT au.full_name, au.h_index FROM (
 	SELECT 
-		DISTINCT ON (aut.id)
+		DISTINCT ON (aut.full_name)
 		aut.full_name AS full_name,
 		aut.h_index_real AS h_index
 	FROM warehouse.authors aut
