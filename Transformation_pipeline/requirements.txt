@@ -1,0 +1,5 @@
+pandas
+numpy
+crossref-commons==0.0.7
+opencitingpy==0.1.1
+scholarly==1.7.9
