@@ -3,3 +3,5 @@
 .idea
 venv
 data
+Transformation_pipeline/data
+Transformation_pipeline/logs
