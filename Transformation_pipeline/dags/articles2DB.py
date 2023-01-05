@@ -112,9 +112,9 @@ def create_authors_table(output_folder):
         f.write(
             'CREATE TABLE IF NOT EXISTS authors (\n'
             'author_ID serial PRIMARY KEY,\n'
-            'last_name VARCHAR(100) NOT NULL,\n'
-            'first_name VARCHAR(100),\n'
-            'first_name_abbr VARCHAR(10) NOT NULL,\n'
+            'last_name VARCHAR(255) NOT NULL,\n'
+            'first_name VARCHAR(255),\n'
+            'first_name_abbr VARCHAR(25) NOT NULL,\n'
             'extra VARCHAR(100),\n'
             'position TEXT,\n'
             'h_index_real INT,\n'
@@ -145,9 +145,9 @@ def create_authors_temp_table(output_folder):
         f.write(
             'CREATE TABLE IF NOT EXISTS authors_temp (\n'
             'publication_ID INT,\n'
-            'last_name VARCHAR(100) NOT NULL,\n'
-            'first_name VARCHAR(100),\n'
-            'first_name_abbr VARCHAR(10) NOT NULL,\n'
+            'last_name VARCHAR(255) NOT NULL,\n'
+            'first_name VARCHAR(255),\n'
+            'first_name_abbr VARCHAR(25) NOT NULL,\n'
             'extra VARCHAR(100),\n'
             'position TEXT,\n'
             'h_index_real INT,\n'
@@ -207,8 +207,9 @@ def create_affiliations_table(output_folder):
         f.write(
             'CREATE TABLE IF NOT EXISTS affiliations (\n'
             'affiliation_ID serial PRIMARY KEY,\n'
-            'institution_name VARCHAR(255) UNIQUE,\n'
-            'institution_place VARCHAR(255));\n'
+            'institution_name VARCHAR(255),\n'
+            'institution_place VARCHAR(255),\n'
+            'UNIQUE (institution_name, institution_place));\n'
         )
 
 prepare_affiliations_sql = PythonOperator(
@@ -466,6 +467,66 @@ def get_previous_publication_ID():
             f2.write(str(new_ID))
     return int(old_ID)
 
+def parse_first_name(first_name_raw):
+    import re
+    if '-' in first_name_raw:
+        splitted_first = [word[0] for word in first_name_raw.split('-')]
+        control_for_full_name = max([len(word) for word in re.split('[. -]', first_name_raw)])
+        if control_for_full_name > 1:
+            first_name = first_name_raw
+        else:
+            first_name = None    
+        first_name_abbr = ('.-'.join(splitted_first) + '.').upper()
+    elif first_name_raw in ['', ' ', None]:
+        first_name_abbr = None
+        first_name = None
+    else:
+        splitted_first = [word[0] for word in first_name_raw.split(' ')]
+        control_for_full_name = max([len(word) for word in re.split('[. -]', first_name_raw)])
+        if control_for_full_name > 1:
+            first_name = first_name_raw
+        else:
+            first_name = None    
+        first_name_abbr = ('. '.join(splitted_first) + '.').upper()
+    return first_name, first_name_abbr
+
+def find_institution_information(institution_name_raw):
+    import pandas as pd
+    import numpy as np
+    import re
+
+    universities_lookup = pd.read_table(f'{DATA_FOLDER}/universities_lookup.tsv')
+    cities_lookup = pd.read_table(f'{DATA_FOLDER}/cities_lookup.tsv')
+    splitted_institution_name = re.sub(r'\s', '', institution_name_raw).split(',')
+    institution_name = None
+    institution_place = None
+    memory = None
+    for split in splitted_institution_name:
+        if universities_lookup['institution'].str.lower().str.contains(split.lower()).any():
+            memory = split.lower()
+
+    if memory != None:
+        for idx, institution in enumerate(universities_lookup['institution']):
+            institution_splitted = re.split('[-,]', institution)[0]
+            if memory in institution_splitted.lower():
+                institution_name = institution_splitted
+                institution_place = universities_lookup.iloc[idx]['country']
+            if memory in institution.lower() and memory not in institution_splitted.lower():
+                institution_name = institution
+                institution_place = universities_lookup.iloc[idx]['country']
+
+    if institution_place == None:
+        memory2 = None
+        for split in splitted_institution_name:
+            if cities_lookup['city'].str.lower().str.contains(split.lower()).any() or cities_lookup['city_ascii'].str.lower().str.contains(split.lower()).any() or cities_lookup['country'].str.lower().str.contains(split.lower()).any() :
+                memory2 = split.lower()
+
+        if memory2 != None:
+            for i in range(len(cities_lookup)):
+                if memory2 in cities_lookup.iloc[i]['city'].lower() or memory2 in cities_lookup.iloc[i]['city_ascii'].lower() or memory2 in cities_lookup.iloc[i]['country'].lower():
+                    institution_place = cities_lookup.iloc[i]['country']
+    return institution_name, institution_place
+
 def data_by_author(author):
     from scholarly import scholarly
     from scholarly import ProxyGenerator
@@ -474,35 +535,37 @@ def data_by_author(author):
     pg = ProxyGenerator()
     pg.FreeProxies()
     scholarly.use_proxy(pg)
-
-    search_query = scholarly.search_author(author)
-    author_data = next(search_query)
-    full_data = scholarly.fill(author_data, sections=['basics', 'indices'])
-    full_name = full_data['name']
-    first_name = ' '.join(re.split(' ', full_name)[:-1])
     try:
-        h_index_real = int(full_data['hindex'])
+        search_query = scholarly.search_author(author)
+        author_data = next(search_query)
+        full_data = scholarly.fill(author_data, sections=['basics', 'indices'])
+        full_name = full_data['name']
+        first_name, first_name_abbr = parse_first_name(' '.join(re.split(' ', full_name)[:-1]))
+        try:
+            h_index_real = int(full_data['hindex'])
+        except:
+            h_index_real = -1
+        affiliation = full_data['affiliation'].split(', ')
+        author_position = None   
+        institution_place = ''
+        institution_name = None
+        for elem in affiliation:
+            parsed_aff = scholarly.search_org(elem)
+            if len(parsed_aff) == 0:
+                author_position = elem
+            else:
+                institution_data = parsed_aff[0]['Organization'].split(', ')
+                for index in range(len(institution_data)):
+                    if index == 0:
+                        institution_name = institution_data[index]
+                    elif index == 1:
+                        institution_place = institution_data[index]
+                    else:
+                        institution_place = institution_place + ', ' + institution_data[index]
+        
+        return first_name, h_index_real, author_position, institution_name, institution_place
     except:
-        h_index_real = -1
-    affiliation = full_data['affiliation'].split(', ')
-    author_position = None   
-    institution_place = ''
-    institution_name = None
-    for elem in affiliation:
-        parsed_aff = scholarly.search_org(elem)
-        if len(parsed_aff) == 0:
-            author_position = elem
-        else:
-            institution_data = parsed_aff[0]['Organization'].split(', ')
-            for index in range(len(institution_data)):
-                if index == 0:
-                    institution_name = institution_data[index]
-                elif index == 1:
-                    institution_place = institution_data[index]
-                else:
-                    institution_place = institution_place + ', ' + institution_data[index]
-    
-    return first_name, h_index_real, author_position, institution_name, institution_place
+        return None, -1, None, None, None
 
 def transform_and_enrich_the_data():
     import crossref_commons.retrieval
@@ -533,9 +596,8 @@ def transform_and_enrich_the_data():
     publication_ID =  old_pub_id + 1
     venue_ID = 0
 
-    #venues_df = pd.DataFrame(columns=['venue_ID', 'full_name', 'abbreviation', 'print_issn', 'electronic_issn'])
     venues_df = pd.read_table(f'{DATA_FOLDER}/venues_df.tsv')
-    print(venues_df)
+
     publications_df = pd.DataFrame(columns=['publication_ID', 'venue_ID', 'DOI', 'title', 'date',
                                             'submitter', 'type', 'language', 'page_numbers', 'volume', 'issue', 
                                             'number_of_references', 'number_of_citations', 'no_versions_arxiv',
@@ -583,6 +645,10 @@ def transform_and_enrich_the_data():
                                                      'author_last_name', 'author_first_name_abbr'])
         authors = metadata_df.iloc[i]['authors']
         for author in authors:
+            first_name = None
+            last_name = None
+            first_name_abbr = None
+            institution_name_raw = None
             for k in range(len(author)):
                 elem = author[k]
                 if k == 0:
@@ -596,40 +662,24 @@ def transform_and_enrich_the_data():
                         extra = elem
                     else:
                         extra = None
-                        institution_name = elem
+                        institution_name_raw = elem
                 if k > 2:
                     if len(re.findall('\d+', elem)) == 0:
-                        institution_name = elem
-            if '.' in first_name_raw:
-                if len(first_name_raw) > 10:
-                    first_name = first_name_raw
-                    if ' ' in first_name_raw:
-                        splitted_first = [word[0] for word in first_name_raw.split(' ')]
-                        first_name_abbr = '. '.join(splitted_first) + '.'
-                else:
-                    first_name = None
-                    first_name_abbr = first_name_raw
-            else:
-                first_name = first_name_raw
-                if '-' in first_name_raw:
-                    splitted_first = [word[0] for word in first_name_raw.split('-')]
-                    first_name_abbr = '.-'.join(splitted_first) + '.'
-                elif ' ' in first_name_raw:
-                    splitted_first = [word[0] for word in first_name_raw.split(' ')]
-                    first_name_abbr = '. '.join(splitted_first) + '.'
-                else:
-                    first_name = None
-                    first_name_abbr = first_name_raw
-            authors_temp_df.loc[len(authors_temp_df.index)] = [publication_ID, last_name, first_name, 
+                        institution_name_raw = elem
+            if institution_name_raw != None:
+                institution_name, institution_place = find_institution_information(institution_name_raw)
+
+            first_name, first_name_abbr = parse_first_name(first_name_raw)
+            authors_temp_df.loc[len(authors_temp_df.index)] = [int(publication_ID), last_name, first_name, 
                                                                first_name_abbr, extra, None, -1, None]
-            affiliations_temp_df.loc[len(affiliations_temp_df.index)] = [publication_ID, institution_name, institution_place,
+            affiliations_temp_df.loc[len(affiliations_temp_df.index)] = [int(publication_ID), institution_name, institution_place,
                                                                          last_name, first_name_abbr]                        
 
         categories = metadata_df.iloc[i]['categories']
         for category in categories:
             category_idx_arxiv = arxiv_categories.index[arxiv_categories['arxiv_category'] == category]
             arxiv_category_ID = arxiv_categories.iloc[category_idx_arxiv[0]]['arxiv_category_ID']
-            publication2arxiv_df.loc[len(publication2arxiv_df.index)] = [publication_ID, arxiv_category_ID]
+            publication2arxiv_df.loc[len(publication2arxiv_df.index)] = [int(publication_ID), int(arxiv_category_ID)]
 
         if article_DOI in DOIs_for_enrichment:        
             crossref_results = crossref_commons.retrieval.get_publication_as_json(article_DOI)
@@ -694,9 +744,15 @@ def transform_and_enrich_the_data():
             no_citations = client.get_citation_count(article_DOI)
 
             cititing_articles = opencitingpy_meta[0].citation
-            citing_pub_df.loc[len(citing_pub_df.index)] = [1, cititing_articles]
+            citing_pub_df.loc[len(citing_pub_df.index)] = [int(publication_ID), cititing_articles]
 
+            
             for author in authors_openc:
+                first_name = None
+                last_name = None
+                first_name_abbr = None
+                institution_name = None
+                institution_place = None
                 # Scholarly has limited times for receiving the data
                 #try:
                 #    first_name, h_index_real, author_position, institution_name, institution_place = data_by_author(author)
@@ -708,16 +764,7 @@ def transform_and_enrich_the_data():
 
                 name_splitted = author.split(', ')
                 last_name_control = name_splitted[0]
-                first_name_control = name_splitted[1]
-                if '-' in first_name_control:
-                    splitted_first_control = [word[0] for word in first_name_control.split('-')]
-                    first_name_abbr_control = '.-'.join(splitted_first_control) + '.'
-                elif ' ' in first_name_control:
-                    splitted_first_control = [word[0] for word in first_name_control.split(' ')]
-                    first_name_abbr_control = '. '.join(splitted_first_control) + '.'
-                else:
-                    first_name_abbr_control = first_name_control
-
+                first_name_control, first_name_abbr_control = parse_first_name(name_splitted[1])
                 author_control_index = authors_temp_df.loc[(authors_temp_df['last_name'].str.lower() == last_name_control.lower()) & (authors_temp_df['first_name_abbr'].str.lower() == first_name_abbr_control.lower())].index
                 if len(author_control_index) > 0:
                     author_index = author_control_index[0]
@@ -728,8 +775,15 @@ def transform_and_enrich_the_data():
                     if authors_temp_df.iloc[author_index]['position'] == None:
                         authors_temp_df.loc[author_index, 'position'] = author_position
                 else:
-                    authors_temp_df.loc[len(authors_temp_df.index)] = [publication_ID, last_name, first_name, first_name_abbr,
-                                                                       None, author_position, h_index_real, None]
+                    if first_name != None:
+                        authors_temp_df.loc[len(authors_temp_df.index)] = [int(publication_ID), last_name_control, first_name, 
+                                                                           first_name_abbr_control, None, author_position, 
+                                                                           int(h_index_real), None]
+                    else:
+                        authors_temp_df.loc[len(authors_temp_df.index)] = [int(publication_ID), last_name_control, first_name_control, 
+                                                                           first_name_abbr_control, None, author_position, 
+                                                                           int(h_index_real), None]
+
                 try:
                     affiliation_control_index = affiliations_temp_df.loc[(affiliations_temp_df['institution_name'].str.lower() == institution_name.lower())].index
                 except:
@@ -739,10 +793,11 @@ def transform_and_enrich_the_data():
                     if affiliations_temp_df.iloc[affiliation_index]['institution_place'] == None:
                         affiliations_temp_df.loc[affiliation_index, 'institution_place'] = institution_place
                 else:
-                    affiliations_temp_df.loc[len(affiliations_temp_df.index)] = [publication_ID, institution_name, institution_place,
+                    affiliations_temp_df.loc[len(affiliations_temp_df.index)] = [int(publication_ID), institution_name, institution_place,
                                                                                  last_name, first_name_abbr]       
 
         if venue_abbr != None:
+            #print(venue_abbr)
             venue_control_index = venues_df.loc[(venues_df['abbreviation'].str.lower() == venue_abbr.lower())].index
             if len(venue_control_index) > 0:
                 venue_index = venue_control_index[0]
@@ -757,10 +812,10 @@ def transform_and_enrich_the_data():
                 venues_df.loc[len(venues_df.index)] = [int(venue_ID), venue_name, venue_abbr, print_issn, electronic_issn]
         
         
-        publications_df.loc[len(publications_df.index)] = [publication_ID, int(venue_ID), article_DOI, article_title, 
+        publications_df.loc[len(publications_df.index)] = [int(publication_ID), int(venue_ID), article_DOI, article_title, 
                                                            metadata_df.iloc[i]['date'], metadata_df.iloc[i]['submitter'],
-                                                           type, language, page_numbers, volume, issue, no_references, 
-                                                           no_citations, metadata_df.iloc[i]['no_versions_arxiv'],
+                                                           type, language, page_numbers, int(volume), int(issue), int(no_references), 
+                                                           int(no_citations), metadata_df.iloc[i]['no_versions_arxiv'],
                                                            metadata_df.iloc[i]['date_of_first_version'], None]
         
         authors_df = pd.concat([authors_df, authors_temp_df], ignore_index=True)
@@ -773,18 +828,24 @@ def transform_and_enrich_the_data():
     
     authors_df.applymap(lambda x: None if x == ' ' else x)
     authors_df.applymap(lambda x: None if x == '' else x)
+    authors_df[['publication_ID', 'h_index_real']] = authors_df[['publication_ID', 'h_index_real']].applymap(np.int64)
 
     venues_df.applymap(lambda x: None if x == ' ' else x)
     venues_df.applymap(lambda x: None if x == '' else x)
+    venues_df[['venue_ID']] = venues_df[['venue_ID']].applymap(np.int64)
 
     affiliations_df.applymap(lambda x: None if x == ' ' else x)
     affiliations_df.applymap(lambda x: None if x == '' else x)
+    affiliations_df[['publication_ID']] = affiliations_df[['publication_ID']].applymap(np.int64)
 
     publication2arxiv_df.applymap(lambda x: None if x == ' ' else x)
     publication2arxiv_df.applymap(lambda x: None if x == '' else x)
+    publication2arxiv_df[['publication_ID', 'arxiv_category_ID']] = publication2arxiv_df[['publication_ID', 'arxiv_category_ID']].applymap(np.int64)
 
     publications_df.applymap(lambda x: None if x == ' ' else x)
     publications_df.applymap(lambda x: None if x == '' else x)
+    columns = ['publication_ID', 'venue_ID', 'volume', 'issue', 'number_of_references', 'number_of_citations', 'no_versions_arxiv']
+    publications_df[columns] = publications_df[columns].applymap(np.int64)
 
     venues_df.to_csv(f'{DATA_FOLDER}/venues_df.tsv', sep="\t", index=False)
     publications_df.to_csv(f'{DATA_FOLDER}/publications_df.tsv', sep="\t", index=False)
@@ -792,8 +853,6 @@ def transform_and_enrich_the_data():
     affiliations_df.to_csv(f'{DATA_FOLDER}/affiliations_df.tsv', sep="\t", index=False)
     publication2arxiv_df.to_csv(f'{DATA_FOLDER}/publication2arxiv_df.tsv', sep="\t", index=False)
     citing_pub_df.to_csv(f'{DATA_FOLDER}/citing_pub_df{old_pub_id}.tsv', sep="\t", index=False)
-    #venues_and_IDs.to_csv(f'{DATA_FOLDER}/venues_and_IDs.csv', index=False)
-
 
 transform_the_data = PythonOperator(
     task_id='transform_the_data',
@@ -811,57 +870,7 @@ def tsv_to_db(file_name, DB_table):
         curr.copy_from(f, DB_table, sep='\t')
         get_postgres_conn.commit()
 
-load_venues_data = PythonOperator(
-    task_id='load_venues_data',
-    dag=articles2DB_dag,
-    python_callable=tsv_to_db,
-    op_kwargs={
-        'file_name': 'venues_df.tsv',
-        'DB_table': 'venues'
-    }
-)
-
-load_publications_data = PythonOperator(
-    task_id='load_publications_data',
-    dag=articles2DB_dag,
-    python_callable=tsv_to_db,
-    op_kwargs={
-        'file_name': 'publications_df.tsv',
-        'DB_table': 'publications'
-    }
-)
-
-load_authors_data = PythonOperator(
-    task_id='load_authors_data',
-    dag=articles2DB_dag,
-    python_callable=tsv_to_db,
-    op_kwargs={
-        'file_name': 'authors_df.tsv',
-        'DB_table': 'authors_temp'
-    }
-)
-
-
-load_affiliations_data = PythonOperator(
-    task_id='load_affiliations_data',
-    dag=articles2DB_dag,
-    python_callable=tsv_to_db,
-    op_kwargs={
-        'file_name': 'affiliations_df.tsv',
-        'DB_table': 'affiliations_temp'
-    }
-)
-
-load_publication2arxiv_data = PythonOperator(
-    task_id='load_publication2arxiv_data',
-    dag=articles2DB_dag,
-    python_callable=tsv_to_db,
-    op_kwargs={
-        'file_name': 'publication2arxiv_df.tsv',
-        'DB_table': 'publication2arxiv'
-    }
-)
-
+# Deleting data from venues, temporary authors table and temporary affiliations table - these tables are always populated with new data
 truncate_venues_table = PostgresOperator(
 	task_id='truncate_venues_table',
     dag=articles2DB_dag,
@@ -883,6 +892,85 @@ truncate_affiliations_temp_table = PostgresOperator(
 	sql="TRUNCATE affiliations_temp"
 )
 
+# Populating the DB tables with new data
+# Venues data to venues table
+load_venues_data = PythonOperator(
+    task_id='load_venues_data',
+    dag=articles2DB_dag,
+    python_callable=tsv_to_db,
+    op_kwargs={
+        'file_name': 'venues_df.tsv',
+        'DB_table': 'venues'
+    }
+)
+
+# Publications data to publications table
+load_publications_data = PythonOperator(
+    task_id='load_publications_data',
+    dag=articles2DB_dag,
+    python_callable=tsv_to_db,
+    op_kwargs={
+        'file_name': 'publications_df.tsv',
+        'DB_table': 'publications'
+    }
+)
+# Authors data to temporary authors table - for checking the duplicates
+load_authors_data = PythonOperator(
+    task_id='load_authors_data',
+    dag=articles2DB_dag,
+    python_callable=tsv_to_db,
+    op_kwargs={
+        'file_name': 'authors_df.tsv',
+        'DB_table': 'authors_temp'
+    }
+)
+
+# Affiliations data to temporary affiliations table - for checking the duplicates
+load_affiliations_data = PythonOperator(
+    task_id='load_affiliations_data',
+    dag=articles2DB_dag,
+    python_callable=tsv_to_db,
+    op_kwargs={
+        'file_name': 'affiliations_df.tsv',
+        'DB_table': 'affiliations_temp'
+    }
+)
+
+# Data about publications arXiv categories to publication2arxiv table
+load_publication2arxiv_data = PythonOperator(
+    task_id='load_publication2arxiv_data',
+    dag=articles2DB_dag,
+    python_callable=tsv_to_db,
+    op_kwargs={
+        'file_name': 'publication2arxiv_df.tsv',
+        'DB_table': 'publication2arxiv'
+    }
+)
+
+# Creating authors_temp2authors.sql to populate authors table with only new authors that appeared in this batch of data
+def create_authors_temp2authors_sql(output_folder):
+    with open(f'{output_folder}/authors_temp2authors.sql', 'w') as f:
+        f.write(
+            'INSERT INTO authors (last_name, first_name, first_name_abbr, extra, position, h_index_real, updated_at)\n'
+            'SELECT DISTINCT last_name, first_name, first_name_abbr, extra, position, h_index_real, updated_at\n'
+            'FROM authors_temp\n'
+            'WHERE NOT EXISTS (\n'
+            'SELECT * FROM authors\n'
+            'WHERE\n'
+            'authors.last_name = authors_temp.last_name\n'
+            'AND authors.first_name_abbr = authors_temp.first_name_abbr);\n'
+        )
+
+prepare_authors_temp2authors_sql = PythonOperator(
+    task_id='prepare_authors_temp2authors_sql',
+    dag=articles2DB_dag,
+    python_callable=create_authors_temp2authors_sql,
+    op_kwargs={
+        'output_folder': DATA_FOLDER
+    }
+)
+
+# Populating the authors table only with new data
 authors_temp2authors = PostgresOperator(
     task_id='authors_temp2authors',
     dag=articles2DB_dag,
@@ -892,6 +980,30 @@ authors_temp2authors = PostgresOperator(
     autocommit=True,
 )
 
+# Creating affiliations_temp2affiliations.sql to populate affiliations table with only new affiliations that appeared in this batch of data
+def create_affiliations_temp2affiliations_sql(output_folder):
+    with open(f'{output_folder}/affiliations_temp2affiliations.sql', 'w') as f:
+        f.write(
+            'INSERT INTO affiliations (institution_name, institution_place)\n'
+            'SELECT DISTINCT institution_name, institution_place\n'
+            'FROM affiliations_temp\n'
+            'WHERE NOT EXISTS (\n'
+            'SELECT * FROM affiliations\n'
+            'WHERE\n'
+            'affiliations.institution_name = affiliations_temp.institution_name\n'
+            'AND affiliations.institution_place = affiliations_temp.institution_place);\n'
+        )
+
+prepare_affiliations_temp2affiliations_sql = PythonOperator(
+    task_id='prepare_affiliations_temp2affiliations_sql',
+    dag=articles2DB_dag,
+    python_callable=create_affiliations_temp2affiliations_sql,
+    op_kwargs={
+        'output_folder': DATA_FOLDER
+    }
+)
+
+# Populating the affiliations table only with new data
 affiliations_temp2affiliations = PostgresOperator(
     task_id='affiliations_temp2affiliations',
     dag=articles2DB_dag,
@@ -901,12 +1013,100 @@ affiliations_temp2affiliations = PostgresOperator(
     autocommit=True,
 )
 
+# Connecting all the tables that need to be connected in DB
+# Authors with publications
+def connect_author2pub_sql(output_folder):
+    with open(f'{output_folder}/connect_author2pub.sql', 'w') as f:
+        f.write(
+            'INSERT INTO author2publication (author_id, publication_id)\n'
+            'SELECT DISTINCT t2.author_id, t1.publication_id\n'
+            'FROM authors_temp t1\n'
+            'JOIN authors t2 ON t1.last_name = t2.last_name AND t1.first_name_abbr = t2.first_name_abbr;\n'
+        )
+
+prepare_connect_author2pub_sql = PythonOperator(
+    task_id='prepare_connect_author2pub_sql',
+    dag=articles2DB_dag,
+    python_callable=connect_author2pub_sql,
+    op_kwargs={
+        'output_folder': DATA_FOLDER
+    }
+)
+
+connect_author2pub = PostgresOperator(
+    task_id='connect_author2pub',
+    dag=articles2DB_dag,
+    postgres_conn_id='airflow_pg',
+    sql='connect_author2pub.sql',
+    trigger_rule='none_failed',
+    autocommit=True,
+)
+
+# Affiliations with publications
+def connect_aff2pub_sql(output_folder):
+    with open(f'{output_folder}/connect_aff2pub.sql', 'w') as f:
+        f.write(
+            'INSERT INTO affiliation2publication (affiliation_id, publication_id)\n'
+            'SELECT DISTINCT t2.affiliation_id, t1.publication_id\n'
+            'FROM affiliations_temp t1\n'
+            'JOIN affiliations t2 ON t1.institution_name = t2.institution_name AND t1.institution_place = t2.institution_place;\n'
+        )
+
+prepare_connect_aff2pub_sql = PythonOperator(
+    task_id='prepare_connect_aff2pub_sql',
+    dag=articles2DB_dag,
+    python_callable=connect_aff2pub_sql,
+    op_kwargs={
+        'output_folder': DATA_FOLDER
+    }
+)
+
+connect_aff2pub = PostgresOperator(
+    task_id='connect_aff2pub',
+    dag=articles2DB_dag,
+    postgres_conn_id='airflow_pg',
+    sql='connect_aff2pub.sql',
+    trigger_rule='none_failed',
+    autocommit=True,
+)
+
+# Authors with affiliations
+def connect_author2aff_sql(output_folder):
+    with open(f'{output_folder}/connect_author2aff.sql', 'w') as f:
+        f.write(
+            'INSERT INTO author2affiliation (author_id, affiliation_id)\n'
+            'SELECT DISTINCT t2.author_id, t3.affiliation_id\n'
+            'FROM affiliations_temp t1\n'
+            'JOIN authors t2 ON t1.author_last_name = t2.last_name AND t1.author_first_name_abbr = t2.first_name_abbr\n'
+            'JOIN affiliations t3 ON t1.institution_name = t3.institution_name AND t1.institution_place = t3.institution_place;\n'
+        )
+
+prepare_connect_author2aff_sql = PythonOperator(
+    task_id='prepare_connect_author2aff_sql',
+    dag=articles2DB_dag,
+    python_callable=connect_author2aff_sql,
+    op_kwargs={
+        'output_folder': DATA_FOLDER
+    }
+)
+
+connect_author2aff = PostgresOperator(
+    task_id='connect_author2aff',
+    dag=articles2DB_dag,
+    postgres_conn_id='airflow_pg',
+    sql='connect_author2aff.sql',
+    trigger_rule='none_failed',
+    autocommit=True,
+)
+
+
 step4 = EmptyOperator(task_id='step4') 
 
 transform_the_data >>  load_publication2arxiv_data >> step4
 transform_the_data >> truncate_venues_table >> load_venues_data >> load_publications_data >> step4
-transform_the_data >> truncate_authors_temp_table >> load_authors_data >> step4
-transform_the_data >> truncate_affiliations_temp_table >> load_affiliations_data >> step4 
+transform_the_data >> truncate_authors_temp_table >> prepare_authors_temp2authors_sql >> load_authors_data >> authors_temp2authors
+transform_the_data >> truncate_affiliations_temp_table >> prepare_affiliations_temp2affiliations_sql >> load_affiliations_data >> affiliations_temp2affiliations
 
-step4 >> authors_temp2authors
-step4 >> affiliations_temp2affiliations
+[load_publications_data, authors_temp2authors] >> prepare_connect_author2pub_sql >>  connect_author2pub >> step4
+[load_publications_data, affiliations_temp2affiliations] >> prepare_connect_aff2pub_sql >>  connect_aff2pub >> step4
+[authors_temp2authors, affiliations_temp2affiliations] >> prepare_connect_author2aff_sql >> connect_author2aff >> step4
