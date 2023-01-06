@@ -18,7 +18,12 @@ DEFAULT_ARGS = {
     'retry_delay': timedelta(minutes=5)
 }
 
-DATA_FOLDER = '/tmp/data'
+INPUT_FOLDER = '/tmp/data/inputs'
+SETUP_FOLDER = '/tmp/data/setups'
+LOOKUP_DATA_FOLDER = '/tmp/data/lookup_tables'
+DATA2DB_FOLDER = '/tmp/data/data2db'
+SQL_FOLDER = '/tmp/data/sql'
+GRAPH_DB_FOLDER = '/tmp/data/graph_db'
 
 articles2DB_dag = DAG(
     dag_id='articles2DB', 
@@ -27,7 +32,7 @@ articles2DB_dag = DAG(
     schedule_interval=None,
     #schedule_interval=timedelta(minutes=2),
     catchup=False,
-    template_searchpath=[DATA_FOLDER]
+    template_searchpath=[SQL_FOLDER]
 )
 
 task_start = BashOperator(
@@ -52,7 +57,7 @@ prepare_venues_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_venues_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -93,7 +98,7 @@ prepare_publications_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_publications_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -127,7 +132,7 @@ prepare_authors_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_authors_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -159,7 +164,7 @@ prepare_authors_temp_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_authors_temp_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -188,7 +193,7 @@ prepare_author2publication_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_author2publication_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -217,7 +222,7 @@ prepare_affiliations_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_affiliations_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -246,7 +251,7 @@ prepare_affiliations_temp_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_affiliations_temp_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -275,7 +280,7 @@ prepare_affiliation2publication_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_affiliation2publication_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -303,7 +308,7 @@ prepare_author2affiliation_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_author2affiliation_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -330,7 +335,7 @@ prepare_arxiv_categories_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_arxiv_categories_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -356,7 +361,7 @@ prepare_publication2arxiv_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_publication2arxiv_table,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -387,7 +392,7 @@ step2 >> create_venues_sql >> create_publications_sql >> step3
 def csv_to_db(file_name, DB_table):
     get_postgres_conn = PostgresHook(postgres_conn_id='airflow_pg').get_conn()
     curr = get_postgres_conn.cursor("cursor")
-    with open(f'{DATA_FOLDER}/{file_name}', 'r') as f:
+    with open(f'{DATA2DB_FOLDER}/{file_name}', 'r') as f:
         next(f)
         curr.copy_from(f, DB_table, sep=',')
         get_postgres_conn.commit()
@@ -413,14 +418,14 @@ step2 >> create_arxiv_categories_sql >> truncate_arxiv_table >> load_arxiv_categ
 
 # Choosing the suitable new data (50K batch) - simulating the arrival of new data
 def get_file_name():
-    with open(f'{DATA_FOLDER}/split_no.txt', 'r') as f:
+    with open(f'{SETUP_FOLDER}/split_no.txt', 'r') as f:
             old_split_no = f.read()
             new_split_no = int(old_split_no) + 1
             if new_split_no > 44:
                 file_name = ''
             else: 
                 file_name = 'original_data_split' + str(new_split_no) + '.json'
-    with open(f'{DATA_FOLDER}/split_no.txt', 'w') as f2:
+    with open(f'{SETUP_FOLDER}/split_no.txt', 'w') as f2:
             f2.write(str(new_split_no))
     return file_name
 
@@ -432,17 +437,17 @@ def get_metadata():
                                         'categories', 'no_versions_arxiv', 'date_of_first_version'])
     
     # For testing use data from original_data_split1.json because it contains the DOIs that are needed for enrichment
-    file_name = 'original_data_split1.json'
+    #file_name = 'original_data_split1.json'
     # Otherwise use the following command
-    #file_name = get_file_name()
+    file_name = get_file_name()
     
     # For testing to limit the number of publications
-    counter = 0
+    #counter = 0
 
-    with open(f'{DATA_FOLDER}/{file_name}', 'r') as f:
+    with open(f'{INPUT_FOLDER}/{file_name}', 'r') as f:
         for line in f:
-            if counter == 50:
-                return metadata_df
+            #if counter == 50:
+                #return metadata_df
             parsed_line = json.loads(line)
             # Only selecting publications that have enough data: DOI or(and) authors + title
             if parsed_line['doi'] != None or (parsed_line['authors_parsed'] != None and parsed_line['title'] != None):
@@ -455,15 +460,15 @@ def get_metadata():
                                                            parsed_line['categories'].split(' '),
                                                            len(parsed_line['versions']),
                                                            datetime.strptime(parsed_line['versions'][0]['created'], '%a, %d %b %Y %H:%M:%S %Z').strftime('%Y-%m-%d')]
-            counter += 1
+            #counter += 1
     return metadata_df
 
 # Holding the ID of last publication that was inserted to DB in memory
 def get_previous_publication_ID():
-    with open(f'{DATA_FOLDER}/publication_ID.txt', 'r') as f:
+    with open(f'{SETUP_FOLDER}/publication_ID.txt', 'r') as f:
             old_ID = f.read()
             new_ID = int(old_ID) + 50000
-    with open(f'{DATA_FOLDER}/publication_ID.txt', 'w') as f2:
+    with open(f'{SETUP_FOLDER}/publication_ID.txt', 'w') as f2:
             f2.write(str(new_ID))
     return int(old_ID)
 
@@ -471,7 +476,7 @@ def find_venue(venue_data_raw):
     import pandas as pd
     import re
 
-    venues_lookup = pd.read_table(f'{DATA_FOLDER}/venues_lookup.tsv')
+    venues_lookup = pd.read_table(f'{LOOKUP_DATA_FOLDER}/venues_lookup.tsv')
     venue_data_check = re.sub(r'\W', '', venue_data_raw).lower()
     venue_abbr = None
     venue_name = None
@@ -509,8 +514,8 @@ def find_institution_information(institution_name_raw):
     import pandas as pd
     import re
 
-    universities_lookup = pd.read_table(f'{DATA_FOLDER}/universities_lookup.tsv')
-    cities_lookup = pd.read_table(f'{DATA_FOLDER}/cities_lookup.tsv')
+    universities_lookup = pd.read_table(f'{LOOKUP_DATA_FOLDER}/universities_lookup.tsv')
+    cities_lookup = pd.read_table(f'{LOOKUP_DATA_FOLDER}/cities_lookup.tsv')
     splitted_institution_name = re.sub(r'\s', '', institution_name_raw).split(',')
     institution_name = None
     institution_place = None
@@ -593,10 +598,9 @@ def transform_and_enrich_the_data():
     
     # Loading the preselected DOIs that belong to the publications which will be enriched
     # Selection was made by checking that all the domains (fields major_domain + sub_category in DWH) would be covered    
-    DOIs_for_enrichment = loadtxt(f'{DATA_FOLDER}/DOIs_for_enrichment.csv', dtype='str', delimiter=',')
+    DOIs_for_enrichment = loadtxt(f'{SETUP_FOLDER}/DOIs_for_enrichment.csv', dtype='str', delimiter=',')
     
-    arxiv_categories = pd.read_csv(f'{DATA_FOLDER}/arxiv_categories.csv')
-    #venues_and_IDs = pd.read_csv(f'{DATA_FOLDER}/venues_and_IDs.csv')
+    arxiv_categories = pd.read_csv(f'{DATA2DB_FOLDER}/arxiv_categories.csv')
 
     # Setting up a ProxyGenerator object to use free proxies
     # This needs to be done only once per session
@@ -610,7 +614,7 @@ def transform_and_enrich_the_data():
     publication_ID =  old_pub_id + 1
     venue_ID = 0
 
-    venues_df = pd.read_table(f'{DATA_FOLDER}/venues_df.tsv')
+    venues_df = pd.read_table(f'{DATA2DB_FOLDER}/venues_df.tsv')
 
     publications_df = pd.DataFrame(columns=['publication_ID', 'venue_ID', 'DOI', 'title', 'date',
                                             'submitter', 'type', 'language', 'page_numbers', 'volume', 'issue', 
@@ -640,13 +644,15 @@ def transform_and_enrich_the_data():
         no_citations = -1
         venue_name = None
         venue_abbr = None
+        venue_data_raw = None
+        venue_abbr_new = None
         print_issn = None
         electronic_issn = None
         institution_name = None
         institution_place = None
         type = None
         h_index_real = -1
-
+        
         if metadata_df.iloc[i]['journal_ref'] != None:
             try:
                 venue_data_raw = re.split(r'(^[^\d]+)', metadata_df.iloc[i]['journal_ref'])[1:][0].replace(',', '').rstrip()
@@ -759,7 +765,6 @@ def transform_and_enrich_the_data():
             cititing_articles = opencitingpy_meta[0].citation
             citing_pub_df.loc[len(citing_pub_df.index)] = [int(publication_ID), cititing_articles]
 
-            
             for author in authors_openc:
                 first_name = None
                 last_name = None
@@ -868,12 +873,12 @@ def transform_and_enrich_the_data():
     columns = ['publication_ID', 'venue_ID', 'volume', 'issue', 'number_of_references', 'number_of_citations', 'no_versions_arxiv']
     publications_df[columns] = publications_df[columns].applymap(np.int64)
 
-    venues_df.to_csv(f'{DATA_FOLDER}/venues_df.tsv', sep="\t", index=False)
-    publications_df.to_csv(f'{DATA_FOLDER}/publications_df.tsv', sep="\t", index=False)
-    authors_df.to_csv(f'{DATA_FOLDER}/authors_df.tsv', sep="\t", index=False)
-    affiliations_df.to_csv(f'{DATA_FOLDER}/affiliations_df.tsv', sep="\t", index=False)
-    publication2arxiv_df.to_csv(f'{DATA_FOLDER}/publication2arxiv_df.tsv', sep="\t", index=False)
-    citing_pub_df.to_csv(f'{DATA_FOLDER}/citing_pub_df{old_pub_id}.tsv', sep="\t", index=False)
+    venues_df.to_csv(f'{DATA2DB_FOLDER}/venues_df.tsv', sep="\t", index=False)
+    publications_df.to_csv(f'{DATA2DB_FOLDER}/publications_df.tsv', sep="\t", index=False)
+    authors_df.to_csv(f'{DATA2DB_FOLDER}/authors_df.tsv', sep="\t", index=False)
+    affiliations_df.to_csv(f'{DATA2DB_FOLDER}/affiliations_df.tsv', sep="\t", index=False)
+    publication2arxiv_df.to_csv(f'{DATA2DB_FOLDER}/publication2arxiv_df.tsv', sep="\t", index=False)
+    citing_pub_df.to_csv(f'{GRAPH_DB_FOLDER}/citing_pub_df{old_pub_id}.tsv', sep="\t", index=False)
 
 transform_the_data = PythonOperator(
     task_id='transform_the_data',
@@ -886,7 +891,7 @@ step3 >> transform_the_data
 def tsv_to_db(file_name, DB_table):
     get_postgres_conn = PostgresHook(postgres_conn_id='airflow_pg').get_conn()
     curr = get_postgres_conn.cursor("cursor")
-    with open(f'{DATA_FOLDER}/{file_name}', 'r') as f:
+    with open(f'{DATA2DB_FOLDER}/{file_name}', 'r') as f:
         next(f)
         curr.copy_from(f, DB_table, sep='\t')
         get_postgres_conn.commit()
@@ -987,7 +992,7 @@ prepare_authors_temp2authors_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_authors_temp2authors_sql,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -1020,7 +1025,7 @@ prepare_affiliations_temp2affiliations_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_affiliations_temp2affiliations_sql,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -1050,7 +1055,7 @@ prepare_connect_author2pub_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=connect_author2pub_sql,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -1078,7 +1083,7 @@ prepare_connect_aff2pub_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=connect_aff2pub_sql,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -1107,7 +1112,7 @@ prepare_connect_author2aff_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=connect_author2aff_sql,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -1154,7 +1159,7 @@ prepare_authors_view_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_authors_view_sql,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -1188,7 +1193,7 @@ prepare_venues_view_sql = PythonOperator(
     dag=articles2DB_dag,
     python_callable=create_venues_view_sql,
     op_kwargs={
-        'output_folder': DATA_FOLDER
+        'output_folder': SQL_FOLDER
     }
 )
 
@@ -1211,8 +1216,8 @@ def copy_data_from_DB(output_folder, SQL_statement, data_type):
     df = pd.read_sql(SQL_statement, conn)
     if data_type == 'publication2arxiv':
         file_name = 'publication2domain_graph_' + datetime.now().strftime("%Y%m%d%H%M%S") + '.csv'
-        arxiv_categories = pd.read_csv(f'{DATA_FOLDER}/arxiv_categories.csv')
-        domains_lookup = pd.read_csv(f'{DATA_FOLDER}/lookup_table_domains.csv')
+        arxiv_categories = pd.read_csv(f'{DATA2DB_FOLDER}/arxiv_categories.csv')
+        domains_lookup = pd.read_csv(f'{LOOKUP_DATA_FOLDER}/lookup_table_domains.csv')
         connected_domains_data = pd.merge(left=arxiv_categories, how='outer', left_on='arxiv_category', right=domains_lookup, right_on='arxiv_category')
         final_df = pd.merge(left=connected_domains_data, how='outer', left_on='arxiv_category_ID', right=df, right_on='arxiv_category_id')
         final_df_print = final_df[['publication_id', 'domain_id', 'major_field', 'sub_category', 'exact_category', 'arxiv_category']]
@@ -1226,7 +1231,7 @@ copy_affiliations = PythonOperator(
     dag=articles2DB_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
-        'output_folder': DATA_FOLDER,
+        'output_folder': GRAPH_DB_FOLDER,
         'SQL_statement': 'SELECT * FROM affiliations',
         'data_type': 'affiliations'
     }
@@ -1237,7 +1242,7 @@ copy_authors = PythonOperator(
     dag=articles2DB_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
-        'output_folder': DATA_FOLDER,
+        'output_folder': GRAPH_DB_FOLDER,
         'SQL_statement': 'SELECT * FROM authors_view',
         'data_type': 'authors'
     }
@@ -1248,7 +1253,7 @@ copy_affiliation2publication = PythonOperator(
     dag=articles2DB_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
-        'output_folder': DATA_FOLDER,
+        'output_folder': GRAPH_DB_FOLDER,
         'SQL_statement': 'SELECT * FROM affiliation2publication',
         'data_type': 'affiliation2publication'
     }
@@ -1259,7 +1264,7 @@ copy_author2affiliation = PythonOperator(
     dag=articles2DB_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
-        'output_folder': DATA_FOLDER,
+        'output_folder': GRAPH_DB_FOLDER,
         'SQL_statement': 'SELECT * FROM author2affiliation',
         'data_type': 'author2affiliation'
     }
@@ -1270,7 +1275,7 @@ copy_author2publication = PythonOperator(
     dag=articles2DB_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
-        'output_folder': DATA_FOLDER,
+        'output_folder': GRAPH_DB_FOLDER,
         'SQL_statement': 'SELECT * FROM author2publication',
         'data_type': 'author2publication'
     }
@@ -1281,7 +1286,7 @@ copy_publications = PythonOperator(
     dag=articles2DB_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
-        'output_folder': DATA_FOLDER,
+        'output_folder': GRAPH_DB_FOLDER,
         'SQL_statement': 'SELECT * FROM publications',
         'data_type': 'publications'
     }
@@ -1292,7 +1297,7 @@ copy_publication2arxiv = PythonOperator(
     dag=articles2DB_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
-        'output_folder': DATA_FOLDER,
+        'output_folder': GRAPH_DB_FOLDER,
         'SQL_statement': 'SELECT * FROM publication2arxiv',
         'data_type': 'publication2arxiv'
     }
