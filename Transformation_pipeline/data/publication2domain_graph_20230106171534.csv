@@ -1,0 +1,323 @@
+publication_id,domain_id,major_field,sub_category,exact_category,arxiv_category
+200009.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+200017.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+200023.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+200044.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+200048.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+250009.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+250017.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+250023.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+250044.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+250048.0,111,natural sciences,physical sciences,astrophysics,astro-ph
+,105,natural sciences,physical sciences,astrophysics,astro-ph.CO
+,106,natural sciences,physical sciences,astrophysics,astro-ph.EP
+,107,natural sciences,physical sciences,astrophysics,astro-ph.GA
+,108,natural sciences,physical sciences,astrophysics,astro-ph.HE
+,110,natural sciences,physical sciences,astrophysics,astro-ph.IM
+,109,natural sciences,physical sciences,astrophysics,astro-ph.SR
+,116,natural sciences,physical sciences,condensed matter physics,cond-mat.dis-nn
+200006.0,117,natural sciences,physical sciences,condensed matter physics,cond-mat.mes-hall
+200027.0,117,natural sciences,physical sciences,condensed matter physics,cond-mat.mes-hall
+250006.0,117,natural sciences,physical sciences,condensed matter physics,cond-mat.mes-hall
+250027.0,117,natural sciences,physical sciences,condensed matter physics,cond-mat.mes-hall
+200008.0,118,natural sciences,physical sciences,condensed matter physics,cond-mat.mtrl-sci
+200043.0,118,natural sciences,physical sciences,condensed matter physics,cond-mat.mtrl-sci
+250008.0,118,natural sciences,physical sciences,condensed matter physics,cond-mat.mtrl-sci
+250043.0,118,natural sciences,physical sciences,condensed matter physics,cond-mat.mtrl-sci
+,119,natural sciences,physical sciences,condensed matter physics,cond-mat.other
+,120,natural sciences,physical sciences,condensed matter physics,cond-mat.quant-gas
+,121,natural sciences,physical sciences,condensed matter physics,cond-mat.soft
+200025.0,122,natural sciences,physical sciences,condensed matter physics,cond-mat.stat-mech
+200043.0,122,natural sciences,physical sciences,condensed matter physics,cond-mat.stat-mech
+250025.0,122,natural sciences,physical sciences,condensed matter physics,cond-mat.stat-mech
+250043.0,122,natural sciences,physical sciences,condensed matter physics,cond-mat.stat-mech
+200025.0,123,natural sciences,physical sciences,condensed matter physics,cond-mat.str-el
+200030.0,123,natural sciences,physical sciences,condensed matter physics,cond-mat.str-el
+250025.0,123,natural sciences,physical sciences,condensed matter physics,cond-mat.str-el
+250030.0,123,natural sciences,physical sciences,condensed matter physics,cond-mat.str-el
+,124,natural sciences,physical sciences,condensed matter physics,cond-mat.supr-con
+200047.0,43,natural sciences,computer sciences,artificial Intelligence,cs.AI
+200050.0,43,natural sciences,computer sciences,artificial Intelligence,cs.AI
+250047.0,43,natural sciences,computer sciences,artificial Intelligence,cs.AI
+250050.0,43,natural sciences,computer sciences,artificial Intelligence,cs.AI
+,44,natural sciences,computer sciences,computer architecture,cs.AR
+,39,natural sciences,computer sciences,algorithms,cs.CC
+,63,natural sciences,computer sciences,other,cs.CE
+200002.0,66,natural sciences,computer sciences,other,cs.CG
+250002.0,66,natural sciences,computer sciences,other,cs.CG
+,65,natural sciences,computer sciences,other,cs.CL
+,47,natural sciences,computer sciences,computer security and reliability,cs.CR
+,67,natural sciences,computer sciences,other,cs.CV
+,86,natural sciences,information sciences,other,cs.CY
+,48,natural sciences,computer sciences,data structures,cs.DB
+,78,natural sciences,information sciences,data management,cs.DB
+,50,natural sciences,computer sciences,distributed computing,cs.DC
+,54,natural sciences,computer sciences,parallel computing,cs.DC
+,70,natural sciences,computer sciences,other,cs.DL
+,69,natural sciences,computer sciences,other,cs.DM
+,38,natural sciences,computer sciences,algorithms,cs.DS
+,49,natural sciences,computer sciences,data structures,cs.DS
+,71,natural sciences,computer sciences,other,cs.ET
+,72,natural sciences,computer sciences,other,cs.FL
+,64,natural sciences,computer sciences,other,cs.GL
+,46,natural sciences,computer sciences,computer graphics,cs.GR
+,74,natural sciences,computer sciences,other,cs.GT
+,52,natural sciences,computer sciences,human-computer interaction,cs.HC
+,81,natural sciences,information sciences,information retrieval,cs.IR
+200046.0,62,natural sciences,computer sciences,other,cs.IT
+250046.0,62,natural sciences,computer sciences,other,cs.IT
+200046.0,79,natural sciences,information sciences,information retrieval,cs.IT
+250046.0,79,natural sciences,information sciences,information retrieval,cs.IT
+200046.0,82,natural sciences,information sciences,information management,cs.IT
+250046.0,82,natural sciences,information sciences,information management,cs.IT
+,41,natural sciences,computer sciences,artificial Intelligence,cs.LG
+,73,natural sciences,computer sciences,other,cs.LO
+,68,natural sciences,computer sciences,other,cs.MA
+,85,natural sciences,information sciences,"multimedia, hypermedia",cs.MM
+,57,natural sciences,computer sciences,software engineering,cs.MS
+,76,natural sciences,computer sciences,other,cs.NA
+200047.0,40,natural sciences,computer sciences,artificial Intelligence,cs.NE
+200050.0,40,natural sciences,computer sciences,artificial Intelligence,cs.NE
+250047.0,40,natural sciences,computer sciences,artificial Intelligence,cs.NE
+250050.0,40,natural sciences,computer sciences,artificial Intelligence,cs.NE
+200047.0,60,natural sciences,computer sciences,other,cs.NE
+200050.0,60,natural sciences,computer sciences,other,cs.NE
+250047.0,60,natural sciences,computer sciences,other,cs.NE
+250050.0,60,natural sciences,computer sciences,other,cs.NE
+,45,natural sciences,computer sciences,computer communications,cs.NI
+,51,natural sciences,computer sciences,distributed computing,cs.NI
+,55,natural sciences,computer sciences,parallel computing,cs.NI
+,75,natural sciences,computer sciences,other,cs.OH
+,53,natural sciences,computer sciences,operating systems,cs.OS
+,77,natural sciences,computer sciences,other,cs.PF
+,56,natural sciences,computer sciences,programming languages,cs.PL
+,158,engineering and technology,"electrical, electronic and information engineering","robotics, automation and control systems",cs.RO
+,59,natural sciences,computer sciences,theory of computation,cs.SC
+,165,engineering and technology,mechanical engineering,audio engineering,cs.SD
+,58,natural sciences,computer sciences,software engineering,cs.SE
+,84,natural sciences,information sciences,information management,cs.SI
+,155,engineering and technology,"electrical, electronic and information engineering",communication engineering and systems,cs.SI
+,162,engineering and technology,"electrical, electronic and information engineering",other,cs.SY
+,183,social sciences,"economics, finance and business",economics and econometrics ,econ.EM
+,185,social sciences,"economics, finance and business",economics and econometrics ,econ.GN
+,184,social sciences,"economics, finance and business",economics and econometrics ,econ.TH
+,166,engineering and technology,mechanical engineering,audio engineering,eess.AS
+,160,engineering and technology,"electrical, electronic and information engineering",other,eess.IV
+,161,engineering and technology,"electrical, electronic and information engineering",other,eess.SP
+,163,engineering and technology,"electrical, electronic and information engineering",other,eess.SY
+200007.0,141,natural sciences,physical sciences,quantum physics,gr-qc
+200048.0,141,natural sciences,physical sciences,quantum physics,gr-qc
+250007.0,141,natural sciences,physical sciences,quantum physics,gr-qc
+250048.0,141,natural sciences,physical sciences,quantum physics,gr-qc
+200020.0,129,natural sciences,physical sciences,high energy physics,hep-ex
+250020.0,129,natural sciences,physical sciences,high energy physics,hep-ex
+200039.0,128,natural sciences,physical sciences,high energy physics,hep-lat
+250039.0,128,natural sciences,physical sciences,high energy physics,hep-lat
+200001.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+200016.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+200029.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+200031.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+200032.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+200039.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+250001.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+250016.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+250029.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+250031.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+250032.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+250039.0,126,natural sciences,physical sciences,high energy physics,hep-ph
+200015.0,127,natural sciences,physical sciences,high energy physics,hep-th
+200018.0,127,natural sciences,physical sciences,high energy physics,hep-th
+250015.0,127,natural sciences,physical sciences,high energy physics,hep-th
+250018.0,127,natural sciences,physical sciences,high energy physics,hep-th
+,35,natural sciences,mathematics,other,math.AC
+200011.0,34,natural sciences,mathematics,other,math.AG
+200019.0,34,natural sciences,mathematics,other,math.AG
+250011.0,34,natural sciences,mathematics,other,math.AG
+250019.0,34,natural sciences,mathematics,other,math.AG
+,33,natural sciences,mathematics,other,math.AP
+200014.0,32,natural sciences,mathematics,other,math.AT
+250014.0,32,natural sciences,mathematics,other,math.AT
+200005.0,31,natural sciences,mathematics,other,math.CA
+200014.0,31,natural sciences,mathematics,other,math.CA
+200028.0,31,natural sciences,mathematics,other,math.CA
+250005.0,31,natural sciences,mathematics,other,math.CA
+250014.0,31,natural sciences,mathematics,other,math.CA
+250028.0,31,natural sciences,mathematics,other,math.CA
+200002.0,30,natural sciences,mathematics,other,math.CO
+200004.0,30,natural sciences,mathematics,other,math.CO
+200010.0,30,natural sciences,mathematics,other,math.CO
+200049.0,30,natural sciences,mathematics,other,math.CO
+250002.0,30,natural sciences,mathematics,other,math.CO
+250004.0,30,natural sciences,mathematics,other,math.CO
+250010.0,30,natural sciences,mathematics,other,math.CO
+250049.0,30,natural sciences,mathematics,other,math.CO
+,29,natural sciences,mathematics,other,math.CT
+,28,natural sciences,mathematics,other,math.CV
+,27,natural sciences,mathematics,other,math.DG
+,26,natural sciences,mathematics,other,math.DS
+200005.0,25,natural sciences,mathematics,other,math.FA
+200040.0,25,natural sciences,mathematics,other,math.FA
+250005.0,25,natural sciences,mathematics,other,math.FA
+250040.0,25,natural sciences,mathematics,other,math.FA
+,4,natural sciences,mathematics,pure mathematics,math.GM
+,24,natural sciences,mathematics,other,math.GN
+,23,natural sciences,mathematics,other,math.GR
+,22,natural sciences,mathematics,other,math.GT
+,21,natural sciences,mathematics,other,math.HO
+200046.0,61,natural sciences,computer sciences,other,math.IT
+250046.0,61,natural sciences,computer sciences,other,math.IT
+200046.0,80,natural sciences,information sciences,information retrieval,math.IT
+250046.0,80,natural sciences,information sciences,information retrieval,math.IT
+200046.0,83,natural sciences,information sciences,information management,math.IT
+250046.0,83,natural sciences,information sciences,information management,math.IT
+,20,natural sciences,mathematics,other,math.KT
+,19,natural sciences,mathematics,other,math.LO
+,18,natural sciences,mathematics,other,math.MG
+200041.0,131,natural sciences,physical sciences,mathematical physics,math.MP
+250041.0,131,natural sciences,physical sciences,mathematical physics,math.MP
+200022.0,17,natural sciences,mathematics,other,math.NA
+250022.0,17,natural sciences,mathematics,other,math.NA
+200011.0,16,natural sciences,mathematics,other,math.NT
+200012.0,16,natural sciences,mathematics,other,math.NT
+200013.0,16,natural sciences,mathematics,other,math.NT
+250011.0,16,natural sciences,mathematics,other,math.NT
+250012.0,16,natural sciences,mathematics,other,math.NT
+250013.0,16,natural sciences,mathematics,other,math.NT
+200040.0,15,natural sciences,mathematics,other,math.OA
+250040.0,15,natural sciences,mathematics,other,math.OA
+,14,natural sciences,mathematics,other,math.OC
+200019.0,7,natural sciences,mathematics,statistics and probability,math.PR
+200028.0,7,natural sciences,mathematics,statistics and probability,math.PR
+250019.0,7,natural sciences,mathematics,statistics and probability,math.PR
+250028.0,7,natural sciences,mathematics,statistics and probability,math.PR
+200041.0,9,natural sciences,mathematics,other,math.QA
+250041.0,9,natural sciences,mathematics,other,math.QA
+200026.0,10,natural sciences,mathematics,other,math.RA
+250026.0,10,natural sciences,mathematics,other,math.RA
+,11,natural sciences,mathematics,other,math.RT
+,12,natural sciences,mathematics,other,math.SG
+,13,natural sciences,mathematics,other,math.SP
+,6,natural sciences,mathematics,statistics and probability,math.ST
+200041.0,130,natural sciences,physical sciences,mathematical physics,math-ph
+250041.0,130,natural sciences,physical sciences,mathematical physics,math-ph
+,143,natural sciences,physical sciences,other,nlin.AO
+200044.0,144,natural sciences,physical sciences,other,nlin.CD
+250044.0,144,natural sciences,physical sciences,other,nlin.CD
+,145,natural sciences,physical sciences,other,nlin.CG
+200021.0,146,natural sciences,physical sciences,other,nlin.PS
+200024.0,146,natural sciences,physical sciences,other,nlin.PS
+200045.0,146,natural sciences,physical sciences,other,nlin.PS
+250021.0,146,natural sciences,physical sciences,other,nlin.PS
+250024.0,146,natural sciences,physical sciences,other,nlin.PS
+250045.0,146,natural sciences,physical sciences,other,nlin.PS
+200045.0,147,natural sciences,physical sciences,other,nlin.SI
+250045.0,147,natural sciences,physical sciences,other,nlin.SI
+,135,natural sciences,physical sciences,nuclear physics,nucl-ex
+200039.0,134,natural sciences,physical sciences,nuclear physics,nucl-th
+250039.0,134,natural sciences,physical sciences,nuclear physics,nucl-th
+200039.0,154,natural sciences,chemical sciences,inorganic and nuclear chemistry,nucl-th
+250039.0,154,natural sciences,chemical sciences,inorganic and nuclear chemistry,nucl-th
+200039.0,167,engineering and technology,mechanical engineering,nuclear related engineering,nucl-th
+250039.0,167,engineering and technology,mechanical engineering,nuclear related engineering,nucl-th
+,104,natural sciences,physical sciences,accelerator physics,physics.acc-ph
+,87,natural sciences,earth sciences,atmospheric science,physics.ao-ph
+,151,natural sciences,physical sciences,other,physics.app-ph
+,156,engineering and technology,"electrical, electronic and information engineering",electrical and electronic engineering,physics.app-ph
+,159,engineering and technology,"electrical, electronic and information engineering","robotics, automation and control systems",physics.app-ph
+,164,engineering and technology,mechanical engineering,applied mechanics,physics.app-ph
+,168,engineering and technology,mechanical engineering,nuclear related engineering,physics.app-ph
+,169,engineering and technology,mechanical engineering,thermodynamics,physics.app-ph
+,170,engineering and technology,materials engineering,ceramics,physics.app-ph
+,171,engineering and technology,materials engineering,coating and films,physics.app-ph
+,172,engineering and technology,materials engineering,composites,physics.app-ph
+,173,engineering and technology,materials engineering,paper and wood ,physics.app-ph
+,174,engineering and technology,materials engineering,textiles,physics.app-ph
+,175,engineering and technology,materials engineering,other,physics.app-ph
+,176,engineering and technology,nano-technology,nano-materials,physics.app-ph
+,177,engineering and technology,nano-technology,nano-processes,physics.app-ph
+,178,engineering and technology,nano-technology,other,physics.app-ph
+,113,natural sciences,physical sciences,atomic,physics.atm-clus
+,133,natural sciences,physical sciences,molecular physics,physics.atm-clus
+,112,natural sciences,physical sciences,atomic,physics.atom-ph
+,94,natural sciences,biology science,biophysics,physics.bio-ph
+200021.0,114,natural sciences,physical sciences,chemical physics,physics.chem-ph
+250021.0,114,natural sciences,physical sciences,chemical physics,physics.chem-ph
+,138,natural sciences,physical sciences,physics,physics.class-ph
+200033.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+200035.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+200037.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+200038.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+250033.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+250035.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+250037.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+250038.0,115,natural sciences,physical sciences,computational physics,physics.comp-ph
+,149,natural sciences,physical sciences,other,physics.data-an
+,150,natural sciences,physical sciences,other,physics.ed-ph
+,125,natural sciences,physical sciences,fluid mechanics,physics.flu-dyn
+200003.0,137,natural sciences,physical sciences,physics,physics.gen-ph
+200042.0,137,natural sciences,physical sciences,physics,physics.gen-ph
+250003.0,137,natural sciences,physical sciences,physics,physics.gen-ph
+250042.0,137,natural sciences,physical sciences,physics,physics.gen-ph
+,88,natural sciences,earth sciences,geophysics,physics.geo-ph
+,148,natural sciences,physical sciences,other,physics.hist-ph
+,157,engineering and technology,"electrical, electronic and information engineering",electrical and electronic engineering,physics.ins-det
+,132,natural sciences,physical sciences,medical physics,physics.med-ph
+200033.0,136,natural sciences,physical sciences,optics,physics.optics
+200035.0,136,natural sciences,physical sciences,optics,physics.optics
+200037.0,136,natural sciences,physical sciences,optics,physics.optics
+200038.0,136,natural sciences,physical sciences,optics,physics.optics
+250033.0,136,natural sciences,physical sciences,optics,physics.optics
+250035.0,136,natural sciences,physical sciences,optics,physics.optics
+250037.0,136,natural sciences,physical sciences,optics,physics.optics
+250038.0,136,natural sciences,physical sciences,optics,physics.optics
+200044.0,139,natural sciences,physical sciences,plasma physics,physics.plasm-ph
+250044.0,139,natural sciences,physical sciences,plasma physics,physics.plasm-ph
+,153,natural sciences,physical sciences,other,physics.pop-ph
+,152,natural sciences,physical sciences,other,physics.soc-ph
+200044.0,140,natural sciences,physical sciences,space science,physics.space-ph
+250044.0,140,natural sciences,physical sciences,space science,physics.space-ph
+,91,natural sciences,biology science,biochemistry and molecular biology,q-bio.BM
+200034.0,95,natural sciences,biology science,cell biology,q-bio.CB
+250034.0,95,natural sciences,biology science,cell biology,q-bio.CB
+,93,natural sciences,biology science,bioinformatics,q-bio.GN
+,98,natural sciences,biology science,genetics and heredity,q-bio.GN
+200021.0,90,natural sciences,biology science,biochemistry and molecular biology,q-bio.MN
+200036.0,90,natural sciences,biology science,biochemistry and molecular biology,q-bio.MN
+250021.0,90,natural sciences,biology science,biochemistry and molecular biology,q-bio.MN
+250036.0,90,natural sciences,biology science,biochemistry and molecular biology,q-bio.MN
+,89,natural sciences,biology science,behavioural biology,q-bio.NC
+,96,natural sciences,biology science,computational biology,q-bio.OT
+,103,natural sciences,biology science,other,q-bio.OT
+200034.0,92,natural sciences,biology science,biodiversity conservation,q-bio.PE
+250034.0,92,natural sciences,biology science,biodiversity conservation,q-bio.PE
+200034.0,97,natural sciences,biology science,evolutionary biology,q-bio.PE
+250034.0,97,natural sciences,biology science,evolutionary biology,q-bio.PE
+200034.0,99,natural sciences,biology science,genetics and heredity,q-bio.PE
+250034.0,99,natural sciences,biology science,genetics and heredity,q-bio.PE
+200036.0,100,natural sciences,biology science,mathematical biology,q-bio.QM
+250036.0,100,natural sciences,biology science,mathematical biology,q-bio.QM
+,101,natural sciences,biology science,structural biology,q-bio.SC
+,102,natural sciences,biology science,other,q-bio.TO
+,188,social sciences,"economics, finance and business",finance,q-fin.CP
+,186,social sciences,"economics, finance and business",economics and econometrics ,q-fin.EC
+,187,social sciences,"economics, finance and business",finance,q-fin.GN
+,189,social sciences,"economics, finance and business",finance,q-fin.MF
+,179,social sciences,"economics, finance and business",business and management ,q-fin.PM
+,180,social sciences,"economics, finance and business",business and management ,q-fin.PR
+,181,social sciences,"economics, finance and business",business and management ,q-fin.RM
+,182,social sciences,"economics, finance and business",economics and econometrics ,q-fin.ST
+,190,social sciences,"economics, finance and business",industrial relations ,q-fin.TR
+200034.0,142,natural sciences,physical sciences,quantum physics,quant-ph
+200042.0,142,natural sciences,physical sciences,quantum physics,quant-ph
+200046.0,142,natural sciences,physical sciences,quantum physics,quant-ph
+250034.0,142,natural sciences,physical sciences,quantum physics,quant-ph
+250042.0,142,natural sciences,physical sciences,quantum physics,quant-ph
+250046.0,142,natural sciences,physical sciences,quantum physics,quant-ph
+,2,natural sciences,mathematics,applied mathematics,stat.AP
+,3,natural sciences,mathematics,applied mathematics,stat.CO
+,5,natural sciences,mathematics,pure mathematics,stat.CO
+,37,natural sciences,computer sciences,algorithms,stat.CO
+,1,natural sciences,mathematics,applied mathematics,stat.ME
+,42,natural sciences,computer sciences,artificial Intelligence,stat.ML
+,36,natural sciences,mathematics,other,stat.OT
+,8,natural sciences,mathematics,statistics and probability,stat.TH
