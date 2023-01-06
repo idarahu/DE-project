@@ -467,6 +467,21 @@ def get_previous_publication_ID():
             f2.write(str(new_ID))
     return int(old_ID)
 
+def find_venue(venue_data_raw):
+    import pandas as pd
+    import re
+
+    venues_lookup = pd.read_table(f'{DATA_FOLDER}/venues_lookup.tsv')
+    venue_data_check = re.sub(r'\W', '', venue_data_raw).lower()
+    venue_abbr = None
+    venue_name = None
+    found_venue = venues_lookup.loc[(venues_lookup['abbrev_check'] == venue_data_check) | (venues_lookup['full_check'] == venue_data_check)]
+    if len(found_venue) > 0:
+        venue_abbr = found_venue.iloc[0]['abbrev.dots']
+        venue_name = found_venue.iloc[0]['full']
+    
+    return venue_abbr, venue_name 
+
 def parse_first_name(first_name_raw):
     import re
     if '-' in first_name_raw:
@@ -492,7 +507,6 @@ def parse_first_name(first_name_raw):
 
 def find_institution_information(institution_name_raw):
     import pandas as pd
-    import numpy as np
     import re
 
     universities_lookup = pd.read_table(f'{DATA_FOLDER}/universities_lookup.tsv')
@@ -635,9 +649,11 @@ def transform_and_enrich_the_data():
 
         if metadata_df.iloc[i]['journal_ref'] != None:
             try:
-                venue_abbr = re.split(r'(^[^\d]+)', metadata_df.iloc[i]['journal_ref'])[1:][0].replace(',', '').rstrip()
+                venue_data_raw = re.split(r'(^[^\d]+)', metadata_df.iloc[i]['journal_ref'])[1:][0].replace(',', '').rstrip()
             except:
-                venue_abbr = None
+                venue_data_raw = None
+        if venue_data_raw != None:
+            venue_abbr, venue_name = find_venue(venue_data_raw)
 
         authors_temp_df = pd.DataFrame(columns=['publication_ID', 'last_name', 'first_name', 'first_name_abbr',
                                                 'extra', 'position', 'h_index_real', 'updated_at'])
@@ -707,8 +723,6 @@ def transform_and_enrich_the_data():
                 venue_abbr_new = crossref_results['short-container-title'][0].replace(',', '').rstrip()
             except:
                 venue_abbr_new = None
-            if venue_abbr_new != None:
-                venue_abbr = venue_abbr_new
             try:
                 issn_numbers = crossref_results['issn-type']
                 
@@ -728,8 +742,7 @@ def transform_and_enrich_the_data():
             
             opencitingpy_meta = client.get_metadata(article_DOI)
             authors_openc = opencitingpy_meta[0].author
-            if venue_name == None:
-                venue_name = opencitingpy_meta[0].source_title
+            venue_name_new = opencitingpy_meta[0].source_title
             if volume == -1:
                 try:
                     volume = int(opencitingpy_meta[0].volume)
@@ -795,9 +808,17 @@ def transform_and_enrich_the_data():
                 else:
                     affiliations_temp_df.loc[len(affiliations_temp_df.index)] = [int(publication_ID), institution_name, institution_place,
                                                                                  last_name, first_name_abbr]       
+        
+        if venue_abbr == None and venue_abbr_new != None:
+            venue_abbr_try, venue_name_try = find_venue(venue_abbr_new)
+            if venue_abbr_try == None:
+                venue_abbr = venue_abbr_new
+                venue_name = venue_name_new
+            else:
+                venue_abbr = venue_abbr_try
+                venue_name = venue_name_try
 
         if venue_abbr != None:
-            #print(venue_abbr)
             venue_control_index = venues_df.loc[(venues_df['abbreviation'].str.lower() == venue_abbr.lower())].index
             if len(venue_control_index) > 0:
                 venue_index = venue_control_index[0]
@@ -1110,3 +1131,173 @@ transform_the_data >> truncate_affiliations_temp_table >> prepare_affiliations_t
 [load_publications_data, authors_temp2authors] >> prepare_connect_author2pub_sql >>  connect_author2pub >> step4
 [load_publications_data, affiliations_temp2affiliations] >> prepare_connect_aff2pub_sql >>  connect_aff2pub >> step4
 [authors_temp2authors, affiliations_temp2affiliations] >> prepare_connect_author2aff_sql >> connect_author2aff >> step4
+
+def create_authors_view_sql(output_folder):
+    with open(f'{output_folder}/authors_view.sql', 'w') as f:
+        f.write(
+            'CREATE or REPLACE VIEW authors_view AS\n'
+            'SELECT DISTINCT authors.author_id, last_name, first_name, first_name_abbr,\n'
+            "first_name_abbr||' '||last_name as full_name,\n"
+            'position, h_index_real, COALESCE(h_index_calculated, -1) AS h_index_calculated\n'
+            'FROM\n'
+            '(SELECT r.author_id, MAX(ranking) AS h_index_calculated\n'
+            'FROM\n'
+            '(SELECT a.author_ID, p.number_of_citations, ROW_NUMBER() OVER (PARTITION BY a.author_ID ORDER BY p.number_of_citations DESC) AS ranking\n'
+            'FROM\n'
+            'author2publication ap JOIN authors a ON a.author_ID = ap.author_id JOIN publications p ON p.publication_id = ap.publication_id) AS r\n'
+            'WHERE r.number_of_citations >= r.ranking\n'
+            'GROUP BY r.author_id) AS h RIGHT JOIN authors ON h.author_id = authors.author_id;\n'
+        )
+
+prepare_authors_view_sql = PythonOperator(
+    task_id='prepare_authors_view_sql',
+    dag=articles2DB_dag,
+    python_callable=create_authors_view_sql,
+    op_kwargs={
+        'output_folder': DATA_FOLDER
+    }
+)
+
+create_authors_view = PostgresOperator(
+    task_id='create_authors_view',
+    dag=articles2DB_dag,
+    postgres_conn_id='airflow_pg',
+    sql='authors_view.sql',
+    trigger_rule='none_failed',
+    autocommit=True,
+)        
+
+def create_venues_view_sql(output_folder):
+    with open(f'{output_folder}/venues_view.sql', 'w') as f:
+        f.write(
+            'CREATE or REPLACE VIEW venues_view AS\n'
+            'SELECT DISTINCT venues.venue_id, full_name, abbreviation,\n'
+            'print_issn, electronic_issn,\n'
+            'COALESCE(h_index_calculated, -1) AS h_index_calculated\n'
+            'FROM\n'
+            '(SELECT venue_id, MAX(ranking) AS h_index_calculated\n'
+            'FROM\n'
+            '(SELECT p.venue_ID, p.number_of_citations, ROW_NUMBER() OVER (PARTITION BY p.venue_ID ORDER BY p.number_of_citations DESC) AS ranking\n'
+            'FROM publications p) AS r\n'
+            'WHERE r.number_of_citations >= r.ranking\n'
+            'GROUP BY r.venue_id) AS h RIGHT JOIN venues ON h.venue_id = venues.venue_id;\n'
+        )
+
+prepare_venues_view_sql = PythonOperator(
+    task_id='prepare_venues_view_sql',
+    dag=articles2DB_dag,
+    python_callable=create_venues_view_sql,
+    op_kwargs={
+        'output_folder': DATA_FOLDER
+    }
+)
+
+create_venues_view = PostgresOperator(
+    task_id='create_venues_view',
+    dag=articles2DB_dag,
+    postgres_conn_id='airflow_pg',
+    sql='venues_view.sql',
+    trigger_rule='none_failed',
+    autocommit=True,
+)
+
+step5 = EmptyOperator(task_id='step5') 
+step4 >> prepare_authors_view_sql >> create_authors_view >> step5
+step4 >> prepare_venues_view_sql >> create_venues_view >> step5
+
+def copy_data_from_DB(output_folder, SQL_statement, data_type):
+    import pandas as pd
+    conn = PostgresHook(postgres_conn_id='airflow_pg').get_conn()
+    df = pd.read_sql(SQL_statement, conn)
+    if data_type == 'publication2arxiv':
+        file_name = 'publication2domain_graph_' + datetime.now().strftime("%Y%m%d%H%M%S") + '.csv'
+        arxiv_categories = pd.read_csv(f'{DATA_FOLDER}/arxiv_categories.csv')
+        domains_lookup = pd.read_csv(f'{DATA_FOLDER}/lookup_table_domains.csv')
+        connected_domains_data = pd.merge(left=arxiv_categories, how='outer', left_on='arxiv_category', right=domains_lookup, right_on='arxiv_category')
+        final_df = pd.merge(left=connected_domains_data, how='outer', left_on='arxiv_category_ID', right=df, right_on='arxiv_category_id')
+        final_df_print = final_df[['publication_id', 'domain_id', 'major_field', 'sub_category', 'exact_category', 'arxiv_category']]
+        final_df_print.to_csv(f'{output_folder}/{file_name}', index=False)
+    else:
+        file_name = data_type + '_graph_' + datetime.now().strftime("%Y%m%d%H%M%S") + '.csv'    
+        df.to_csv(f'{output_folder}/{file_name}', index=False)
+
+copy_affiliations = PythonOperator(
+    task_id='copy_affiliations',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM affiliations',
+        'data_type': 'affiliations'
+    }
+)
+
+copy_authors = PythonOperator(
+    task_id='copy_authors',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM authors_view',
+        'data_type': 'authors'
+    }
+)
+
+copy_affiliation2publication = PythonOperator(
+    task_id='copy_affiliation2publication',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM affiliation2publication',
+        'data_type': 'affiliation2publication'
+    }
+)
+
+copy_author2affiliation = PythonOperator(
+    task_id='copy_author2affiliation',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM author2affiliation',
+        'data_type': 'author2affiliation'
+    }
+)
+
+copy_author2publication = PythonOperator(
+    task_id='copy_author2publication',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM author2publication',
+        'data_type': 'author2publication'
+    }
+)
+
+copy_publications = PythonOperator(
+    task_id='copy_publications',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM publications',
+        'data_type': 'publications'
+    }
+)
+
+copy_publication2arxiv = PythonOperator(
+    task_id='copy_publication2arxiv',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM publication2arxiv',
+        'data_type': 'publication2arxiv'
+    }
+)
+
+step6 = EmptyOperator(task_id='step6') 
+step5 >> [copy_affiliations, copy_authors, copy_affiliation2publication, copy_author2affiliation, 
+          copy_author2publication, copy_publications, copy_publication2arxiv] >> step6
