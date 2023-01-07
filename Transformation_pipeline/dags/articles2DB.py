@@ -781,27 +781,27 @@ def transform_and_enrich_the_data():
                 author_position = None
 
                 name_splitted = author.split(', ')
-                last_name_control = name_splitted[0]
-                first_name_control, first_name_abbr_control = parse_first_name(name_splitted[1])
-                author_control_index = authors_temp_df.loc[(authors_temp_df['last_name'].str.lower() == last_name_control.lower()) & (authors_temp_df['first_name_abbr'].str.lower() == first_name_abbr_control.lower())].index
-                if len(author_control_index) > 0:
-                    author_index = author_control_index[0]
-                    if authors_temp_df.iloc[author_index]['first_name'] == None:
-                        authors_temp_df.loc[author_index, 'first_name'] = first_name
-                    if authors_temp_df.iloc[author_index]['h_index_real'] == -1:
-                        authors_temp_df.loc[author_index, 'h_index_real'] = h_index_real
-                    if authors_temp_df.iloc[author_index]['position'] == None:
-                        authors_temp_df.loc[author_index, 'position'] = author_position
-                else:
-                    if first_name != None:
-                        authors_temp_df.loc[len(authors_temp_df.index)] = [int(publication_ID), last_name_control, first_name, 
-                                                                           first_name_abbr_control, None, author_position, 
-                                                                           int(h_index_real), None]
+                if len(name_splitted) == 2:
+                    last_name_control = name_splitted[0]
+                    first_name_control, first_name_abbr_control = parse_first_name(name_splitted[1])
+                    author_control_index = authors_temp_df.loc[(authors_temp_df['last_name'].str.lower() == last_name_control.lower()) & (authors_temp_df['first_name_abbr'].str.lower() == first_name_abbr_control.lower())].index
+                    if len(author_control_index) > 0:
+                        author_index = author_control_index[0]
+                        if authors_temp_df.iloc[author_index]['first_name'] == None:
+                            authors_temp_df.loc[author_index, 'first_name'] = first_name
+                        if authors_temp_df.iloc[author_index]['h_index_real'] == -1:
+                            authors_temp_df.loc[author_index, 'h_index_real'] = h_index_real
+                        if authors_temp_df.iloc[author_index]['position'] == None:
+                            authors_temp_df.loc[author_index, 'position'] = author_position
                     else:
-                        authors_temp_df.loc[len(authors_temp_df.index)] = [int(publication_ID), last_name_control, first_name_control, 
-                                                                           first_name_abbr_control, None, author_position, 
-                                                                           int(h_index_real), None]
-
+                        if first_name != None:
+                            authors_temp_df.loc[len(authors_temp_df.index)] = [int(publication_ID), last_name_control, first_name, 
+                                                                            first_name_abbr_control, None, author_position, 
+                                                                            int(h_index_real), None]
+                        else:
+                            authors_temp_df.loc[len(authors_temp_df.index)] = [int(publication_ID), last_name_control, first_name_control, 
+                                                                            first_name_abbr_control, None, author_position, 
+                                                                            int(h_index_real), None]
                 try:
                     affiliation_control_index = affiliations_temp_df.loc[(affiliations_temp_df['institution_name'].str.lower() == institution_name.lower())].index
                 except:
