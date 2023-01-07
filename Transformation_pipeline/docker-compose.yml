@@ -56,7 +56,7 @@ x-airflow-common:
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+#    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
   volumes:
@@ -277,5 +277,32 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  citus-db:
+    image: citusdata/citus:11.1.5
+    environment:
+      POSTGRES_USER: citususer
+      POSTGRES_PASSWORD: cituspass
+      PGUSER: citususer
+      PGPASSWORD: cituspass
+    volumes:
+      - citus-data-volume:/data/postgres
+      - ./data/wh-db-init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 25432:5432
+
+  transformation-db:
+    image: postgres:15.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    volumes:
+      - transformation-data-volume:/data/postgres
+    ports:
+      - 15432:5432
+
 volumes:
   postgres-db-volume:
+  citus-data-volume:
+  transformation-data-volume:

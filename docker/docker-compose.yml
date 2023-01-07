@@ -2,37 +2,35 @@ version: "3"
 
 services:
   citus-db:
-    container_name: "${DE_PROJECT_NAME}-citus-db"
+    container_name: "de-citus-db"
     image: citusdata/citus:11.1.5
     environment:
-      POSTGRES_USER: "${CITUS_DB_USER}"
-      POSTGRES_PASSWORD: "${CITUS_DB_PASSWORD}"
-      PGUSER: "${CITUS_DB_USER}"
-      PGPASSWORD: "${CITUS_DB_PASSWORD}"
+      POSTGRES_USER: citususer
+      POSTGRES_PASSWORD: cituspass
+      PGUSER: citususer
+      PGPASSWORD: cituspass
     volumes:
       - citus-data-volume:/data/postgres
       - ./data/wh-db-init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "${CITUS_DB_PORT}:5432"
-    networks:
-      - citus
-    restart: unless-stopped
+      - 25432:5432
   transformation-db:
-    container_name: "${DE_PROJECT_NAME}-database"
+    container_name: "de-database"
     image: postgres:15.1
     environment:
-      POSTGRES_USER: "${TRANSFORMATION_DB_USER}"
-      POSTGRES_PASSWORD: "${TRANSFORMATION_DB_PASSWORD}"
-      PGUSER: "${TRANSFORMATION_DB_USER}"
-      PGPASSWORD: "${TRANSFORMATION_DB_PASSWORD}"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
     volumes:
       - transformation-data-volume:/data/postgres
     ports:
-      - "${TRANSFORMATION_DB_PORT}:5432"
-    restart: unless-stopped
+      - 15432:5432
 
 networks:
   citus:
+    driver: bridge
+  transformation:
     driver: bridge
 
 volumes:
