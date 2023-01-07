@@ -487,10 +487,26 @@ def find_venue(venue_data_raw):
     
     return venue_abbr, venue_name 
 
-def parse_first_name(first_name_raw):
+def check_first_name_raw(first_name_raw_to_check):
+    first_name_raw = first_name_raw_to_check.strip()
+    if first_name_raw.endswith('-'):
+        new_first_name_raw = list(filter(None, re.split('[. ]', first_name_raw))) 
+        real_first_char = new_first_name_raw[-1] 
+        if real_first_char == '-':
+            first_first_name = new_first_name_raw[-2] + real_first_char
+            last_first_name = ' '.join(new_first_name_raw[:-2])
+            first_name_raw = first_first_name + last_first_name
+        else:
+            first_first_name = real_first_char
+            last_first_name = ' '.join(new_first_name_raw[:-1])
+            first_name_raw = first_first_name + last_first_name
+    return first_name_raw
+
+def parse_first_name(first_name_raw_to_parse):
     import re
+    first_name_raw = check_first_name_raw(first_name_raw_to_parse)
     if '-' in first_name_raw:
-        splitted_first = [word[0] for word in first_name_raw.split('-')]
+        splitted_first = [word[0] for word in list(filter(None, first_name_raw.split('-')))]
         control_for_full_name = max([len(word) for word in re.split('[. -]', first_name_raw)])
         if control_for_full_name > 1:
             first_name = first_name_raw
@@ -501,7 +517,7 @@ def parse_first_name(first_name_raw):
         first_name_abbr = None
         first_name = None
     else:
-        splitted_first = [word[0] for word in first_name_raw.split(' ')]
+        splitted_first = [word[0] for word in list(filter(None, first_name_raw.split(' ')))]
         control_for_full_name = max([len(word) for word in re.split('[. -]', first_name_raw)])
         if control_for_full_name > 1:
             first_name = first_name_raw
