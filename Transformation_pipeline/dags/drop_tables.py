@@ -9,7 +9,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
 
 default_args = {
-    'owner': 'de-team',
+    'owner': 'Ihar',
     'depends_on_past': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),

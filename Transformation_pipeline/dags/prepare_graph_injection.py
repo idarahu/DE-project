@@ -553,9 +553,9 @@ output_dir = Path('/tmp/neo4j_import/')
 output_dir.mkdir(exist_ok=True, parents=True)
 
 default_args = {
-    'owner': 'de-team',
+    'owner': 'Ihar',
     'depends_on_past': False,
-    'retries': 1,
+    'retries': 0,
     'retry_delay': timedelta(minutes=5),
 }
 
