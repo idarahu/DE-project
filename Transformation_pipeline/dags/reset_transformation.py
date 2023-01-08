@@ -69,7 +69,11 @@ DROP TABLE IF EXISTS updated_publications CASCADE;
     autocommit=True
 )
 
-create_tables_trigger = TriggerDagRunOperator(task_id='create_tables', trigger_dag_id='create_DB_tables_and_SQL_statements', dag=dag)
+create_tables_trigger = TriggerDagRunOperator(
+    task_id='create_tables',
+    trigger_dag_id='create_DB_tables_and_SQL_statements',
+    dag=dag,
+)
 
 # Flow
 
