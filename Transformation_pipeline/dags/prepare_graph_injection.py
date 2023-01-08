@@ -336,12 +336,15 @@ def process_publication_belongs_to_domain_relationships(
     domains_df = pd.read_csv(domains_path, sep=infer_separator(domains_path))
     # publication_id
     pub_df = pd.read_csv(publications_path, sep=infer_separator(publications_path))[['publication_id']]
+    pub_df = convert_column_to_type(pub_df, 'publication_id', int)
 
     pub_to_domains_df = pub_to_domains_df.merge(arxiv_categories_df, on='arxiv_category_ID')
     pub_to_domains_df = pub_to_domains_df.merge(domains_df, on='arxiv_category')
 
     pub_to_domains_df = pub_to_domains_df.rename(columns={'publication_ID': 'publication_id'})
     pub_to_domains_df = pub_to_domains_df[['publication_id', 'arxiv_category']]
+
+    pub_to_domains_df = convert_column_to_type(pub_to_domains_df, 'publication_id', int)
 
     # Removing publications with IDs that are not in the publications.csv file, i.e., not in the database
     pub_to_domains_df = pub_to_domains_df.merge(pub_df, on='publication_id')
