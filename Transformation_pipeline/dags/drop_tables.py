@@ -36,8 +36,9 @@ DROP TABLE IF EXISTS publications CASCADE;
 DROP TABLE IF EXISTS arxiv_categories CASCADE;
 DROP TABLE IF EXISTS author2affiliation CASCADE;
 DROP TABLE IF EXISTS authors CASCADE;
-DROP TABLE IF EXISTS publication2arxiv CASCADE;
 DROP TABLE IF EXISTS venues CASCADE;
+DROP TABLE IF EXISTS author2publication CASCADE;
+DROP TABLE IF EXISTS updated_publications CASCADE;
 """,
     autocommit=True
 )
