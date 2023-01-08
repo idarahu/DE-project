@@ -27,20 +27,18 @@ drop_tables = PostgresOperator(
     task_id="drop_tables",
     dag=dag,
     postgres_conn_id='airflow_pg',
-    sql="""
-        DROP TABLE IF EXISTS affiliations;
-        DROP TABLE IF EXISTS affiliation2publication;
-        DROP TABLE IF EXISTS publication2arxiv;
-        DROP TABLE IF EXISTS affiliations_temp;
-        DROP TABLE IF EXISTS authors_temp;
-        DROP TABLE IF EXISTS publications;
-        DROP TABLE IF EXISTS arxiv_categories;
-        DROP TABLE IF EXISTS author2affiliation;
-        DROP TABLE IF EXISTS authors;
-        DROP TABLE IF EXISTS publication2arxiv;
-        DROP TABLE IF EXISTS venues;
-        
-        """,
+    sql="""DROP TABLE IF EXISTS affiliations CASCADE;
+DROP TABLE IF EXISTS affiliation2publication CASCADE;
+DROP TABLE IF EXISTS publication2arxiv CASCADE;
+DROP TABLE IF EXISTS affiliations_temp CASCADE;
+DROP TABLE IF EXISTS authors_temp CASCADE;
+DROP TABLE IF EXISTS publications CASCADE;
+DROP TABLE IF EXISTS arxiv_categories CASCADE;
+DROP TABLE IF EXISTS author2affiliation CASCADE;
+DROP TABLE IF EXISTS authors CASCADE;
+DROP TABLE IF EXISTS publication2arxiv CASCADE;
+DROP TABLE IF EXISTS venues CASCADE;
+""",
     autocommit=True
 )
 
