@@ -1,15 +1,10 @@
-import datetime
-import io
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
-from airflow import DAG 
-from airflow.operators.python_operator import PythonOperator
-from airflow.operators.bash_operator import BashOperator 
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.sensors.external_task import ExternalTaskMarker, ExternalTaskSensor
-from airflow.utils.task_group import TaskGroup
-from airflow.operators.empty import EmptyOperator
+from airflow import DAG
 from airflow.hooks.postgres_hook import PostgresHook
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python_operator import PythonOperator
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 DEFAULT_ARGS = {
     'owner': 'Ida',
@@ -22,14 +17,15 @@ SQL_FOLDER = '/tmp/data/sql'
 DATA2DB_FOLDER = '/tmp/data/data2db'
 
 create_DB_tables_and_SQL_statements_dag = DAG(
-    dag_id='create_DB_tables_and_SQL_statements', 
+    dag_id='create_DB_tables_and_SQL_statements',
     default_args=DEFAULT_ARGS,
-    start_date=datetime(2022,10,12,14,0,0),
+    start_date=datetime(2022, 10, 12, 14, 0, 0),
     schedule_interval=None,
-    #schedule_interval=timedelta(minutes=2),
+    # schedule_interval=timedelta(minutes=2),
     catchup=False,
     template_searchpath=[SQL_FOLDER]
 )
+
 
 # Creating venues table
 def create_venues_table(output_folder):
@@ -42,6 +38,7 @@ def create_venues_table(output_folder):
             'print_issn VARCHAR(50),\n'
             'electronic_issn VARCHAR(50));\n'
         )
+
 
 prepare_venues_sql = PythonOperator(
     task_id='prepare_venues_sql',
@@ -60,6 +57,7 @@ create_venues_sql = PostgresOperator(
     trigger_rule='none_failed',
     autocommit=True,
 )
+
 
 # Creating the publications table
 def create_publications_table(output_folder):
@@ -84,6 +82,7 @@ def create_publications_table(output_folder):
             'updated_at TIMESTAMP WITH TIME ZONE);\n'
         )
 
+
 prepare_publications_sql = PythonOperator(
     task_id='prepare_publications_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -102,6 +101,7 @@ create_publications_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 # Creating authors table and also a temporary authors table for bulk inserts to check the duplicates
 def create_authors_table(output_folder):
     with open(f'{output_folder}/authors.sql', 'w') as f:
@@ -116,6 +116,7 @@ def create_authors_table(output_folder):
             'h_index_real INT,\n'
             'updated_at TIMESTAMP WITH TIME ZONE);\n'
         )
+
 
 prepare_authors_sql = PythonOperator(
     task_id='prepare_authors_sql',
@@ -135,6 +136,7 @@ create_authors_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 def create_authors_temp_table(output_folder):
     with open(f'{output_folder}/authors_temp.sql', 'w') as f:
         f.write(
@@ -148,6 +150,7 @@ def create_authors_temp_table(output_folder):
             'h_index_real INT,\n'
             'updated_at TIMESTAMP WITH TIME ZONE);\n'
         )
+
 
 prepare_authors_temp_sql = PythonOperator(
     task_id='prepare_authors_temp_sql',
@@ -167,6 +170,7 @@ create_authors_temp_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 # Creating connection table between authors and publications
 def create_author2publication_table(output_folder):
     with open(f'{output_folder}/author2publication.sql', 'w') as f:
@@ -177,6 +181,7 @@ def create_author2publication_table(output_folder):
             'publication_ID INT NOT NULL,\n'
             'UNIQUE (author_ID, publication_ID));\n'
         )
+
 
 prepare_author2publication_sql = PythonOperator(
     task_id='prepare_author2publication_sql',
@@ -196,6 +201,7 @@ create_author2publication_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 # Creating affiliations table and also a temporary affiliations table for bulk inserts to check the duplicates
 def create_affiliations_table(output_folder):
     with open(f'{output_folder}/affiliations.sql', 'w') as f:
@@ -206,6 +212,7 @@ def create_affiliations_table(output_folder):
             'institution_place VARCHAR(255),\n'
             'UNIQUE (institution_name, institution_place));\n'
         )
+
 
 prepare_affiliations_sql = PythonOperator(
     task_id='prepare_affiliations_sql',
@@ -225,6 +232,7 @@ create_affiliations_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 def create_affiliations_temp_table(output_folder):
     with open(f'{output_folder}/affiliations_temp.sql', 'w') as f:
         f.write(
@@ -235,6 +243,7 @@ def create_affiliations_temp_table(output_folder):
             'author_last_name VARCHAR(100) NOT NULL,\n'
             'author_first_name_abbr VARCHAR(25) NOT NULL);\n'
         )
+
 
 prepare_affiliations_temp_sql = PythonOperator(
     task_id='prepare_affiliations_temp_sql',
@@ -254,6 +263,7 @@ create_affiliations_temp_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 # Creating connection tables between affiliations and publications and authors and affiliations
 def create_affiliation2publication_table(output_folder):
     with open(f'{output_folder}/affiliation2publication.sql', 'w') as f:
@@ -264,6 +274,7 @@ def create_affiliation2publication_table(output_folder):
             'publication_ID INT NOT NULL,\n'
             'UNIQUE (affiliation_ID, publication_ID));\n'
         )
+
 
 prepare_affiliation2publication_sql = PythonOperator(
     task_id='prepare_affiliation2publication_sql',
@@ -283,6 +294,7 @@ create_affiliation2publication_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 def create_author2affiliation_table(output_folder):
     with open(f'{output_folder}/author2affiliation.sql', 'w') as f:
         f.write(
@@ -292,6 +304,7 @@ def create_author2affiliation_table(output_folder):
             'affiliation_ID INT NOT NULL,\n'
             'UNIQUE (author_ID, affiliation_ID));\n'
         )
+
 
 prepare_author2affiliation_sql = PythonOperator(
     task_id='prepare_author2affiliation_sql',
@@ -311,6 +324,7 @@ create_author2affiliation_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 # Creating arXiv categories table and cennection table between publication and arXiv category
 def create_arxiv_categories_table(output_folder):
     with open(f'{output_folder}/arxiv_categories.sql', 'w') as f:
@@ -319,6 +333,7 @@ def create_arxiv_categories_table(output_folder):
             'arxiv_category_ID INT PRIMARY KEY,\n'
             'arxiv_category VARCHAR(50) NOT NULL UNIQUE);\n'
         )
+
 
 prepare_arxiv_categories_sql = PythonOperator(
     task_id='prepare_arxiv_categories_sql',
@@ -338,6 +353,7 @@ create_arxiv_categories_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 def create_publication2arxiv_table(output_folder):
     with open(f'{output_folder}/publication2arxiv.sql', 'w') as f:
         f.write(
@@ -345,6 +361,7 @@ def create_publication2arxiv_table(output_folder):
             'publication_ID INT NOT NULL,\n'
             'arxiv_category_ID INT NOT NULL);\n'
         )
+
 
 prepare_publication2arxiv_sql = PythonOperator(
     task_id='prepare_publication2arxiv_sql',
@@ -364,6 +381,7 @@ create_publication2arxiv_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 def csv_to_db(file_name, DB_table):
     get_postgres_conn = PostgresHook(postgres_conn_id='airflow_pg').get_conn()
     curr = get_postgres_conn.cursor("cursor")
@@ -372,11 +390,12 @@ def csv_to_db(file_name, DB_table):
         curr.copy_from(f, DB_table, sep=',')
         get_postgres_conn.commit()
 
+
 truncate_arxiv_table = PostgresOperator(
-	task_id='truncate_arxiv_table',
+    task_id='truncate_arxiv_table',
     dag=create_DB_tables_and_SQL_statements_dag,
-	postgres_conn_id='airflow_pg',
-	sql="TRUNCATE arxiv_categories"
+    postgres_conn_id='airflow_pg',
+    sql="TRUNCATE arxiv_categories"
 )
 
 load_arxiv_category = PythonOperator(
@@ -392,20 +411,21 @@ load_arxiv_category = PythonOperator(
 truncate_arxiv_table >> load_arxiv_category
 
 step1 = EmptyOperator(task_id='step1')
-step2 = EmptyOperator(task_id='step2') 
+step2 = EmptyOperator(task_id='step2')
 
-step1 >> [prepare_venues_sql, prepare_publications_sql, prepare_authors_sql, prepare_authors_temp_sql, 
-       prepare_author2publication_sql, prepare_affiliations_sql, prepare_affiliations_temp_sql, 
-       prepare_affiliation2publication_sql, prepare_author2affiliation_sql, prepare_arxiv_categories_sql,
-       prepare_publication2arxiv_sql] >> step2
+step1 >> [prepare_venues_sql, prepare_publications_sql, prepare_authors_sql, prepare_authors_temp_sql,
+          prepare_author2publication_sql, prepare_affiliations_sql, prepare_affiliations_temp_sql,
+          prepare_affiliation2publication_sql, prepare_author2affiliation_sql, prepare_arxiv_categories_sql,
+          prepare_publication2arxiv_sql] >> step2
 
-step3 = EmptyOperator(task_id='step3')      
-step2 >> [create_authors_sql, create_authors_temp_sql, 
-       create_author2publication_sql, create_affiliations_sql, create_affiliations_temp_sql, 
-       create_affiliation2publication_sql, create_author2affiliation_sql,
-       create_publication2arxiv_sql] >> step3 
+step3 = EmptyOperator(task_id='step3')
+step2 >> [create_authors_sql, create_authors_temp_sql,
+          create_author2publication_sql, create_affiliations_sql, create_affiliations_temp_sql,
+          create_affiliation2publication_sql, create_author2affiliation_sql,
+          create_publication2arxiv_sql] >> step3
 step2 >> create_venues_sql >> create_publications_sql >> step3
 step2 >> create_arxiv_categories_sql >> truncate_arxiv_table >> load_arxiv_category >> step3
+
 
 # Creating authors_temp2authors.sql to populate authors table with only new authors that appeared in this batch of data
 def create_authors_temp2authors_sql(output_folder):
@@ -421,6 +441,7 @@ def create_authors_temp2authors_sql(output_folder):
             'AND authors.first_name_abbr = authors_temp.first_name_abbr);\n'
         )
 
+
 prepare_authors_temp2authors_sql = PythonOperator(
     task_id='prepare_authors_temp2authors_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -429,6 +450,7 @@ prepare_authors_temp2authors_sql = PythonOperator(
         'output_folder': SQL_FOLDER
     }
 )
+
 
 # Creating affiliations_temp2affiliations.sql to populate affiliations table with only new affiliations that appeared in this batch of data
 def create_affiliations_temp2affiliations_sql(output_folder):
@@ -444,6 +466,7 @@ def create_affiliations_temp2affiliations_sql(output_folder):
             'AND affiliations.institution_place = affiliations_temp.institution_place);\n'
         )
 
+
 prepare_affiliations_temp2affiliations_sql = PythonOperator(
     task_id='prepare_affiliations_temp2affiliations_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -452,6 +475,7 @@ prepare_affiliations_temp2affiliations_sql = PythonOperator(
         'output_folder': SQL_FOLDER
     }
 )
+
 
 # Connecting all the tables that need to be connected in DB
 # Authors with publications
@@ -464,6 +488,7 @@ def connect_author2pub_sql(output_folder):
             'JOIN authors t2 ON t1.last_name = t2.last_name AND t1.first_name_abbr = t2.first_name_abbr;\n'
         )
 
+
 prepare_connect_author2pub_sql = PythonOperator(
     task_id='prepare_connect_author2pub_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -472,6 +497,7 @@ prepare_connect_author2pub_sql = PythonOperator(
         'output_folder': SQL_FOLDER
     }
 )
+
 
 # Affiliations with publications
 def connect_aff2pub_sql(output_folder):
@@ -483,6 +509,7 @@ def connect_aff2pub_sql(output_folder):
             'JOIN affiliations t2 ON t1.institution_name = t2.institution_name AND t1.institution_place = t2.institution_place;\n'
         )
 
+
 prepare_connect_aff2pub_sql = PythonOperator(
     task_id='prepare_connect_aff2pub_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -491,6 +518,7 @@ prepare_connect_aff2pub_sql = PythonOperator(
         'output_folder': SQL_FOLDER
     }
 )
+
 
 # Authors with affiliations
 def connect_author2aff_sql(output_folder):
@@ -508,6 +536,7 @@ def connect_author2aff_sql(output_folder):
             'AND author2affiliation.affiliation_id = t3.affiliation_id);\n'
         )
 
+
 prepare_connect_author2aff_sql = PythonOperator(
     task_id='prepare_connect_author2aff_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -516,6 +545,7 @@ prepare_connect_author2aff_sql = PythonOperator(
         'output_folder': SQL_FOLDER
     }
 )
+
 
 def create_authors_view_sql(output_folder):
     with open(f'{output_folder}/authors_view.sql', 'w') as f:
@@ -534,6 +564,7 @@ def create_authors_view_sql(output_folder):
             'GROUP BY r.author_id) AS h RIGHT JOIN authors ON h.author_id = authors.author_id;\n'
         )
 
+
 prepare_authors_view_sql = PythonOperator(
     task_id='prepare_authors_view_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -542,6 +573,7 @@ prepare_authors_view_sql = PythonOperator(
         'output_folder': SQL_FOLDER
     }
 )
+
 
 def create_venues_view_sql(output_folder):
     with open(f'{output_folder}/venues_view.sql', 'w') as f:
@@ -559,6 +591,7 @@ def create_venues_view_sql(output_folder):
             'GROUP BY r.venue_id) AS h RIGHT JOIN venues ON h.venue_id = venues.venue_id;\n'
         )
 
+
 prepare_venues_view_sql = PythonOperator(
     task_id='prepare_venues_view_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
@@ -568,9 +601,11 @@ prepare_venues_view_sql = PythonOperator(
     }
 )
 
-step4 = EmptyOperator(task_id='step4') 
+step4 = EmptyOperator(task_id='step4')
 step3 >> [prepare_authors_temp2authors_sql, prepare_affiliations_temp2affiliations_sql, prepare_connect_author2pub_sql,
-          prepare_connect_aff2pub_sql, prepare_connect_author2aff_sql, prepare_authors_view_sql, prepare_venues_view_sql] >> step4
+          prepare_connect_aff2pub_sql, prepare_connect_author2aff_sql, prepare_authors_view_sql,
+          prepare_venues_view_sql] >> step4
+
 
 def create_updated_publications_table(output_folder):
     with open(f'{output_folder}/updated_publications.sql', 'w') as f:
@@ -580,6 +615,7 @@ def create_updated_publications_table(output_folder):
             'number_of_citations INT,\n'
             'updated_at TIMESTAMP WITH TIME ZONE);\n'
         )
+
 
 prepare_updated_publications_sql = PythonOperator(
     task_id='prepare_updated_publications_sql',
@@ -599,6 +635,7 @@ create_updated_publications_sql = PostgresOperator(
     autocommit=True,
 )
 
+
 def create_update_no_citations_sql(output_folder):
     with open(f'{output_folder}/update_no_citations.sql', 'w') as f:
         f.write(
@@ -607,6 +644,7 @@ def create_update_no_citations_sql(output_folder):
             'FROM updated_publications\n'
             'WHERE publications.publication_id = updated_publications.publication_id;\n'
         )
+
 
 prepare_update_no_citations_sql = PythonOperator(
     task_id='prepare_update_no_citations_sql',
