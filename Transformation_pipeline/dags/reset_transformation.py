@@ -43,10 +43,10 @@ reset_publication_ID = BashOperator(
 delete_final_data = BashOperator(
     task_id='delete_data',
     dag=dag,
-    bash_command='rm /tmp/data/final_data/affiliation*; '
-                 'rm /tmp/data/final_data/author*; '
-                 'rm /tmp/data/final_data/publication*; '
-                 'rm /tmp/data/final_data/citing_pub*'
+    bash_command='rm -f /tmp/data/final_data/affiliation*; '
+                 'rm -f /tmp/data/final_data/author*; '
+                 'rm -f /tmp/data/final_data/publication*; '
+                 'rm -f /tmp/data/final_data/citing_pub*'
 )
 
 drop_tables = PostgresOperator(

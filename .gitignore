@@ -7,3 +7,4 @@ data
 Transformation_pipeline/data
 Transformation_pipeline/logs
 Transformation_pipeline/neo4j/*
+!Transformation_pipeline/neo4j/plugins

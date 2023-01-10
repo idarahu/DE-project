@@ -56,11 +56,13 @@ x-airflow-common:
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    #    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    # AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # Neo4j
     AIRFLOW_CONN_NEO4J_DEFAULT: neo4j://neo4j:neo4j@neo4j:7687/neo4j
+    NEO4J_HOST_IMPORT_DIR: ${PWD}/neo4j/import
+    NEO4J_HOST_DATA_DIR: ${PWD}/neo4j/data
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
@@ -305,21 +307,29 @@ services:
     ports:
       - 15432:5432
 
-  neo4j:
-    image: neo4j
+  #  neo4j:
+  #    image: neo4j
+  #    ports:
+  #      - "7474:7474"
+  #      - "7687:7687"
+  #    volumes:
+  #      - ./neo4j/data:/data
+  #      - ./neo4j/import:/import
+  #      - ./neo4j/logs:/logs
+  #      - ./neo4j/plugins:/plugins
+  #    environment:
+  #      NEO4J_AUTH: none
+  #      NEO4J_apoc_export_file_enabled: true
+  #      NEO4J_apoc_import_file_enabled: true
+  #    restart: "no"
+
+  docker-proxy:
+    image: bobrik/socat
+    command: "TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock"
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "2376:2375"
     volumes:
-      - ./neo4j/data:/data
-      - ./neo4j/import:/import
-      - ./neo4j/logs:/logs
-      - ./neo4j/plugins:/plugins
-      - ./neo4j/products:/products
-      - ./neo4j/conf:/conf
-    environment:
-      NEO4J_AUTH: none
-    restart: "no"
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres-db-volume:
