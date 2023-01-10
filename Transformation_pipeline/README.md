@@ -34,7 +34,7 @@ python split_dataset.py --arxiv_path <path-to-arxiv-dataset-json> --output_dir .
 
 After the transformation step, 
 
-1. Run the `transform_for_batch_injection_batch` DAG. This will create import CSVs at `./neo4j/import`.
+1. Run the `transform_for_batch_injection` DAG. This will create import CSVs at `./neo4j/import`.
 2. Run the `load_graph_db` DAG. This will start a new container with ports 7474 and 7687 exposed. The container might take some seconds to start.
 3. Go to http://localhost:7474/browser/ and run the following Cypher query to check that the graph was loaded correctly:
    ```cypher
