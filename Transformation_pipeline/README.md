@@ -30,7 +30,7 @@ python split_dataset.py --arxiv_path <path-to-arxiv-dataset-json> --output_dir .
    2. Graph Data Science Library
 3. [comes with docker-compose] Note that `docker-proxy` container exposes the host's `/var/run/docker.sock` to containers via TCP (don't know where `docker.sock` is located on Windows machines, this [thread](https://stackoverflow.com/questions/36765138/bind-to-docker-socket-on-windows) might help)
 
-#### Run
+#### Run (in Airflow's UI)
 
 After the transformation step, 
 
