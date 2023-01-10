@@ -6,13 +6,11 @@ FROM warehouse.publications pub
 	JOIN warehouse.publication_time pub_time
 	JOIN warehouse.authors aut
 	JOIN warehouse.publication_author pub_auth
-ON pub.id = pub_time.publication_id
+ON pub.publication_time = pub_time.id
 	AND pub_auth.publication_id = pub.id
 	AND pub_auth.author_id = aut.id
-WHERE 
-	DATE_PART('year', pub_time.date::date) = 'year_val'
-	-- the following is possibly faster
-	--pub_time.date >= '2020-01-01'::date AND pub_time.date < '2021-01-01'::date
+WHERE
+    pub_time.year = '2023'
 GROUP BY aut.id
 ORDER BY num_of_publications DESC;
 
@@ -60,12 +58,12 @@ FROM warehouse.authors aut
 	JOIN warehouse.publication_venues pub_venues
 	ON pub_auth.publication_id = pub.id
 	AND pub_auth.author_id = aut.id
-	AND pub.id = pub_time.publication_id
+	AND pub.publication_time = pub_time.id
 	AND pub_domain.publication_id = pub.id
 	AND pub_domain.domain_id = scientific_domain.id
 	AND pub_venues.publication_id = pub.id
 WHERE
-	DATE_PART('year', pub_time.date::date) = 'year_val'
+	pub_time.year = '2023'
 	AND scientific_domain.id = 'scientific_domain_id'
 	AND pub_venues.id = 'pub_venues_id'
 GROUP BY aut.id
@@ -95,9 +93,9 @@ FROM
 	JOIN warehouse.publication_time pub_time
 	ON pub_auth.publication_id = pub.pub_id
 	AND pub_auth.author_id = aut.id
-	AND pub.pub_id = pub_time.publication_id
+	AND pub.publication_time = pub_time.id
 WHERE 
-	DATE_PART('year', pub_time.date::date) = 'year_val'
+	pub_time.year = '2023'
 GROUP BY aut.id
 ORDER BY number_of_citations DESC;
 
@@ -173,12 +171,12 @@ FROM
 	JOIN warehouse.publication_venues pub_venues
 	ON pub_auth.publication_id = pub.pub_id
 	AND pub_auth.author_id = aut.id
-	AND pub.pub_id = pub_time.publication_id
+	AND pub.publication_time = pub_time.id
 	AND pub_domain.publication_id = pub.pub_id
 	AND pub_domain.domain_id = scientific_domain.id
 	AND pub_venues.publication_id = pub.pub_id
 WHERE
-	DATE_PART('year', pub_time.date::date) = 'year_val'
+	pub_time.year = '2023'
 	AND scientific_domain.id = 'scientific_domain_id'
 	AND pub_venues.id = 'pub_venues_id'
 GROUP BY aut.id

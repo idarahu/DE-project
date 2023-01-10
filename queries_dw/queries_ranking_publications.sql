@@ -15,9 +15,9 @@ FROM
 		ORDER BY pu.snapshot_valid_to DESC
 	) pub
 	JOIN warehouse.publication_time pub_time
-	AND pub.pub_id = pub_time.publication_id
+	AND pub.publication_time = pub_time.id
 WHERE 
-	DATE_PART('year', pub_time.date::date) = 'year_val'
+	pub_time.year = '2023'
 GROUP BY pub.doi
 ORDER BY number_of_citations DESC;
 
@@ -41,11 +41,11 @@ FROM
 	JOIN warehouse.publication_domain pub_domain
 	JOIN warehouse.scientific_domain scientific_domain
 	JOIN warehouse.publication_venues pub_venues
-	AND pub.pub_id = pub_time.publication_id
+	AND pub.publication_time = pub_time.id
 	AND pub_domain.domain_id = scientific_domain.id
 	AND pub_venues.publication_id = pub.id
 WHERE 
-	DATE_PART('year', pub_time.date::date) = 'year_val'
+	pub_time.year = '2023'
 	AND scientific_domain.id = 'scientific_domain_id'
 	AND pub_venues.id = 'pub_venues_id'
 GROUP BY pub.doi
