@@ -291,7 +291,7 @@ services:
       PGPASSWORD: cituspass
     volumes:
       - citus-data-volume:/data/postgres
-      - ./data/wh-db-init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./data/citus_setup/wh-db-init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 25432:5432
 
