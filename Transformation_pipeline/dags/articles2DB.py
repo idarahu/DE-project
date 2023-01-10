@@ -714,6 +714,7 @@ connector1 >> [create_authors_view, create_venues_view] >> connector2
 
 def copy_data_from_DB(output_folder, SQL_statement, data_type):
     import pandas as pd
+    import numpy as np
     conn = PostgresHook(postgres_conn_id='airflow_pg').get_conn()
     df = pd.read_sql(SQL_statement, conn)
     if data_type == 'publication2arxiv':
@@ -721,8 +722,9 @@ def copy_data_from_DB(output_folder, SQL_statement, data_type):
         arxiv_categories = pd.read_csv(f'{DATA2DB_FOLDER}/arxiv_categories.csv')
         domains_lookup = pd.read_csv(f'{LOOKUP_DATA_FOLDER}/lookup_table_domains.csv')
         connected_domains_data = pd.merge(left=arxiv_categories, how='outer', left_on='arxiv_category', right=domains_lookup, right_on='arxiv_category')
-        final_df = pd.merge(left=connected_domains_data, how='outer', left_on='arxiv_category_ID', right=df, right_on='arxiv_category_id')
+        final_df = pd.merge(left=connected_domains_data, how='right', left_on='arxiv_category_ID', right=df, right_on='arxiv_category_id')
         final_df_print = final_df[['publication_id', 'domain_id', 'major_field', 'sub_category', 'exact_category', 'arxiv_category']]
+        final_df_print[['publication_id', 'domain_id']] = final_df_print[['publication_id', 'domain_id']].applymap(np.int64)
         final_df_print.to_csv(f'{output_folder}/{file_name}', index=False)
     else:
         file_name = data_type + '_' + datetime.now().strftime("%Y%m%d%H%M%S") + '.csv'    
