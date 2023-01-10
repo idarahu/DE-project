@@ -2,7 +2,13 @@
 
 ## Extract
 
-...
+The arXiv dataset is available at https://www.kaggle.com/datasets/Cornell-University/arxiv. 
+
+We use splits to simulate periodic updates:
+
+```zsh
+python split_dataset.py --arxiv_path <path-to-arxiv-dataset-json> --output_dir ./inputs
+```
 
 ## Transform
 
