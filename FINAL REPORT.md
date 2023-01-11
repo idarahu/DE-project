@@ -24,9 +24,9 @@ In this project, a data pipeline to analyse data about scientific publications w
 
 **Figure 1** Design of the overall data pipeline
 
-**Part 1**
+## Part 1
 
-**Dataset and pre-pipeline processing**
+### Dataset and pre-pipeline processing
 
 ArXiv is the open-access archive for scholarly articles from a wide range of different scientific fields. The dataset given for the project contains metadata of the original arXiv data, _i.e._ metadata of papers in the arXiv. The metadata is given in JSON format and contains the following fields:
 
@@ -53,7 +53,7 @@ The original dataset contains information about more than 2 million publications
 
 ![image](https://user-images.githubusercontent.com/102286655/211939541-ac36d15b-e349-49cb-8c43-0619a2ca78c0.png)
 
-**Transformation pipeline (1A)**
+### Transformation pipeline (1A)
 
 As mentioned before, the first part of the overall pipeline can be divided into two subparts: transformation pipeline (1A) and updating pipeline (1B). This chapter covers the concepts of the transformation pipeline. The details about the updating pipeline are given in the next chapter.
 
@@ -114,7 +114,7 @@ After that, the data is loaded into the up-to-date DB. In the cases where it is 
 
 In the last step of the transformation pipeline, the data in the database is copied and stored in CSV files. These files are used for loading the data into DWH and graph DB. Appropriate views are generated beforehand to get all the required information (like calculated h-indices of the venues and authors). Also, the field of study is normalised. For that, each arXiv category is mapped against the Scientific Disciplines classification table4. (This table is stored in suitable form in lookup\_table\_comains.csv.) For example, if the value in the arXiv category field is "cs.AI" after the mapping, besides this tag, there are three new tags: major\_field: "natural sciences", sub\_category: "computer sciences" and exact\_category: "artificial intelligence".
 
-**Updating pipeline (1B)**
+### Updating pipeline (1B)
 
 To fulfil the prerequisites of using the up-to-date DB approach, the data about publications in the database should be updated periodically. For that reason, the Airflow DAG update\_articles\_in\_DB was built (see figure 6).
 
@@ -126,7 +126,7 @@ During the run of this DAG, the publications with DOIs, that are stored in DB ar
 
 Similarly to the transformation pipeline, updating the pipeline ends with copying the data. However, at this time, only publications', authors' and venues' data is copied and saved as CSV files ready for the following pipeline parts.
 
-**Part 2**
+## Part 2
 
 After thoroughly investigating the data to understand what parts of it are usable for the project, it is possible to phrase the BI queries that would be the basis for developing a data warehouse. In the subsequent sections, the BI queries, the schema of DWH and the technologies that will be used are discussed.
 
@@ -240,7 +240,7 @@ According to the ClickHouse benchmark, the main SQL competitor is MariaDB with C
 
 Postgres with Citus extension is used on Azure for a petabyte-scale analytical solution17.
 
-**Part 3**
+## Part 3
 
 The labelled property graph model is used instead of RDF to design the graph database. It makes the graph look more concise and allows to specify properties next to nodes and edges.
 
@@ -345,11 +345,11 @@ TECHNOLOGIES
 
 The Neo4j graph database engines with Cypher23 as the query language will be used to implement the graph model. Neo4j is an ACID-compliant transactional database widely used for graph data with native graph storage and processing. It supports the property graph model and has been widely used in the industry while being developed since 2007 by Neo4j, Inc24.
 
-**Guidelines for running the overall pipeline**
+## Guidelines for running the overall pipeline
 
 ...
 
-**References**
+## References
 
 1. Bartell, A. REST API. _Crossref_ https://www.crossref.org/documentation/retrieve-metadata/rest-api/.
 
