@@ -100,23 +100,11 @@ parse\_first\_name(first\_name\_raw\_to\_parse)) to get the last and first names
 1. The field categories is used to map each publication with arXiv categories. (At the end, arXiv categories are stored in up-to-date DB in the table "ARXIV\_CATEGORIES").
 2. The field doi is used for getting additional information (its type, number of references, citations/number of citations, page numbers, and different attributes relevant to journal articles, such as an issue number) about the publication. This method for enrichment is considered only when the DOI of publication is in the file DOIs\_for\_enrichment.csv, as mentioned before. Two APIs are used to retrieve a piece of extra information: Crossref REST API1 and OpenCitations API2 (see the following examples).
 
-| _# Example of retrieving the publication type based on DOI by using the Crossref REST API_
-crossref\_results=crossref\_commons.retrieval.get\_publication\_as\_json('10.1103/PhysRevA.75.043613')print(crossref\_results['type'])
-_# Output:_journal-article
-_# Example of retrieving the number of references based on DOI by using the Crossref REST API_
-crossref\_results = crossref\_commons.retrieval.get\_publication\_as\_json('10.1103/PhysReVA.75.043613')print(crossref\_results['reference-count'])
-_# Output:_23
-_# Example of retrieving the number of citations based on DOI by using the OpenCitations API_
-client = opencitingpy.client.Client()open\_citation\_result = client.get\_citation\_count('10.1103/PhysReVA.75.043613')print(open\_citation\_result)
-_# Output:_13 |
-| --- |
+![image](https://user-images.githubusercontent.com/102286655/211939840-8599f760-63d2-4300-b928-9dc0d7029ea3.png)
 
 _By using OpenCitations API, also the authors of the publication are received. Names of these authors are used to get more information about them (for example, their real-life h-index or full names). For that purpose, a scholarly __3__ , a module that allows retrieving author and publication information from Google Scholar (and function_ _data\_by\_author(author)__), is used._
 
-| _# Example of retrieving the author's real-life h-index by using a scholarly module_
-search\_query = scholarly.search\_author('S. Wichmann')first\_author\_result = next(search\_query)author = scholarly.fill(first\_author\_result)print(author['hindex'])
-_# Output:_39 |
-| --- |
+![image](https://user-images.githubusercontent.com/102286655/211939886-def23ea4-0946-4f97-8752-be4fb87384a1.png)
 
 _However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function_ _transform\_and\_enrich\_the\_data()_ _should be commented out before running the pipeline if one wants to use scholarly._
 
