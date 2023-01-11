@@ -51,39 +51,7 @@ The original dataset contains information about more than 2 million publications
 
 **Table 1** Categories (major field together with one sub-category forms one category) that are used for selecting the publications that are going to be enriched
 
-| **Major field** | **Sub-category** |
-| --- | --- |
-| natural science |
-- mathematics
- |
-| --- | --- |
-|
-- computer sciences
- |
-|
-- information sciences
- |
-|
-- earth sciences
- |
-|
-- biology science
- |
-|
-- physical sciences
- |
-|
-- chemical sciences
- |
-| engineering and technology |
-- electrical, electronic and information engineering
- |
-|
-- mechanical engineering
- |
-| social sciences |
-- economics, finance and business
- |
+![image](https://user-images.githubusercontent.com/102286655/211939541-ac36d15b-e349-49cb-8c43-0619a2ca78c0.png)
 
 **Transformation pipeline (1A)**
 
@@ -113,21 +81,7 @@ To run this DAG, the "data" folder should contain six subfolders: "inputs", "set
 
 **Table 2** Data folders required for running the first part of the pipeline
 
-| **Subfolder** | **Explanation** |
- |
-| --- | --- | --- |
-| inputs | The raw JSON datasets generated during pre-pipeline processing by splitting the original arXiv dataset are stored in this folder. |
-| --- | --- |
-| setups | It contains three files: "DOIs\_for\_enrichment.csv", "publication\_ID.txt", and "split\_no.txt". "DOIs\_for\_enrichment.csv" contains DOIs of the articles, which data will be enriched during the transformation pipeline (see chapter "Dataset and pre-pipeline processing"). The file "publication\_ID.txt" is used for storing the last publication ID to ensure that all the publication IDs are unique. Before the first run of the pipeline, the ID in this file should be 0. The file "split\_no.txt" is used for a similar purpose – storing the number of the previously used dataset to ensure that all datasets are ingested only once. Before the first run of the pipeline, the split number should be 0. |
-| lookup\_tables | It contains four tables: "cities\_lookup.tsv", "lookup\_table\_domains.csv", "universities\_lookup.tsv", and "venues\_lookup.tsv". All these tables (except "lookup\_table\_domains.csv") are used for enriching and transforming the raw data.For enriching and transforming the:
-- affiliations' data the "cities\_lookup.tsv" and "universities\_lookup.tsv" are used.
- In the "cities\_lookup.tsv", the names of 42905 world's largest cities (including the Unicode and ASCII strings) together with names of countries are given. This data was retrieved from SimpleMaps.com ([https://simplemaps.com/data/world-cities](https://simplemaps.com/data/world-cities)).
- In the "universities\_lookup.tsv", the data (names, countries, cities/locations and abbreviations of locations) of about 1152 world universities are stored. This data was retrieved by merging and preprocessing the World University Rankings ([https://www.kaggle.com/datasets/mylesoneill/world-university-rankings](https://www.kaggle.com/datasets/mylesoneill/world-university-rankings)) dataset and University Rankings 2017 ([https://data.world/education/university-rankings-2017](https://data.world/education/university-rankings-2017)) dataset.
-- venues' data the "venues\_lookup.tsv" is used. This dataset contains information such as the name and abbreviation (with and without dots) of 87224 venues. This dataset was retrieved from the Web Of Science ([https://images.webofknowledge.com/images/help/WOS/A\_abrvjt.html](https://images.webofknowledge.com/images/help/WOS/A_abrvjt.html)). To make the enrichment process easier and faster, the dataset was preprocessed, and therefore the lookup table also contains fields abbrev\_check and full\_check. The lowercase abbreviations and full names of venues without spaces are stored in these fields.
- |
-| data2db | The data that will be loaded into the up-to-date database are stored in this folder. Before the first run, it should contain two files: "arxiv\_categories.csv" and "venues\_df.tsv". By the way, the latter should contain only the header row before the first run of the pipeline. In the "arxiv\_categories.csv", the IDs and arXiv category names of 156 categories are stored. |
-| sql | This folder is used for storing all the SQL statements. Before the first run, the folder should be empty, but after the run of "create\_DB\_tables\_and\_SQL\_statements" DAG, the .sql files are generated and saved in this folder. |
-| final\_data | This folder should contain the data in the correct form, ready to be loaded into the DWH and graph DB. Before the first run of the pipeline, this folder should be empty. |
+![image](https://user-images.githubusercontent.com/102286655/211939640-55a7226a-5401-4e97-9901-4eefcfa62876.png)
 
 The transformation pipeline starts with the task "transform\_the\_data", which can be considered the most important task in this part of the pipeline. In this task, nine different functions (written in Python by one of the authors of this project) are used (see figure 5).
 
