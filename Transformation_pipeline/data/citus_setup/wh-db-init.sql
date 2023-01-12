@@ -20,7 +20,8 @@ create table if not exists warehouse.publication_time
     date  date   not null,
     year  int,
     month int,
-    day   int
+    day   int,
+    constraint publication_time_unique_idx unique(date)
 );
 
 create table if not exists warehouse.publications
