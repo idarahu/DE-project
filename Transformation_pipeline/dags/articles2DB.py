@@ -71,11 +71,15 @@ def get_metadata():
             parsed_line = json.loads(line)
             # Only selecting publications that have enough data: DOI or(and) authors + title
             if parsed_line['doi'] != None or (parsed_line['authors_parsed'] != None and parsed_line['title'] != None):
+                if parsed_line['doi'] != None:
+                    doi = parsed_line['doi'].split(' ')[0]
+                else:
+                    doi = parsed_line['doi']
                 metadata_df.loc[len(metadata_df.index)] = [parsed_line['submitter'], 
                                                            parsed_line['authors_parsed'], 
                                                            parsed_line['title'],
                                                            parsed_line['journal-ref'],
-                                                           parsed_line['doi'],
+                                                           doi,
                                                            datetime.strptime(parsed_line['versions'][-1]['created'], '%a, %d %b %Y %H:%M:%S %Z').strftime('%Y-%m-%d'),
                                                            parsed_line['categories'].split(' '),
                                                            len(parsed_line['versions']),
