@@ -20,9 +20,9 @@ DEFAULT_ARGS = {
 }
 
 dag = DAG(
-    dag_id='transform_for_batch_injection',
+    dag_id='update_warehouse_db',
     default_args=DEFAULT_ARGS,
-    description='Prepare the graph injection CSVs',
+    description='Update warehouse DB with latest data',
     schedule_interval=None,
     start_date=days_ago(2),
 )
@@ -87,7 +87,7 @@ def update_warehouse(venues_path: Path, publications_path: Path, authors_path: P
     venues_df = pd.read_csv(venues_path, sep=infer_separator(venues_path))
     publications_df = pd.read_csv(publications_path, sep=infer_separator(publications_path))
     authors_df = pd.read_csv(authors_path, sep=infer_separator(authors_path))
-    author_to_publications_df = pd.read_csv(author_to_publications_path, sep=infer_separator(authors_path))
+    author_to_publications_df = pd.read_csv(author_to_publications_path, sep=infer_separator(author_to_publications_path))
     # affiliations_df = pd.read_csv(affiliations_path, sep=infer_separator(affiliations_path))
     # publication_to_affiliations_df = pd.read_csv(publication_to_affiliations_path,
     #                                              sep=infer_separator(publication_to_affiliations_path))
@@ -138,7 +138,7 @@ def update_warehouse(venues_path: Path, publications_path: Path, authors_path: P
 
 
 update_warehouse_db = PythonOperator(
-    task_id='prepare_author_of_relationships',
+    task_id='update_warehouse_data',
     python_callable=update_warehouse,
     op_kwargs={
         'venues_path': get_latest_filename(final_data_dir, 'venues_'),
