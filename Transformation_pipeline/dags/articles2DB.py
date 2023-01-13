@@ -253,17 +253,18 @@ def get_venues_and_publications_data():
     merged_df.print_issn.fillna(merged_df.print_issn_pub, inplace=True)
     merged_df.electronic_issn.fillna(merged_df.electronic_issn_pub, inplace=True)
     merged_df.venue_ID.fillna(0, inplace=True)
-    merged_df = merged_df.sort_values('abbreviation')
+    merged_df = merged_df.sort_values('abbreviation').reset_index(drop=True)
     
     previous = ''
+    new_venue_ID = max_venue_ID + 1
     for i in range(len(merged_df)):
-        if merged_df.iloc[i]['venue_ID'] == 0 and merged_df.iloc[i]['abbreviation'] != None: 
+        if merged_df.iloc[i]['venue_ID'] == 0 and merged_df.iloc[i]['abbreviation'] != None:
             if previous == merged_df.iloc[i]['abbreviation']:
-                merged_df.loc[i, 'venue_ID'] = max_venue_ID + 1
-            else:
-                print(merged_df.iloc[i])
-                max_venue_ID += 1
-                merged_df.loc[i,'venue_ID'] = max_venue_ID + 1
+                merged_df.loc[i, 'venue_ID'] = new_venue_ID
+                previous = previous
+            if previous != merged_df.iloc[i]['abbreviation']:
+                new_venue_ID += 1
+                merged_df.loc[i,'venue_ID'] = new_venue_ID
                 previous = merged_df.iloc[i]['abbreviation']
     
     publications_df = merged_df[['publication_ID', 'venue_ID', 'doi', 'title', 'date', 'submitter', 'type', 'language', 'page_numbers', 'volume', 'issue',
