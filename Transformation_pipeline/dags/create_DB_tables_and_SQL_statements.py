@@ -37,8 +37,8 @@ def create_venues_table(output_folder):
         f.write(
             'CREATE TABLE IF NOT EXISTS venues (\n'
             'venue_ID INT PRIMARY KEY,\n'
-            'full_name VARCHAR(255),\n'
-            'abbreviation VARCHAR(50) UNIQUE,\n'
+            'full_name VARCHAR(500),\n'
+            'abbreviation VARCHAR(100) UNIQUE,\n'
             'print_issn VARCHAR(50),\n'
             'electronic_issn VARCHAR(50));\n'
         )
