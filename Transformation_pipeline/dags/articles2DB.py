@@ -255,15 +255,15 @@ def get_venues_and_publications_data():
     merged_df.venue_ID.fillna(0, inplace=True)
     merged_df = merged_df.sort_values('abbreviation')
     
-    previous = None
+    previous = ''
     for i in range(len(merged_df)):
-
-        if merged_df.iloc[i]['venue_ID'] == 0 and merged_df.iloc[i]['abbreviation'] != None:
+        if merged_df.iloc[i]['venue_ID'] == 0 and merged_df.iloc[i]['abbreviation'] != None: 
             if previous == merged_df.iloc[i]['abbreviation']:
-                merged_df.iloc[i]['venue_ID'] == max_venue_ID + 1
+                merged_df.loc[i, 'venue_ID'] = max_venue_ID + 1
             else:
+                print(merged_df.iloc[i])
                 max_venue_ID += 1
-                merged_df.iloc[i]['venue_ID'] == max_venue_ID + 1
+                merged_df.loc[i,'venue_ID'] = max_venue_ID + 1
                 previous = merged_df.iloc[i]['abbreviation']
     
     publications_df = merged_df[['publication_ID', 'venue_ID', 'doi', 'title', 'date', 'submitter', 'type', 'language', 'page_numbers', 'volume', 'issue',
