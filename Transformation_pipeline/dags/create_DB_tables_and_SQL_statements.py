@@ -38,9 +38,10 @@ def create_venues_table(output_folder):
             'CREATE TABLE IF NOT EXISTS venues (\n'
             'venue_ID INT PRIMARY KEY,\n'
             'full_name VARCHAR(500),\n'
-            'abbreviation VARCHAR(100) UNIQUE,\n'
+            'abbreviation VARCHAR(100),\n'
             'print_issn VARCHAR(50),\n'
-            'electronic_issn VARCHAR(50));\n'
+            'electronic_issn VARCHAR(50),\n'
+            'UNIQUE(full_name, abbreviation));\n'
         )
 
 prepare_venues_sql = PythonOperator(
