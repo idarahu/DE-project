@@ -253,19 +253,30 @@ def get_venues_and_publications_data():
     merged_df.print_issn.fillna(merged_df.print_issn_pub, inplace=True)
     merged_df.electronic_issn.fillna(merged_df.electronic_issn_pub, inplace=True)
     merged_df.venue_ID.fillna(0, inplace=True)
-    merged_df = merged_df.sort_values('abbreviation').reset_index(drop=True)
+    merged_df = merged_df.sort_values(['abbreviation', 'full_name']).reset_index(drop=True)
     
-    previous = ''
+    previous_name = ''
+    previous_abbr = ''
     new_venue_ID = max_venue_ID + 1
     for i in range(len(merged_df)):
-        if merged_df.iloc[i]['venue_ID'] == 0 and merged_df.iloc[i]['abbreviation'] != None:
-            if previous == merged_df.iloc[i]['abbreviation']:
-                merged_df.loc[i, 'venue_ID'] = new_venue_ID
-                previous = previous
-            if previous != merged_df.iloc[i]['abbreviation']:
+        name = merged_df.iloc[i]['full_name']
+        abbr = merged_df.iloc[i]['abbreviation']
+        if merged_df.iloc[i]['venue_ID'] == 0 and abbr != None:
+            if previous_abbr == abbr:
+                if previous_name == name:
+                    merged_df.loc[i, 'venue_ID'] = new_venue_ID
+                    previous_name = previous_name
+                    previous_abbr= previous_abbr
+                if previous_name != name:
+                    new_venue_ID += 1
+                    merged_df.loc[i, 'venue_ID'] = new_venue_ID
+                    previous_name = name
+                    previous_abbr = previous_abbr    
+            if previous_abbr != abbr:
                 new_venue_ID += 1
                 merged_df.loc[i,'venue_ID'] = new_venue_ID
-                previous = merged_df.iloc[i]['abbreviation']
+                previous_abbr = abbr
+                previous_name = name
     
     publications_df = merged_df[['publication_ID', 'venue_ID', 'doi', 'title', 'date', 'submitter', 'type', 'language', 'page_numbers', 'volume', 'issue',
                                  'number_of_references', 'number_of_citations', 'no_versions_arxiv', 'date_of_first_version']]
@@ -286,7 +297,8 @@ def get_venues_and_publications_data():
     venues_df.applymap(lambda x: None if x == '' else x)
     venues_df[['venue_ID']] = venues_df[['venue_ID']].applymap(np.int64)
     venues_df = venues_df.drop_duplicates()
-   
+    venues_df = venues_df[venues_df.full_name.notnull() | venues_df.abbreviation.notnull()]
+    
     venues_df.to_csv(f'{DATA2DB_FOLDER}/venues_df.tsv', sep="\t", index=False)
     publications_df.to_csv(f'{DATA2DB_FOLDER}/publications_df.tsv', sep="\t", index=False)
 
