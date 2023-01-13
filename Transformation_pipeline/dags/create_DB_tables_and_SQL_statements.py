@@ -61,7 +61,6 @@ create_venues_sql = PostgresOperator(
     autocommit=True,
 )
 
-
 # Creating the publications table
 def create_publications_table(output_folder):
     with open(f'{output_folder}/publications.sql', 'w') as f:
@@ -296,7 +295,7 @@ create_affiliations_temp_sql = PostgresOperator(
     autocommit=True,
 )
 
-# Creating connection tables between affiliations and publications and authors and affiliations
+# Creating connection tables between affiliations and publications together with temporary table (for checking duplicates) and authors and affiliations
 def create_affiliation2publication_table(output_folder):
     with open(f'{output_folder}/affiliation2publication.sql', 'w') as f:
         f.write(
@@ -324,6 +323,34 @@ create_affiliation2publication_sql = PostgresOperator(
     trigger_rule='none_failed',
     autocommit=True,
 )
+
+def create_affiliation2publication_temp_table(output_folder):
+    with open(f'{output_folder}/affiliation2publication_temp.sql', 'w') as f:
+        f.write(
+            'CREATE TABLE IF NOT EXISTS affiliation2publication_temp (\n'
+            'affiliation2pub_ID serial PRIMARY KEY,\n'
+            'affiliation_ID INT NOT NULL,\n'
+            'publication_ID INT NOT NULL);\n'
+        )
+
+prepare_affiliation2publication_temp_sql = PythonOperator(
+    task_id='prepare_affiliation2publication_temp_sql',
+    dag=create_DB_tables_and_SQL_statements_dag,
+    python_callable=create_affiliation2publication_temp_table,
+    op_kwargs={
+        'output_folder': SQL_FOLDER
+    }
+)
+
+create_affiliation2publication_temp_sql = PostgresOperator(
+    task_id='create_affiliation2publication_temp_sql',
+    dag=create_DB_tables_and_SQL_statements_dag,
+    postgres_conn_id='airflow_pg',
+    sql='affiliation2publication_temp.sql',
+    trigger_rule='none_failed',
+    autocommit=True,
+)
+
 
 def create_author2affiliation_table(output_folder):
     with open(f'{output_folder}/author2affiliation.sql', 'w') as f:
@@ -438,14 +465,14 @@ step2 = EmptyOperator(task_id='step2')
 
 step1 >> [prepare_venues_sql, prepare_publications_sql, prepare_publications_temp_sql, prepare_authors_sql,
           prepare_authors_temp_sql, prepare_author2publication_sql, prepare_affiliations_sql, prepare_affiliations_temp_sql, 
-          prepare_affiliation2publication_sql, prepare_author2affiliation_sql, prepare_arxiv_categories_sql,
-          prepare_publication2arxiv_sql] >> step2
+          prepare_affiliation2publication_sql, prepare_affiliation2publication_temp_sql, prepare_author2affiliation_sql, 
+          prepare_arxiv_categories_sql, prepare_publication2arxiv_sql] >> step2
 
 step3 = EmptyOperator(task_id='step3')      
 step2 >> [create_authors_sql, create_authors_temp_sql, create_publications_temp_sql,
           create_author2publication_sql, create_affiliations_sql, create_affiliations_temp_sql, 
-          create_affiliation2publication_sql, create_author2affiliation_sql,
-          create_publication2arxiv_sql] >> step3 
+          create_affiliation2publication_sql, create_affiliation2publication_temp_sql, 
+          create_author2affiliation_sql, create_publication2arxiv_sql] >> step3 
 step2 >> create_venues_sql >> create_publications_sql >> step3
 step2 >> create_arxiv_categories_sql >> truncate_arxiv_table >> load_arxiv_category >> step3
 
@@ -466,6 +493,29 @@ prepare_publications_temp2publications_sql = PythonOperator(
     task_id='prepare_publications_temp2publications_sql',
     dag=create_DB_tables_and_SQL_statements_dag,
     python_callable=create_publications_temp2publications_sql,
+    op_kwargs={
+        'output_folder': SQL_FOLDER
+    }
+)
+
+# Creating affiliation2publication_temp2affiliation2publication.sql to populate affiliation2publication table with only new data
+def create_affiliation2publication_temp2affiliation2publication_sql(output_folder):
+    with open(f'{output_folder}/affiliation2publication_temp2affiliation2publication.sql', 'w') as f:
+        f.write(
+            'INSERT INTO affiliation2publication (affiliation_id, publication_id)\n'
+            'SELECT DISTINCT affiliation_id, publication_id\n'
+            'FROM affiliation2publication_temp\n'
+            'WHERE NOT EXISTS (\n'
+            'SELECT * FROM affiliation2publication\n'
+            'WHERE\n'
+            'affiliation2publication.affiliation_id = affiliation2publication_temp.affiliation_id\n'
+            'AND affiliation2publication.publication_id = affiliation2publication_temp.publication_id);\n'
+        )
+
+prepare_affiliation2publication_temp2affiliation2publication_sql = PythonOperator(
+    task_id='prepare_affiliation2publication_temp2affiliation2publication_sql',
+    dag=create_DB_tables_and_SQL_statements_dag,
+    python_callable=create_affiliation2publication_temp2affiliation2publication_sql,
     op_kwargs={
         'output_folder': SQL_FOLDER
     }
@@ -541,7 +591,7 @@ prepare_connect_author2pub_sql = PythonOperator(
 def connect_aff2pub_sql(output_folder):
     with open(f'{output_folder}/connect_aff2pub.sql', 'w') as f:
         f.write(
-            'INSERT INTO affiliation2publication (affiliation_id, publication_id)\n'
+            'INSERT INTO affiliation2publication_temp (affiliation_id, publication_id)\n'
             'SELECT DISTINCT t2.affiliation_id, t1.publication_id\n'
             'FROM affiliations_temp t1\n'
             'JOIN affiliations t2 ON t1.institution_name = t2.institution_name AND t1.institution_place = t2.institution_place;\n'
@@ -633,7 +683,8 @@ prepare_venues_view_sql = PythonOperator(
 )
 
 step4 = EmptyOperator(task_id='step4') 
-step3 >> [prepare_publications_temp2publications_sql, prepare_authors_temp2authors_sql, prepare_affiliations_temp2affiliations_sql, prepare_connect_author2pub_sql,
+step3 >> [prepare_publications_temp2publications_sql, prepare_authors_temp2authors_sql, prepare_affiliations_temp2affiliations_sql, 
+          prepare_connect_author2pub_sql, prepare_affiliation2publication_temp2affiliation2publication_sql,
           prepare_connect_aff2pub_sql, prepare_connect_author2aff_sql, prepare_authors_view_sql, prepare_venues_view_sql] >> step4
 
 def create_updated_publications_table(output_folder):
