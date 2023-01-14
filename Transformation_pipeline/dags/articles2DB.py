@@ -95,6 +95,7 @@ def get_metadata():
     df = df.drop(columns=['versions'])
     df = df.reset_index()
     df = df.rename(columns={"index":"publication_ID"})
+    df = df.reset_index(drop=True)
     df['publication_ID'] = df.index + get_previous_publication_ID() + 1
     df.to_csv(f'{METADATA_FOLDER}/metadata_df.tsv', sep="\t", index=False)
 
@@ -298,6 +299,7 @@ def get_venues_and_publications_data():
     venues_df[['venue_ID']] = venues_df[['venue_ID']].applymap(np.int64)
     venues_df = venues_df.drop_duplicates()
     venues_df = venues_df[venues_df.full_name.notnull() | venues_df.abbreviation.notnull()]
+    venues_df = venues_df.sort_values(['venue_ID', 'print_issn', 'electronic_issn']).reset_index(drop=True)
     m = (venues_df['print_issn'].isnull() & venues_df['electronic_issn'].isnull()) & venues_df['venue_ID'].duplicated()
     indexes_drop = venues_df[m].index
     venues_df = venues_df.drop(indexes_drop, axis=0).reset_index(drop=True)
