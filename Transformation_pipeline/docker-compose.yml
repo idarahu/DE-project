@@ -69,6 +69,7 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./data:/tmp/data
     - ./neo4j/import:/tmp/neo4j_import
+    - ./neo4j/data:/tmp/neo4j_data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
