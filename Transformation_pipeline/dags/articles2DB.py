@@ -1,3 +1,9 @@
+"""
+This DAG pulls the raw data (reads in the raw JSON file with 50K publications) and then transforms and enriches it.
+After that, it loads all the data into the up-to-date database (DB) and generates the needed views for querying.
+Finally, the DAG generates the CSV files (based on the data in the DB) needed for populating the DWH and graph DB with data.
+"""
+
 import datetime
 import io
 import os
