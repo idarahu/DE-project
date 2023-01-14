@@ -1,3 +1,10 @@
+"""
+This DAG is a copy-paste version of the DAG update_articles_in_DB. 
+The only difference is that instead of pulling all publications' data, it limits the number of publications to 200. 
+This limitation was set because API calls needed for updating the data are very time-consuming. 
+Therefore, during a presentation, it would be almost impossible to wait for the update with 50K+ publications to finish.
+"""
+
 import datetime
 import io
 from datetime import datetime, timedelta, timezone
