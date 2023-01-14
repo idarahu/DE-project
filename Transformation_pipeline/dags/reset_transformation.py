@@ -1,6 +1,6 @@
 """
 This DAG resets the tranformation pipeline by dropping all the generated tables from the database,
-resetting split_no.txt and publication_ID.txt, and deleting the files in the data folder.
+resetting venues_df.tsv, split_no.txt and publication_ID.txt, and deleting the files in the data folder.
 """
 from datetime import timedelta
 
