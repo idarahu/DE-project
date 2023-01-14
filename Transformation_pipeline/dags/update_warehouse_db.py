@@ -1,7 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
 from typing import Optional
-
+import swifter
 import pandas as pd
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -42,30 +42,30 @@ def prepare_string_value(value) -> str:
     return str(value).replace("'", "").replace('nan', '')
 
 
-def get_time_id(date: str) -> int:
+def get_time_id(date: str, connection) -> int:
     params = {}
     params['pdate'] = date
     query = open('/tmp/data/wh_sql/upsert_publication_time.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     publication_time_id = pd.read_sql_query(query.read().format(**params), connection)['id']
     connection.commit()
     query.close()
     return int(publication_time_id)
 
 
-def get_venue_id(venue) -> int:
+def get_venue_id(venue, connection) -> int:
     params = {}
     params['full_name'] = venue['full_name']
     params['abbreviation'] = venue['abbreviation']
     query = open('/tmp/data/wh_sql/insert_venue.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     prepared_query = query.read().format(**params)
-    queried_venue = pd.read_sql_query(prepared_query, connection)
+    cursor = connection.cursor()
+    cursor.execute(prepared_query)
+    queried_venue_id = cursor.fetchone()[0]
     connection.commit()
-    return queried_venue['id']
+    query.close()
+    return int(queried_venue_id)
 
-
-def get_publication_id(publication, venues_df) -> int:
+def get_publication_id(publication, venues_df, connection) -> int:
     venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if (publication['venue_id'] not in [0, 1]) else 'null'
     params = {}
     params['doi'] = prepare_string_value(publication.get('doi', default=''))
@@ -73,7 +73,7 @@ def get_publication_id(publication, venues_df) -> int:
     params['submitter'] = prepare_string_value(publication.get('submitter', default=''))
     params['lang'] = prepare_string_value(publication.get('lang', default=''))
     params['venue_id'] = 'null' if venue_db_id == 'nan' else venue_db_id
-    params['time_id'] = get_time_id(publication.get('date'))
+    params['time_id'] = get_time_id(publication.get('date'), connection)
     params['volume'] = publication.get('volume')
     params['issue'] = publication['issue']
     params['page_numbers'] = prepare_string_value(publication.get('page_numbers', default=''))
@@ -82,9 +82,10 @@ def get_publication_id(publication, venues_df) -> int:
     params['date_of_first_version'] = publication['date_of_first_version']
     params['number_of_citations'] = publication['number_of_citations']
     query = open('/tmp/data/wh_sql/upsert_publication.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     prepared_query = query.read().format(**params)
-    publication_id = pd.read_sql_query(prepared_query, connection)['id']
+    cursor = connection.cursor()
+    cursor.execute(prepared_query)
+    publication_id = cursor.fetchone()[0]
     connection.commit()
     query.close()
     return int(publication_id)
@@ -93,8 +94,9 @@ def get_publication_id(publication, venues_df) -> int:
 def update_warehouse(venues_path: Path, publications_path: Path, output_prepared_publication_path: Path):
     venues_df = pd.read_csv(venues_path, sep=infer_separator(venues_path))
     publications_df = pd.read_csv(publications_path, sep=infer_separator(publications_path))
-    venues_df['db_id'] = venues_df.apply(lambda venue: get_venue_id(venue), axis=1)
-    publications_df['db_id'] = publications_df.apply(lambda publication: get_publication_id(publication, venues_df),
+    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
+    venues_df['db_id'] = venues_df.swifter.apply(lambda venue: get_venue_id(venue, connection), axis=1)
+    publications_df['db_id'] = publications_df.swifter.apply(lambda publication: get_publication_id(publication, venues_df, connection),
                                                      axis=1)
     output_prepared_publication_path.parent.mkdir(parents=True, exist_ok=True)
     publications_df.to_csv(output_prepared_publication_path, index=False, encoding='utf-8')
@@ -112,19 +114,18 @@ update_publication = PythonOperator(
 )
 
 
-def get_affiliation_id(affiliation):
+def get_affiliation_id(affiliation, connection):
     params = {}
     params['name'] = prepare_string_value(affiliation.get('institution_name', ''))
     params['address'] = prepare_string_value(affiliation.get('institution_place', ''))
     query = open('/tmp/data/wh_sql/upsert_institution.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     affiliation_id = pd.read_sql_query(query.read().format(**params), connection)['id']
     connection.commit()
     query.close()
     return int(affiliation_id)
 
 
-def insert_affiliation_publication(publication_affiliation, affiliations_df, publications_df) -> None:
+def insert_affiliation_publication(publication_affiliation, affiliations_df, publications_df, connection) -> None:
     affiliation_id = int(publication_affiliation['affiliation_id'])
     affiliation_db_id = int(affiliations_df.query('affiliation_id == {}'.format(affiliation_id)).iloc[0]['db_id'])
     publication_id = int(publication_affiliation['publication_id'])
@@ -133,7 +134,6 @@ def insert_affiliation_publication(publication_affiliation, affiliations_df, pub
     params['institution_id'] = affiliation_db_id
     params['publication_id'] = publication_db_id
     query = open('/tmp/data/wh_sql/insert_publication_affiliation.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     connection.cursor().execute(query.read().format(**params))
     connection.commit()
 
@@ -144,10 +144,11 @@ def update_warehouse_affiliations(prepared_publication_path: Path, affiliations_
     affiliations_df = pd.read_csv(affiliations_path, sep=infer_separator(affiliations_path))
     publication_to_affiliations_df = pd.read_csv(publication_to_affiliations_path,
                                                  sep=infer_separator(publication_to_affiliations_path))
-    affiliations_df['db_id'] = affiliations_df.apply(lambda affiliation: get_affiliation_id(affiliation), axis=1)
-    publication_to_affiliations_df.apply(
+    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
+    affiliations_df['db_id'] = affiliations_df.swifter.apply(lambda affiliation: get_affiliation_id(affiliation, connection), axis=1)
+    publication_to_affiliations_df.swifter.apply(
         lambda publication_affiliation: insert_affiliation_publication(publication_affiliation, affiliations_df,
-                                                                       publication_df), axis=1)
+                                                                       publication_df, connection), axis=1)
 
 
 update_affiliations_data = PythonOperator(
@@ -162,7 +163,7 @@ update_affiliations_data = PythonOperator(
 )
 
 
-def get_author_id(author) -> int:
+def get_author_id(author, connection) -> int:
     params = {}
     params['first_name'] = prepare_string_value(author.get('first_name', ''))
     params['last_name'] = prepare_string_value(author.get('last_name', ''))
@@ -170,14 +171,13 @@ def get_author_id(author) -> int:
     params['full_name'] = prepare_string_value(author.get('full_name', ''))
     params['h_index_real'] = author['h_index_real']
     query = open('/tmp/data/wh_sql/upsert_author.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     publication_id = pd.read_sql_query(query.read().format(**params), connection)['id']
     connection.commit()
     query.close()
     return int(publication_id)
 
 
-def insert_author_publication(publication_author, authors_df, publications_df) -> None:
+def insert_author_publication(publication_author, authors_df, publications_df,connection) -> None:
     author_id = int(publication_author['author_id'])
     author_db_id = int(authors_df.query('author_id == {}'.format(author_id)).iloc[0]['db_id'])
     publication_id = int(publication_author['publication_id'])
@@ -186,19 +186,20 @@ def insert_author_publication(publication_author, authors_df, publications_df) -
     params['author_id'] = author_db_id
     params['publication_id'] = publication_db_id
     query = open('/tmp/data/wh_sql/insert_publication_author.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     connection.cursor().execute(query.read().format(**params))
     connection.commit()
+    query.close()
 
 
 def update_warehouse_authors(prepared_publication_path: Path, authors_path: Path, author_to_publications_path: Path):
     publication_df = pd.read_csv(prepared_publication_path, sep=infer_separator(prepared_publication_path))
     authors_df = pd.read_csv(authors_path, sep=infer_separator(authors_path))
+    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     author_to_publications_df = pd.read_csv(author_to_publications_path,
                                             sep=infer_separator(author_to_publications_path))
-    authors_df['db_id'] = authors_df.apply(lambda author: get_author_id(author), axis=1)
+    authors_df['db_id'] = authors_df.apply(lambda author: get_author_id(author, connection), axis=1)
     author_to_publications_df.apply(
-        lambda publication_author: insert_author_publication(publication_author, authors_df, publication_df), axis=1)
+        lambda publication_author: insert_author_publication(publication_author, authors_df, publication_df, connection), axis=1)
 
 
 update_authors_data = PythonOperator(
@@ -213,21 +214,20 @@ update_authors_data = PythonOperator(
 )
 
 
-def get_domain_id(domain) -> int:
+def get_domain_id(domain, connection) -> int:
     params = {}
     params['major_field'] = prepare_string_value(domain.get('major_field', ''))
     params['sub_category'] = prepare_string_value(domain.get('sub_category', ''))
     params['exact_category'] = prepare_string_value(domain.get('exact_category', ''))
     params['arxiv_category'] = prepare_string_value(domain.get('arxiv_category', ''))
     query = open('/tmp/data/wh_sql/upsert_scientific_domain.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     domain_id = pd.read_sql_query(query.read().format(**params), connection)['id']
     connection.commit()
     query.close()
     return int(domain_id)
 
 
-def insert_publication_domain(publication_domain, publications_df) -> None:
+def insert_publication_domain(publication_domain, publications_df, connection) -> None:
     domain_db_id = int(publication_domain['domain_db_id'])
     publication_id = int(publication_domain['publication_id'])
     publication_db_id = int(publications_df.query('publication_id == {}'.format(publication_id)).iloc[0]['db_id'])
@@ -235,7 +235,6 @@ def insert_publication_domain(publication_domain, publications_df) -> None:
     params['domain_id'] = domain_db_id
     params['publication_id'] = publication_db_id
     query = open('/tmp/data/wh_sql/insert_publication_domain.sql', 'r')
-    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     connection.cursor().execute(query.read().format(**params))
     connection.commit()
     query.close()
@@ -244,9 +243,10 @@ def insert_publication_domain(publication_domain, publications_df) -> None:
 def update_warehouse_domains(prepared_publication_path: Path, publication_domains_path: Path):
     publication_df = pd.read_csv(prepared_publication_path, sep=infer_separator(prepared_publication_path))
     publication_domains_df = pd.read_csv(publication_domains_path, sep=infer_separator(publication_domains_path))
-    publication_domains_df['domain_db_id'] = publication_domains_df.apply(lambda domain: get_domain_id(domain), axis=1)
-    publication_domains_df.apply(
-        lambda publication_author: insert_publication_domain(publication_author, publication_df), axis=1)
+    connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
+    publication_domains_df['domain_db_id'] = publication_domains_df.swifter.apply(lambda domain: get_domain_id(domain, connection), axis=1)
+    publication_domains_df.swifter.apply(
+        lambda publication_author: insert_publication_domain(publication_author, publication_df, connection), axis=1)
 
 
 update_domain_data = PythonOperator(

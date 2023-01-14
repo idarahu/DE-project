@@ -3,6 +3,10 @@ create database warehouse encoding 'utf8';
 create schema warehouse;
 create sequence wh;
 -- create extension if not exists citus;
+
+create extension if not exists pg_trgm;
+create extension if not exists btree_gin;
+
 alter system set max_connections = 300;
 
 create table if not exists warehouse.publication_venues
@@ -50,6 +54,11 @@ create table if not exists warehouse.publications
     CONSTRAINT fk_author_publication_time FOREIGN KEY (time_id) REFERENCES warehouse.publication_time (id)
 );
 
+create index if not exists publication_doi_gin_idx on warehouse.publications using gin (doi);
+create index if not exists publication_title_gin_idx on warehouse.publications using gin (title);
+create index if not exists publication_number_of_references_idx on warehouse.publications (number_of_citations);
+create index if not exists publication_number_of_references_idx on warehouse.publications (number_of_references);
+
 create table if not exists warehouse.authors
 (
     id                 bigint not null default nextval('wh') primary key,
@@ -64,6 +73,12 @@ create table if not exists warehouse.authors
     constraint author_unique unique (first_name, first_name_abbr, last_name, full_name, h_index_real),
     constraint authors_check_date check ( valid_from < authors.valid_to)
 );
+
+create index if not exists authors_first_name_idx on warehouse.authors using gin (first_name);
+create index if not exists authors_first_name_abbr_idx on warehouse.authors using gin (first_name_abbr);
+create index if not exists authors_last_name_idx on warehouse.authors using gin (last_name);
+create index if not exists authors_full_name_idx on warehouse.authors using gin (full_name);
+create index if not exists authors_h_index_real_idx on warehouse.authors (h_index_real);
 
 create table if not exists warehouse.publication_author
 (

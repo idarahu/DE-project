@@ -284,7 +284,8 @@ services:
         condition: service_completed_successfully
 
   citus-db:
-    image: citusdata/citus:11.1.5
+    image: postgres:15.1
+#    image: citusdata/citus:11.1.5
     environment:
       POSTGRES_USER: citususer
       POSTGRES_PASSWORD: cituspass
