@@ -101,21 +101,35 @@ What is the most influential publication:
 | in a given venue             | `MATCH (p:Publication)-[:PUBLISHED_IN]-(v:Venue) WHERE v.full_name = "International Journal of Astrobiology" MATCH (p:Publication)-[:CITED_BY]->(cited:Publication) WITH p, COUNT(DISTINCT cited) AS citedCount ORDER BY citedCount DESC LIMIT 1 RETURN p` | Not enough data |
 | in a given affiliation       | `MATCH (af:Affiliation {name: "Princeton University"})-[:WORKS_IN]-(:Author)-[:AUTHOR_OF]-(p:Publication)-[:CITED_BY]->(cited:Publication) WITH p, COUNT(cited) AS citedCount ORDER BY citedCount DESC LIMIT 1 RETURN p`                                   | Not enough data |
 
-What is a community of authors:
+To find communities of authors that cover a particular scientific domain, we use the [Louvain](https://neo4j.com/docs/graph-data-science/current/algorithms/louvain/#algorithms-louvain-examples-stream) method from GDS with the following Cypher queries:
 
-`CALL gds.graph.project('community_domain', 'Author', {COLLABORATES_WITH: {orientation: 'UNDIRECTED'}})`
+Projecting the graph:
 
-| Question                                     | Cypher Query | Notes |
-|----------------------------------------------|--------------|-------|
-| that covers a given scientific domain        | ``           |       |
-| that publishes in a given publication venue? | ``           |       |
-| that publishes for a given affiliation?      | ``           |       |
+```cyper
+CALL gds.graph.project.cypher('community_by_domain', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:AUTHOR_OF]->(p:Publication)-[:BELONGS_TO]->(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" MATCH (a2:Author)-[:AUTHOR_OF]->(p) WHERE a1 <> a2 RETURN id(a1) AS source, id(a2) AS target')
+```
+
+Write the community_by_domain id to the authors:
+
+```cyper
+CALL gds.louvain.stream('community_by_domain') YIELD nodeId, communityId WITH gds.util.asNode(nodeId) AS a, communityId AS communityId SET a.community_by_domain = communityId
+```
+
+Query the community where amount of authors is greater than 1:
+
+```cyper
+MATCH (a:Author) WHERE a.community_by_domain IS NOT NULL WITH a.community_by_domain AS communityId, COUNT(a) AS amount WHERE amount > 1 RETURN communityId, amount ORDER BY amount DESC
+```
+
+```cyper
+MATCH (a:Author {community_by_domain: 0}) RETURN a LIMIT 25
+```
 
 Other queries:
 
-| Question                                                                                                | Cypher Query | Notes |
-|---------------------------------------------------------------------------------------------------------|--------------|-------|
-| Which author has the most self-citations (or citations to other authors from the same affiliation)?     | ``           |       |
-| Which author has the most collaborations?                                                               | ``           |       |
-| Is there a connection between co-authors and where they publish their papers?                           | ``           |       |
-| What is the missing link between two authors from different affiliations who have not collaborated yet? | ``           |       |
+| Question                                                                                                | Cypher Query                                                                                                                                                                                                                | Notes |
+|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------|
+| Which author has the most self-citations (or citations to other authors from the same affiliation)?     | `MATCH (a1:Author)-[:AUTHOR_OF]->(p:Publication)-[:CITED_BY]->(cited:Publication)-[:AUTHOR_OF]-(a2:Author) WHERE a1.author_id = a2.author_id WITH COUNT(cited) AS citations, a1 ORDER BY citations DESC RETURN a1 LIMIT 25` |       |
+| Which author has the most collaborations?                                                               | `MATCH (author:Author)-[:COLLABORATES_WITH]->(otherAuthor:Author) WITH author, COUNT(DISTINCT otherAuthor) as collaborations ORDER BY collaborations DESC LIMIT 1 RETURN author, collaborations`                            |       |
+| Is there a connection between co-authors and where they publish their papers?                           | ``                                                                                                                                                                                                                          |       |
+| What is the missing link between two authors from different affiliations who have not collaborated yet? | ``                                                                                                                                                                                                                          |       |
