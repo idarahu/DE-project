@@ -1,3 +1,8 @@
+"""
+This DAG generates all the SQL statements needed for creating the up-to-date database (DB) tables and views, 
+populating them with data and updating them if necessary.
+"""
+
 import datetime
 import io
 from datetime import datetime, timedelta, timezone
