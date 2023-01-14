@@ -66,13 +66,13 @@ def get_venue_id(venue) -> int:
 
 
 def get_publication_id(publication, venues_df) -> int:
-    venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if publication['venue_id'] != 1 else 'null'
+    venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if (publication['venue_id'] not in [0, 1]) else 'null'
     params = {}
     params['doi'] = prepare_string_value(publication.get('doi', default=''))
     params['title'] = prepare_string_value(publication.get('title'))
     params['submitter'] = prepare_string_value(publication.get('submitter', default=''))
     params['lang'] = prepare_string_value(publication.get('lang', default=''))
-    params['venue_id'] = venue_db_id
+    params['venue_id'] = 'null' if venue_db_id == 'nan' else venue_db_id
     params['time_id'] = get_time_id(publication.get('date'))
     params['volume'] = publication.get('volume')
     params['issue'] = publication['issue']
@@ -238,6 +238,7 @@ def insert_publication_domain(publication_domain, publications_df) -> None:
     connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     connection.cursor().execute(query.read().format(**params))
     connection.commit()
+    query.close()
 
 
 def update_warehouse_domains(prepared_publication_path: Path, publication_domains_path: Path):

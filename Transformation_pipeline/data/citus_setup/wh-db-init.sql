@@ -2,7 +2,8 @@ create database warehouse encoding 'utf8';
 \connect warehouse;
 create schema warehouse;
 create sequence wh;
-create extension if not exists citus;
+-- create extension if not exists citus;
+alter system set max_connections = 300;
 
 create table if not exists warehouse.publication_venues
 (
