@@ -248,7 +248,7 @@ def get_venues_and_publications_data():
     metadata_df['issue'] = metadata_df.apply(lambda x: x.issue_cross if x.issue_cross != -1 else x.issue_open, axis=1)
     metadata_df['volume'] = metadata_df.apply(lambda x: x.volume_cross if x.volume_cross != -1 else x.volume_open, axis=1)
     metadata_df[['venue_abbr', 'venue_name']] = metadata_df.apply(lambda x: check_API_venues(x.venue_name_cross, x.venue_abbr_cross, x.venue_name_open, venues_lookup) if x.venue_abbr is None else [x.venue_abbr, x.venue_name], axis = 1, result_type='expand')
-    merged_df = pd.merge(left=metadata_df, left_on='venue_abbr', right=venues_df, right_on='abbreviation', how='outer')
+    merged_df = pd.merge(left=metadata_df, left_on=['venue_abbr', 'venue_name'], right=venues_df, right_on=['abbreviation', 'full_name'], how='outer')
     merged_df.abbreviation.fillna(merged_df.venue_abbr, inplace=True)
     merged_df.full_name.fillna(merged_df.venue_name, inplace=True)
     merged_df.print_issn.fillna(merged_df.print_issn_pub, inplace=True)
@@ -303,6 +303,7 @@ def get_venues_and_publications_data():
     m = (venues_df['print_issn'].isnull() & venues_df['electronic_issn'].isnull()) & venues_df['venue_ID'].duplicated()
     indexes_drop = venues_df[m].index
     venues_df = venues_df.drop(indexes_drop, axis=0).reset_index(drop=True)
+    venues_df = venues_df.drop_duplicates(subset='venue_ID', keep='first').reset_index(drop=True)
     
     venues_df.to_csv(f'{DATA2DB_FOLDER}/venues_df.tsv', sep="\t", index=False)
     publications_df.to_csv(f'{DATA2DB_FOLDER}/publications_df.tsv', sep="\t", index=False)
