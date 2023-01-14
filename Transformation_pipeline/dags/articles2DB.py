@@ -304,7 +304,7 @@ def get_venues_and_publications_data():
     indexes_drop = venues_df[m].index
     venues_df = venues_df.drop(indexes_drop, axis=0).reset_index(drop=True)
     venues_df = venues_df.drop_duplicates(subset='venue_ID', keep='first').reset_index(drop=True)
-    
+
     venues_df.to_csv(f'{DATA2DB_FOLDER}/venues_df.tsv', sep="\t", index=False)
     publications_df.to_csv(f'{DATA2DB_FOLDER}/publications_df.tsv', sep="\t", index=False)
 
@@ -770,6 +770,17 @@ copy_authors = PythonOperator(
     }
 )
 
+copy_venues = PythonOperator(
+    task_id='copy_venues',
+    dag=articles2DB_dag,
+    python_callable=copy_data_from_DB,
+    op_kwargs={
+        'output_folder': FINAL_DATA_FOLDER,
+        'SQL_statement': 'SELECT * FROM venues_view',
+        'data_type': 'venues'
+    }
+)
+
 copy_affiliation2publication = PythonOperator(
     task_id='copy_affiliation2publication',
     dag=articles2DB_dag,
@@ -826,5 +837,6 @@ copy_publication2arxiv = PythonOperator(
 )
 
 connector4 = EmptyOperator(task_id='connector4') 
-connector3 >> [copy_affiliations, copy_authors, copy_affiliation2publication, copy_author2affiliation, 
-          copy_author2publication, copy_publications, copy_publication2arxiv] >> connector4
+connector3 >> [copy_affiliations, copy_authors, copy_venues, copy_affiliation2publication, 
+               copy_author2affiliation, copy_author2publication, copy_publications, 
+               copy_publication2arxiv] >> connector4
