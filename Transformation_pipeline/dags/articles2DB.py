@@ -298,6 +298,9 @@ def get_venues_and_publications_data():
     venues_df[['venue_ID']] = venues_df[['venue_ID']].applymap(np.int64)
     venues_df = venues_df.drop_duplicates()
     venues_df = venues_df[venues_df.full_name.notnull() | venues_df.abbreviation.notnull()]
+    m = (venues_df['print_issn'].isnull() & venues_df['electronic_issn'].isnull()) & venues_df['venue_ID'].duplicated()
+    indexes_drop = venues_df[m].index
+    venues_df = venues_df.drop(indexes_drop, axis=0).reset_index(drop=True)
     
     venues_df.to_csv(f'{DATA2DB_FOLDER}/venues_df.tsv', sep="\t", index=False)
     publications_df.to_csv(f'{DATA2DB_FOLDER}/publications_df.tsv', sep="\t", index=False)
