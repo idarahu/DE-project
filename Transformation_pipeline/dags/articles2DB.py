@@ -279,6 +279,10 @@ def get_venues_and_publications_data():
                 previous_abbr = abbr
                 previous_name = name
     
+    mask = merged_df['full_name'].isnull() & merged_df['abbreviation'].isnull()
+    indexes_mask = merged_df[mask].index
+    merged_df.loc[indexes_mask, 'venue_ID'] = 0
+
     publications_df = merged_df[['publication_ID', 'venue_ID', 'doi', 'title', 'date', 'submitter', 'type', 'language', 'page_numbers', 'volume', 'issue',
                                  'number_of_references', 'number_of_citations', 'no_versions_arxiv', 'date_of_first_version']]
     publications_df.dropna(axis=0, how='all',inplace=True)
