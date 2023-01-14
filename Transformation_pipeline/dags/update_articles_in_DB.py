@@ -1,3 +1,11 @@
+"""
+This DAG pulls the data of the publications with DOI from the up-to-date database (DB). 
+Then, it makes the API calls to check if the number of citations has been changed and updates
+the values if needed (in the table of publications in the DB). 
+Finally, it refreshes the authors' and venues' views in the DB and generates CSV files 
+based on the updated data needed for populating the DWH and graph DB with data.
+"""
+
 import datetime
 import io
 from datetime import datetime, timedelta, timezone
