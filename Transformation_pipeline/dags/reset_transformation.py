@@ -41,12 +41,25 @@ reset_publication_ID = BashOperator(
 )
 
 delete_final_data = BashOperator(
-    task_id='delete_data',
+    task_id='delete_final_data',
     dag=dag,
     bash_command='rm -f /tmp/data/final_data/affiliation*; '
                  'rm -f /tmp/data/final_data/author*; '
                  'rm -f /tmp/data/final_data/publication*; '
                  'rm -f /tmp/data/final_data/citing_pub*'
+)
+
+delete_graph_import_data = BashOperator(
+    task_id='delete_graph_import_data',
+    dag=dag,
+    bash_command='rm -f /tmp/neo4j_import/*.csv; '
+                 'rm -f /tmp/neo4j_import/*.report; '
+)
+
+delete_graph_database = BashOperator(
+    task_id='delete_graph_database',
+    dag=dag,
+    bash_command='rm -rf /tmp/neo4j_data/*'
 )
 
 drop_tables = PostgresOperator(
@@ -81,5 +94,7 @@ EmptyOperator(task_id='start') >> [
     reset_split_no,
     reset_publication_ID,
     delete_final_data,
-    drop_tables
+    drop_tables,
+    delete_graph_import_data,
+    delete_graph_database,
 ] >> create_tables_trigger
