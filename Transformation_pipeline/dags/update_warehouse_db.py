@@ -66,8 +66,7 @@ def get_venue_id(venue) -> int:
 
 
 def get_publication_id(publication, venues_df) -> int:
-    venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if publication[
-                                                                                                            'venue_id'] != 0 else 'null'
+    venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if publication['venue_id'] != 1 else 'null'
     params = {}
     params['doi'] = prepare_string_value(publication.get('doi', default=''))
     params['title'] = prepare_string_value(publication.get('title'))
