@@ -59,7 +59,7 @@ As mentioned before, the first part of the overall pipeline can be divided into 
 
 In the transformation pipeline, the raw data in JSON format (as explained in the previous chapter) is ingested into the overall pipeline; then, this data is cleaned and enriched if needed and loaded into the up-to-date database. Because this project uses the approach where the data will be stored in the up-to-date database to simulate the real-life setup where constant data updates are required because of its volatile nature (the number of citations of the publications changes and so on) before discussing all the details about transformation pipeline, main concepts of this database are given. The schema of this DB is shown in figure 2.
 
-![image](https://user-images.githubusercontent.com/102286655/211939082-105f99af-a7f1-4e7f-a53d-93abe19fc072.png)
+![DB schema](https://user-images.githubusercontent.com/102286655/212496111-9c03d31d-49c2-4cc7-a1ed-522261e08902.png)
 
 **Figure 2** Schema of an up-to-date database
 
@@ -162,7 +162,7 @@ SCHEMA
 
 Based on the formulated BI queries, the proper schema of a data warehouse for storing data about scientific publications would contain a fact table, "PUBLICATIONS", and five dimension tables: "AUTHORS", "AUTHORS' AFFILIATIONS", "PUBLICATION VENUES", "SCIENTIFIC DOMAINS" and "TIME" (see Figure 2).
 
-![](RackMultipart20230111-1-jtg7b3_html_db0436105bba0daf.png)
+![DWH schema](https://user-images.githubusercontent.com/102286655/212495688-05f5f60f-0c72-44dd-8d24-bd3541ee072c.png)
 
 **Figure 2** Schema of DWH
 
