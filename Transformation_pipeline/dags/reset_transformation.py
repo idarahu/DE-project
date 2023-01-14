@@ -1,6 +1,6 @@
 """
 This DAG resets the tranformation pipeline by dropping all the generated tables from the database,
-resetting split_no.txt and publication_ID.txt, and deleting the files in the data folder.
+resetting venues_df.tsv, split_no.txt and publication_ID.txt, and deleting the files in the data folder.
 """
 from datetime import timedelta
 
@@ -10,6 +10,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
+from airflow.operators.python_operator import PythonOperator
 
 # DAG
 
@@ -28,6 +29,17 @@ dag = DAG(
     start_date=days_ago(2),
 )
 
+def write_empty_venues_df():
+    import pandas as pd
+    venues_df = pd.DataFrame(columns=['venue_ID', 'full_name', 'abbreviation', 'print_issn', 'electronic_issn'])
+    venues_df.to_csv('/tmp/data/data2db/venues_df.tsv', sep="\t", index=False)
+
+reset_venues_df = PythonOperator(
+    task_id='reset_venues_df',
+    dag=dag,
+    python_callable=write_empty_venues_df
+)
+
 reset_split_no = BashOperator(
     task_id='reset_split_no',
     dag=dag,
@@ -41,13 +53,26 @@ reset_publication_ID = BashOperator(
 )
 
 delete_final_data = BashOperator(
-    task_id='delete_data',
+    task_id='delete_final_data',
     dag=dag,
     bash_command='rm -f /tmp/data/final_data/affiliation*; '
                  'rm -f /tmp/data/final_data/author*; '
                  'rm -f /tmp/data/final_data/publication*; '
                  'rm -f /tmp/data/final_data/venues*; '
                  'rm -f /tmp/data/final_data/citing_pub*'
+)
+
+delete_graph_import_data = BashOperator(
+    task_id='delete_graph_import_data',
+    dag=dag,
+    bash_command='rm -f /tmp/neo4j_import/*.csv; '
+                 'rm -f /tmp/neo4j_import/*.report; '
+)
+
+delete_graph_database = BashOperator(
+    task_id='delete_graph_database',
+    dag=dag,
+    bash_command='rm -rf /tmp/neo4j_data/*'
 )
 
 drop_tables = PostgresOperator(
@@ -79,8 +104,11 @@ create_tables_trigger = TriggerDagRunOperator(
 # Flow
 
 EmptyOperator(task_id='start') >> [
+    reset_venues_df,
     reset_split_no,
     reset_publication_ID,
     delete_final_data,
-    drop_tables
+    drop_tables,
+    delete_graph_import_data,
+    delete_graph_database,
 ] >> create_tables_trigger

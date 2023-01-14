@@ -241,12 +241,19 @@ def process_author_collaborates_with_relationships(author_to_publications_path: 
 
     df = df[['author_id', 'publication_id']]
 
-    result = pd.DataFrame(columns=['author_id_1', 'author_id_2'])
+    records = []
 
     for publication_id, publication_df in df.groupby('publication_id'):
-        author_ids = publication_df['author_id'].values
-        author_ids_permutations = list(itertools.permutations(author_ids, 2))
-        result = pd.concat([result, pd.DataFrame(author_ids_permutations, columns=['author_id_1', 'author_id_2'])])
+        author_ids = publication_df['author_id'].unique()
+        if len(author_ids) < 2:
+            continue
+        for author_id_1, author_id_2 in itertools.combinations(author_ids, 2):
+            records.append({
+                'author_id_1': author_id_1,
+                'author_id_2': author_id_2,
+            })
+
+    result = pd.DataFrame.from_records(records)
 
     result = result.rename(columns={
         'author_id_1': ':START_ID(Author-ID)',
@@ -380,6 +387,8 @@ def process_publication_cited_by_relationships(citations_path: Path, publication
     # publication_ID, citing_publication_DOI (array)
     df = pd.read_csv(citations_path, sep=infer_separator(citations_path))
 
+    df = df.dropna(subset=['citing_publication_DOI'])
+
     df['citing_publication_DOI'] = df['citing_publication_DOI'].apply(literal_eval)
     df = df.explode('citing_publication_DOI')
 
@@ -388,11 +397,11 @@ def process_publication_cited_by_relationships(citations_path: Path, publication
     # Removing publications that are not in the publications.csv file
     df = df.merge(pub_df, left_on='citing_publication_DOI', right_on='doi')
 
-    df = df[['publication_id', 'citing_publication_DOI']]
+    df = df[['publication_ID', 'publication_id']]
 
     df = df.rename(columns={
-        'publication_id': ':START_ID(Publication-ID)',
-        'citing_publication_DOI': ':END_ID(Publication-ID)',
+        'publication_ID': ':START_ID(Publication-ID)',
+        'publication_id': ':END_ID(Publication-ID)',
     })
 
     df[':TYPE'] = 'CITED_BY'
@@ -569,7 +578,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='transform_for_batch_injection',
+    dag_id='transform_for_graph_injection',
     default_args=default_args,
     description='Prepare the graph injection CSVs',
     schedule_interval=None,
@@ -742,3 +751,17 @@ EmptyOperator(task_id='start') >> [
     prepare_affiliation_collaborates_with_relationships,
     prepare_affiliation_publishes_in_relationships,
 ]
+
+# Localhost Testing
+#
+# if __name__ == '__main__':
+#     process_author_collaborates_with_relationships(
+#         Path('/Users/ihar/Studies/Data Engineering/Project/DE-project/Transformation_pipeline/data/final_data/author2publication_20230114173416.csv'),
+#         Path('/Users/ihar/Studies/Data Engineering/Project/DE-project/Transformation_pipeline/neo4j/import')
+#     )
+#
+#     process_publication_cited_by_relationships(
+#         Path('/Users/ihar/Studies/Data Engineering/Project/DE-project/Transformation_pipeline/data/final_data/citing_pub.tsv'),
+#         Path('/Users/ihar/Studies/Data Engineering/Project/DE-project/Transformation_pipeline/data/final_data/publications_20230114173416.csv'),
+#         Path('/Users/ihar/Studies/Data Engineering/Project/DE-project/Transformation_pipeline/neo4j/import')
+#     )
