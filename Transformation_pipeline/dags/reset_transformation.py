@@ -10,6 +10,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
+from airflow.operators.python_operator import PythonOperator
 
 # DAG
 
@@ -26,6 +27,17 @@ dag = DAG(
     description='Reset the transformation pipeline',
     schedule_interval=None,
     start_date=days_ago(2),
+)
+
+def write_empty_venues_df():
+    import pandas as pd
+    venues_df = pd.DataFrame(columns=['venue_ID', 'full_name', 'abbreviation', 'print_issn', 'electronic_issn'])
+    venues_df.to_csv('/tmp/data/data2db/venues_df.tsv', sep="\t", index=False)
+
+reset_venues_df = PythonOperator(
+    task_id='reset_venues_df',
+    dag=dag,
+    python_callable=write_empty_venues_df
 )
 
 reset_split_no = BashOperator(
@@ -92,6 +104,7 @@ create_tables_trigger = TriggerDagRunOperator(
 # Flow
 
 EmptyOperator(task_id='start') >> [
+    reset_venues_df,
     reset_split_no,
     reset_publication_ID,
     delete_final_data,
