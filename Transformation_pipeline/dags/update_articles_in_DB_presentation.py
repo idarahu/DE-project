@@ -1,9 +1,8 @@
 """
-This DAG pulls the data of the publications with DOI from the up-to-date database (DB). 
-Then, it makes the API calls to check if the number of citations has been changed and updates
-the values if needed (in the table of publications in the DB). 
-Finally, it refreshes the authors' and venues' views in the DB and generates CSV files 
-based on the updated data needed for populating the DWH and graph DB with data.
+This DAG is a copy-paste version of the DAG update_articles_in_DB. 
+The only difference is that instead of pulling all publications' data, it limits the number of publications to 200. 
+This limitation was set because API calls needed for updating the data are very time-consuming. 
+Therefore, during a presentation, it would be almost impossible to wait for the update with 50K+ publications to finish.
 """
 
 import datetime
@@ -30,8 +29,8 @@ DATA2DB_FOLDER = '/tmp/data/data2db'
 SQL_FOLDER = '/tmp/data/sql'
 FINAL_DATA_FOLDER = '/tmp/data/final_data'
 
-update_articles_in_DB_dag = DAG(
-    dag_id='update_articles_in_DB', 
+update_articles_in_DB_presentation_dag = DAG(
+    dag_id='update_articles_in_DB_presentation', 
     default_args=DEFAULT_ARGS,
     start_date=datetime(2022,10,12,14,0,0),
     schedule_interval=None,
@@ -53,7 +52,7 @@ def update_publications():
     import pandas as pd
 
     conn = PostgresHook(postgres_conn_id='airflow_pg').get_conn()
-    publications_old_df = pd.read_sql('SELECT publication_id, doi, number_of_citations FROM publications WHERE doi IS NOT NULL', conn)
+    publications_old_df = pd.read_sql('SELECT publication_id, doi, number_of_citations FROM publications WHERE doi IS NOT NULL LIMIT 200', conn)
     publications_old_df['number_of_citations_new'] = publications_old_df.apply(lambda x: do_opencitation_call(x.doi), axis=1)
     publications_new_df = publications_old_df[publications_old_df.number_of_citations_new.gt(publications_old_df.number_of_citations)]
     publications_new_df = publications_new_df.drop(['doi', 'number_of_citations'], axis=1)
@@ -63,13 +62,13 @@ def update_publications():
 
 update_publications_data = PythonOperator(
     task_id='update_publications_data',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     python_callable=update_publications
 )
 
 truncate_updated_publications_table = PostgresOperator(
 	task_id='truncate_updated_publications_table',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
 	postgres_conn_id='airflow_pg',
 	sql="TRUNCATE updated_publications"
 )
@@ -86,7 +85,7 @@ def tsv_to_db(file_name, DB_table):
 
 load_updated_publications_data = PythonOperator(
     task_id='load_updated_publications_data',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     python_callable=tsv_to_db,
     op_kwargs={
         'file_name': 'updated_publications_df.tsv',
@@ -98,7 +97,7 @@ truncate_updated_publications_table >> load_updated_publications_data
 
 update_no_citations = PostgresOperator(
     task_id='update_no_citations',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     postgres_conn_id='airflow_pg',
     sql='update_no_citations.sql',
     trigger_rule='none_failed',
@@ -109,7 +108,7 @@ load_updated_publications_data >> update_no_citations
 
 create_updated_authors_view = PostgresOperator(
     task_id='create_updated_authors_view',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     postgres_conn_id='airflow_pg',
     sql='authors_view.sql',
     trigger_rule='none_failed',
@@ -118,7 +117,7 @@ create_updated_authors_view = PostgresOperator(
 
 create_updated_venues_view = PostgresOperator(
     task_id='create_updated_venues_view',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     postgres_conn_id='airflow_pg',
     sql='venues_view.sql',
     trigger_rule='none_failed',
@@ -134,7 +133,7 @@ def copy_data_from_DB(output_folder, SQL_statement, data_type):
 
 copy_updated_publications = PythonOperator(
     task_id='copy_updated_publications',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
         'output_folder': FINAL_DATA_FOLDER,
@@ -145,7 +144,7 @@ copy_updated_publications = PythonOperator(
 
 copy_updated_authors = PythonOperator(
     task_id='copy_updated_authors',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
         'output_folder': FINAL_DATA_FOLDER,
@@ -156,7 +155,7 @@ copy_updated_authors = PythonOperator(
 
 copy_updated_venues = PythonOperator(
     task_id='copy_updated_venues',
-    dag=update_articles_in_DB_dag,
+    dag=update_articles_in_DB_presentation_dag,
     python_callable=copy_data_from_DB,
     op_kwargs={
         'output_folder': FINAL_DATA_FOLDER,

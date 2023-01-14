@@ -2,6 +2,7 @@ create database warehouse encoding 'utf8';
 \connect warehouse;
 create schema warehouse;
 create sequence wh;
+create extension if not exists citus;
 
 create table if not exists warehouse.publication_venues
 (
@@ -11,7 +12,8 @@ create table if not exists warehouse.publication_venues
     h_index_calculated int,
     valid_from         timestamp not null,
     valid_to           timestamp,
-    constraint publications_venues_check_date check (valid_from < valid_to)
+    constraint publications_venues_check_date check (valid_from < valid_to),
+    constraint publication_venues_unique_idx unique (full_name, abbreviation)
 );
 
 create table if not exists warehouse.publication_time
@@ -20,7 +22,8 @@ create table if not exists warehouse.publication_time
     date  date   not null,
     year  int,
     month int,
-    day   int
+    day   int,
+    constraint publication_time_unique_idx unique(date)
 );
 
 create table if not exists warehouse.publications
