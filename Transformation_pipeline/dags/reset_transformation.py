@@ -46,6 +46,7 @@ delete_final_data = BashOperator(
     bash_command='rm -f /tmp/data/final_data/affiliation*; '
                  'rm -f /tmp/data/final_data/author*; '
                  'rm -f /tmp/data/final_data/publication*; '
+                 'rm -f /tmp/data/final_data/venues*; '
                  'rm -f /tmp/data/final_data/citing_pub*'
 )
 
