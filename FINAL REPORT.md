@@ -101,7 +101,7 @@ Firstly, the fields submitter, title, journal-ref, doi, categories, versions and
 
 The next three tasks that run in parallel, transform_venues_and_publications_data (figure 6), transform_arxiv_data (figure 7)  and transform_authors_and_affiliations_data (figure 8), can be considered the most critical tasks in the transformation pipeline. The main cleaning, transformation, and enrichment processes are performed during these tasks. 
 ![image](https://user-images.githubusercontent.com/102286655/212534653-62c8e040-bba1-4132-b0f5-2c692614470f.png) 
-**Figure 6 Schema of the task transform_venues_and_publications_data
+**Figure 6** Schema of the task transform_venues_and_publications_data
 
 During the task transform_venues_and_publications_data, the following steps are carried out.
 1.	The title of the publication is cleaned (the symbols of the newline are removed).
@@ -139,7 +139,7 @@ print(open_citation_result)
 
 During the task transform_arxiv_data, the field categories in "metadata_df.tsv" is used to map each publication with arXiv categories (stored in "arxiv_categories.csv"). The received information is saved as file "publication2arxiv_df.tsv". In the end, arXiv categories are stored in up-to-date DB in the table "ARXIV_CATEGORIES" and mapping data in the table "PUBLICATION2ARXIV".
 ![image](https://user-images.githubusercontent.com/102286655/212534753-b0465734-6fc8-4227-9154-b7e119441f14.png)
-**Figure 7 Schema of the task transform_arxiv_data
+**Figure 7** Schema of the task transform_arxiv_data
 
 And last but not least, the following list explains the steps carried out during the task transform_authors_and_affiliations_data.
 1.	The relevant fields, such as publication_ID and  authors_parsed, are filtered out from "metadata_df.tsv".
@@ -161,7 +161,7 @@ print(author['hindex'])
 5.	The TSV files ("authors_df.tsv" and "affiliations_df.tsv") needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
 ![image](https://user-images.githubusercontent.com/102286655/212534810-9b1108d0-d329-412b-ae2d-f30decfb9b85.png)
  
-**Figure 8 Schema of the task transform_authors_and_affiliations_data
+**Figure 8** Schema of the task transform_authors_and_affiliations_data
 
 After these tasks, the data is loaded into the up-to-date DB. In the cases where it is necessary to check that only new data is loaded to ensure that there would be no duplicates in the DB,  the additional temporary tables (such as "AFFILIATION2PUBLICATION_TEMP",  "AFFILIATIOS_TEMP", "AUTHORS_TEMP" and "PUBLICATIONS_TEMP") are used. (These tables are always emptied before a new batch of data.) To illustrate how the temporary tables are used, the following example is given. Initially, data about authors is bulk inserted into the "AUTHORS_TEMP" table. Then the data of each author is compared with the data of each author in the "AUTHORS" table. If the author's information is not already present in the DB, a new author is inserted into the "AUTHORS" table. Otherwise, the data about the author is discarded. The same comparison is made between all the corresponding temporary and permanent tables.
 
@@ -173,7 +173,7 @@ In the last step of the transformation pipeline, the data in the database is cop
 
 To fulfil the prerequisites of using the up-to-date DB approach, the data about publications in the database should be updated periodically (for example, monthly). For that reason, the Airflow DAG update_articles_in_DB was built (see figure 9). 
  ![image](https://user-images.githubusercontent.com/102286655/212534828-e66977b9-ec0c-4ce0-b796-b5cae1ddc904.png)
-**Figure 9 Airflow DAG update_articles_in_DB
+**Figure 9** Airflow DAG update_articles_in_DB
 
 During the run of this DAG, the publications with DOIs, that are stored in DB are updated by using their DOIs and OpenCitations API. In this project, only the number of citations is considered as changing field. If the API call returns a new value for this variable, the data about publication is updated. Since venues' and authors' h-indices depend on the number of citations, the relevant views are refreshed after updates.
 Similarly to the transformation pipeline, updating the pipeline ends with copying the data. However, at this time, only publications', authors' and venues' data is copied and saved as CSV files ready for the following pipeline parts (other tables in DB do not change).
