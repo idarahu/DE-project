@@ -62,7 +62,12 @@ delete_final_data = BashOperator(
                  'rm -f /tmp/data/final_data/author*; '
                  'rm -f /tmp/data/final_data/publication*; '
                  'rm -f /tmp/data/final_data/venues*; '
-                 'rm -f /tmp/data/final_data/citing_pub*'
+                 'rm -f /tmp/data/final_data/citing_pub*; '
+                 'rm -f /tmp/data/data2db/affiliations_df.tsv; '
+                 'rm -f /tmp/data/data2db/authors_df.tsv; '
+                 'rm -f /tmp/data/data2db/publication2arxiv_df.tsv; '
+                 'rm -f /tmp/data/data2db/publications_df.tsv; '
+                 'rm -f /tmp/data/data2db/updated_publications_df.tsv; '
 )
 
 delete_graph_import_data = BashOperator(
