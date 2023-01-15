@@ -1,55 +1,122 @@
 -- What are the year's hottest topics (categories of scientific disciplines)?
--- Hottest = most publications
--- By venue, by institution
-
-SELECT pub_venues.full_name, pub_venues.h_index FROM (
-	SELECT 
-		DISTINCT ON (venue.full_name)
-		venue.full_name AS full_name,
-		venue.h_index_calculated AS h_index
-	FROM warehouse.publication_venues venue
-	WHERE
-	    (venue.valid_from, venue.valid_to) OVERLAPS ('2012-01-01'::DATE, '2012-04-12'::DATE)
-	ORDER BY venue.valid_to DESC
-) pub_venues
-ORDER BY pub_venues.h_index DESC;
-
-
+-- HOTTEST = most publications
+-- by time, by venue, by institution
+-- Exact category
 SELECT
-    COUNT()
+	scientific_domain.id,
 	scientific_domain.major_field,
 	scientific_domain.sub_category,
-	SUM(pub.number_of_citations) AS number_of_citations
+	scientific_domain.exact_category,
+	scientific_domain.arxivx_category,
+	COUNT(DISTINCT pub.pub_doi) AS num_of_publications
 FROM
+	-- use latest DOIs
 	(
-		-- Only look at the latest DOI (multiple rows can have same DOI).
-		-- Otherwise citations of same paper are counted multiple times.
-		SELECT
-			DISTINCT ON (pu.doi)
+		SELECT DISTINCT ON (pu.doi)
 			pu.id AS pub_id,
-			pu.number_of_citations AS number_of_citations
+			pu.time_id AS pub_time_id,
+			pu.number_of_citations AS pub_num_of_citations,
+			pu.venue_id AS pub_venue_id,
+			pu.title AS pub_title,
+			pu.doi AS pub_doi
 		FROM warehouse.publications pu
-		ORDER BY pu.snapshot_valid_to DESC
+		ORDER BY pu.doi, pu.snapshot_valid_to DESC
 	) pub
-	JOIN warehouse.publication_time pub_time
-	JOIN warehouse.publication_domain pub_domain
-	JOIN warehouse.scientific_domain scientific_domain
-	JOIN warehouse.publication_venues pub_venues
-	AND pub.publication_time = pub_time.id
-	AND pub_domain.domain_id = scientific_domain.id
-	AND pub_venues.publication_id = pub.id
+-- join scientific domains with publications
+JOIN warehouse.publication_domain pub_domain
+	ON pub_domain.publication_id = pub.pub_id
+JOIN warehouse.scientific_domain scientific_domain
+	ON pub_domain.domain_id = scientific_domain.id
+-- join institutions with publications
+JOIN warehouse.publication_institution pub_inst
+	ON pub_inst.publication_id = pub.pub_id
+JOIN warehouse.institution inst
+	ON pub_inst.institution_id = inst.id
+-- join venues with publications
+JOIN warehouse.publication_venues pub_venues
+	ON pub_venues.id = pub.pub_venue_id
+-- join time with publications
+JOIN warehouse.publication_time pub_time
+	ON pub.pub_time_id = pub_time.id
 WHERE
 	pub_time.year = '2023'
-	AND scientific_domain.id = 'scientific_domain_id'
-	AND pub_venues.id = 'pub_venues_id'
-GROUP BY pub.doi
-ORDER BY number_of_citations DESC;
+	AND inst.id = 1
+	AND pub_venues.id = 1
+GROUP BY scientific_domain.id
+ORDER BY num_of_publications DESC;
 
+-- What are the year's hottest topics (categories of scientific disciplines)?
+-- HOTTEST = most publications
+-- by time, by venue, by institution
+-- Major field
+SELECT
+	scientific_domain.major_field,
+	COUNT(DISTINCT pub.pub_doi) AS num_of_publications
+FROM
+	-- use latest DOIs
+	(
+		SELECT DISTINCT ON (pu.doi)
+			pu.id AS pub_id,
+			pu.time_id AS pub_time_id,
+			pu.number_of_citations AS pub_num_of_citations,
+			pu.venue_id AS pub_venue_id,
+			pu.title AS pub_title,
+			pu.doi AS pub_doi
+		FROM warehouse.publications pu
+		ORDER BY pu.doi, pu.snapshot_valid_to DESC
+	) pub
+-- join scientific domains with publications
+JOIN warehouse.publication_domain pub_domain
+	ON pub_domain.publication_id = pub.pub_id
+JOIN warehouse.scientific_domain scientific_domain
+	ON pub_domain.domain_id = scientific_domain.id
+-- join institutions with publications
+JOIN warehouse.publication_institution pub_inst
+	ON pub_inst.publication_id = pub.pub_id
+JOIN warehouse.institution inst
+	ON pub_inst.institution_id = inst.id
+-- join venues with publications
+JOIN warehouse.publication_venues pub_venues
+	ON pub_venues.id = pub.pub_venue_id
+-- join time with publications
+JOIN warehouse.publication_time pub_time
+	ON pub.pub_time_id = pub_time.id
+WHERE
+	pub_time.year = '2023'
+	AND inst.id = 1
+	AND pub_venues.id = 1
+GROUP BY scientific_domain.major_field
+ORDER BY num_of_publications DESC;
 
-
-
-
-
-
-
-	
+-- What are the year's hottest topics (categories of scientific disciplines)?
+-- HOTTEST = most publications
+-- by time
+-- in major field
+SELECT
+	scientific_domain.major_field,
+	COUNT(DISTINCT pub.pub_doi) AS num_of_publications
+FROM
+	-- use latest DOIs
+	(
+		SELECT DISTINCT ON (pu.doi)
+			pu.id AS pub_id,
+			pu.time_id AS pub_time_id,
+			pu.number_of_citations AS pub_num_of_citations,
+			pu.venue_id AS pub_venue_id,
+			pu.title AS pub_title,
+			pu.doi AS pub_doi
+		FROM warehouse.publications pu
+		ORDER BY pu.doi, pu.snapshot_valid_to DESC
+	) pub
+-- join scientific domains with publications
+JOIN warehouse.publication_domain pub_domain
+	ON pub_domain.publication_id = pub.pub_id
+JOIN warehouse.scientific_domain scientific_domain
+	ON pub_domain.domain_id = scientific_domain.id
+-- join time with publications
+JOIN warehouse.publication_time pub_time
+	ON pub.pub_time_id = pub_time.id
+WHERE
+	pub_time.year = '2023'
+GROUP BY scientific_domain.major_field
+ORDER BY num_of_publications DESC;
