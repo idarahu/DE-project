@@ -24,20 +24,20 @@ In this project, a data pipeline to analyse data about scientific publications w
 
 ArXiv is the open-access archive for scholarly articles from a wide range of different scientific fields. The dataset given for the project contains metadata of the original arXiv data, _i.e._ metadata of papers in the arXiv. The metadata is given in JSON format and contains the following fields:
 
-- id – publication arXiv ID
-- submitter – the name of the person who submitted the paper/corresponding author
-- authors – list of the names of the authors of the paper (in some cases, this field includes additional information about the affiliations of the authors)
-- title – the title of the publication
-- comments – additional information about the paper (such as the number of figures, tables and pages)
-- journal-ref – information about the journal where the article was published
-- doi – Digital Object Identifier (DOI) of the paper
-- report-no – institution's locally assigned publication number
-- categories – categories/tags in the arXiv system, i.e. field of the current study
-- license – license information
-- abstract – abstract of the publication
-- versions – history of the versions (version number together with timestamp/date)
-- update\_date – timestamp of the last update in arXiv
-- authors\_parsed – previous authors field in the parsed form
+- `id` – publication arXiv ID
+- `submitter` – the name of the person who submitted the paper/corresponding author
+- `authors` – list of the names of the authors of the paper (in some cases, this field includes additional information about the affiliations of the authors)
+- `title` – the title of the publication
+- `comments` – additional information about the paper (such as the number of figures, tables and pages)
+- `journal-ref` – information about the journal where the article was published
+- `doi` – Digital Object Identifier (DOI) of the paper
+- `report-no` – institution's locally assigned publication number
+- `categories` – categories/tags in the arXiv system, i.e. field of the current study
+- `license` – license information
+- `abstract` – abstract of the publication
+- `versions` – history of the versions (version number together with timestamp/date)
+- `update\_date` – timestamp of the last update in arXiv
+- `authors\_parsed` – previous authors field in the parsed form
 
 In this project's scope, the fields of submitter, title, journal-ref, doi, categories, versions and authors_parsed  were used (all the others were dropped). 
 
