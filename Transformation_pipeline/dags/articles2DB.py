@@ -83,7 +83,6 @@ def get_previous_publication_ID():
 def get_metadata():
     import pandas as pd
 
-    # id,submitter,authors,title,comments,journal-ref,doi,report-no,categories,license,abstract,versions,update_date,authors_parsed
     file_name = get_file_name()
     df = pd.read_json(f'{INPUT_FOLDER}/{file_name}', lines=True)
     df = df[['submitter', 'authors_parsed', 'title', 'journal-ref', 'doi', 'versions', 'categories']]
@@ -94,7 +93,7 @@ def get_metadata():
 
     df['categories'] = df['categories'].str.split(' ')
     df['versions'] = df['versions'].apply(get_first_and_last_date_from_versions)
-    df['no_versions_arxiv'] = df['categories'].apply(lambda x: len(x))
+    df['no_versions_arxiv'] = df['versions'].apply(lambda x: len(x))
     df['doi'] = df['doi'].apply(lambda x: x.split(' ')[0] if x is not None else '')
     df['date_of_first_version'] = df['versions'].apply(lambda x: x[0])
     df['date'] = df['versions'].apply(lambda x: x[1])
