@@ -16,6 +16,21 @@ python split_dataset.py --arxiv_path <path-to-arxiv-dataset-json> --output_dir .
 
 ## Load
 
+### Data Warehouse
+
+#### Pre-requisites
+
+1. Airflow connection to PostgreSQL database:
+   ```
+   connection_id: citus-warehouse
+   conn_type: Postgres
+   host: citus-db
+   schema: warehouse
+   login: citususer
+   password: cituspass
+   port: 5432
+   ```
+
 ### Neo4j Graph Database
 
 #### Pre-requisites
