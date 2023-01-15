@@ -221,9 +221,6 @@ The fact table "PUBLICATIONS" will store the primary keys of dimension tables (o
 **Table 1** Attributes of the fact table together with explanations
 
 | **Attribute** | **Explanation** |
-|
-| --- | --- | --- |
-| **Attribute** | **Explanation** |
 | --- | --- |
 | authors\_group\_key | the "AUTHORS" dimension group key; is required to get information about the authors of the publication |
 | venue\_ID | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published |
