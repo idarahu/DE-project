@@ -206,7 +206,7 @@ After thoroughly investigating the data to understand what parts of it are usabl
 
 ### Queries examples
 Basic:
-"Authors with most publications in given year."
+"Authors with most publications in given year (2022)."
 SQL:
 https://github.com/idarahu/DE-project/blob/main/queries_dwh/authors/authors_with_most_pubs_in_year.sql
 
