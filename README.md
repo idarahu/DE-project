@@ -1,4 +1,6 @@
-# Data Engineering (LTAT.02.007)
+# Data Engineering (LTAT.02.007). Group 12
+
+Timofei Ganjušev, Siim Karel Koger, Ida Rahu, and Ihar Suvorau
 
 - [Assignment](Assignment.md)
 - [Design](Design.md)
