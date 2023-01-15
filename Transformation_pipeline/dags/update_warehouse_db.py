@@ -4,8 +4,10 @@ from typing import Optional
 import swifter
 import pandas as pd
 from airflow import DAG
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
 
 DATA2DB_DIR = Path('/tmp/data/data2db')
@@ -65,8 +67,10 @@ def get_venue_id(venue, connection) -> int:
     query.close()
     return int(queried_venue_id)
 
+
 def get_publication_id(publication, venues_df, connection) -> int:
-    venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if (publication['venue_id'] not in [0, 1]) else 'null'
+    venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if (
+                publication['venue_id'] not in [0, 1]) else 'null'
     params = {}
     params['doi'] = prepare_string_value(publication.get('doi', default=''))
     params['title'] = prepare_string_value(publication.get('title'))
@@ -96,8 +100,9 @@ def update_warehouse(venues_path: Path, publications_path: Path, output_prepared
     publications_df = pd.read_csv(publications_path, sep=infer_separator(publications_path))
     connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
     venues_df['db_id'] = venues_df.swifter.apply(lambda venue: get_venue_id(venue, connection), axis=1)
-    publications_df['db_id'] = publications_df.swifter.apply(lambda publication: get_publication_id(publication, venues_df, connection),
-                                                     axis=1)
+    publications_df['db_id'] = publications_df.swifter.apply(
+        lambda publication: get_publication_id(publication, venues_df, connection),
+        axis=1)
     output_prepared_publication_path.parent.mkdir(parents=True, exist_ok=True)
     publications_df.to_csv(output_prepared_publication_path, index=False, encoding='utf-8')
 
@@ -145,7 +150,8 @@ def update_warehouse_affiliations(prepared_publication_path: Path, affiliations_
     publication_to_affiliations_df = pd.read_csv(publication_to_affiliations_path,
                                                  sep=infer_separator(publication_to_affiliations_path))
     connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
-    affiliations_df['db_id'] = affiliations_df.swifter.apply(lambda affiliation: get_affiliation_id(affiliation, connection), axis=1)
+    affiliations_df['db_id'] = affiliations_df.swifter.apply(
+        lambda affiliation: get_affiliation_id(affiliation, connection), axis=1)
     publication_to_affiliations_df.swifter.apply(
         lambda publication_affiliation: insert_affiliation_publication(publication_affiliation, affiliations_df,
                                                                        publication_df, connection), axis=1)
@@ -177,7 +183,7 @@ def get_author_id(author, connection) -> int:
     return int(publication_id)
 
 
-def insert_author_publication(publication_author, authors_df, publications_df,connection) -> None:
+def insert_author_publication(publication_author, authors_df, publications_df, connection) -> None:
     author_id = int(publication_author['author_id'])
     author_db_id = int(authors_df.query('author_id == {}'.format(author_id)).iloc[0]['db_id'])
     publication_id = int(publication_author['publication_id'])
@@ -198,8 +204,9 @@ def update_warehouse_authors(prepared_publication_path: Path, authors_path: Path
     author_to_publications_df = pd.read_csv(author_to_publications_path,
                                             sep=infer_separator(author_to_publications_path))
     authors_df['db_id'] = authors_df.apply(lambda author: get_author_id(author, connection), axis=1)
-    author_to_publications_df.apply(
-        lambda publication_author: insert_author_publication(publication_author, authors_df, publication_df, connection), axis=1)
+    author_to_publications_df.swifter.apply(
+        lambda publication_author: insert_author_publication(publication_author, authors_df, publication_df,
+                                                             connection), axis=1)
 
 
 update_authors_data = PythonOperator(
@@ -244,7 +251,8 @@ def update_warehouse_domains(prepared_publication_path: Path, publication_domain
     publication_df = pd.read_csv(prepared_publication_path, sep=infer_separator(prepared_publication_path))
     publication_domains_df = pd.read_csv(publication_domains_path, sep=infer_separator(publication_domains_path))
     connection = PostgresHook(postgres_conn_id='citus-warehouse', schema='warehouse').get_conn()
-    publication_domains_df['domain_db_id'] = publication_domains_df.swifter.apply(lambda domain: get_domain_id(domain, connection), axis=1)
+    publication_domains_df['domain_db_id'] = publication_domains_df.swifter.apply(
+        lambda domain: get_domain_id(domain, connection), axis=1)
     publication_domains_df.swifter.apply(
         lambda publication_author: insert_publication_domain(publication_author, publication_df, connection), axis=1)
 
@@ -259,5 +267,41 @@ update_domain_data = PythonOperator(
     dag=dag
 )
 
+update_authors_h_index_calculated = PostgresOperator(
+    task_id='update_authors_h_index_calculated',
+    sql='update warehouse.authors a set h_index_calculated ='
+        ' (select count(1) from warehouse.publication_author pa, warehouse.publications p'
+        '  where pa.author_id = a.id'
+        '  and pa.publication_id = p.id'
+        '  and p.snapshot_valid_to is null'
+        '  and p.number_of_citations > 0) '
+        'where a.valid_to is null;',
+    postgres_conn_id='citus-warehouse',
+    trigger_rule='none_failed',
+    autocommit=True,
+    dag=dag
+)
 
-update_publication >> [update_authors_data, update_affiliations_data, update_domain_data]
+update_venues_h_index_calculated = PostgresOperator(
+    task_id='update_venues_h_index_calculated',
+    sql='update warehouse.publication_venues pv set h_index_calculated = '
+        ' (select count(1) from warehouse.publications p'
+        '  where p.venue_id = pv.id and p.snapshot_valid_to is null and p.number_of_citations > 0)'
+        'where pv.valid_to is null;',
+    postgres_conn_id='citus-warehouse',
+    trigger_rule='none_failed',
+    autocommit=True,
+    dag=dag
+)
+
+
+commit_task = EmptyOperator(
+        task_id='commit',
+        dag=dag
+    )
+
+
+publication_affiliations = [update_authors_data, update_affiliations_data, update_domain_data]
+update_indexes = [update_authors_h_index_calculated, update_venues_h_index_calculated]
+
+update_publication >> publication_affiliations >> commit_task >> update_indexes
