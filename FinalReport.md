@@ -271,7 +271,7 @@ but at the same time, there may be long time intervals during which this value r
 
 In the dimension table "AUTHORS", all the relevant data about the publications' 
 authors (name and h-index) will be stored. 
-The difference between fields "h\_index\_real" and "h\_index\_calculated" 
+The difference between fields "h_index_real" and "h_index_calculated" 
 is that the first h-index is retrieved by an API call and refers to the real-life h-index 
 that the author has. The second h-index is calculated based on the data added to the DWH. 
 The reason to keep both is that it is one way to immediately see if there is an error 
@@ -304,7 +304,7 @@ institutions information.
 
 Dimension table "PUBLICATION VENUES" will store data about the venues of the publications. 
 In this table, there could be many fields that do not apply to all the records. 
-For example, if the type is "book", the field "h\_index\_calculated" is irrelevant. 
+For example, if the type is "book", the field "h_index_calculated" is irrelevant. 
 However, if the field h-index is applicable (for journals), similarly to the "AUTHORS" 
 dimension table, tracking its changes is essential from the BI point of view. 
 Therefore, this table will also use the type 2 slowly changing dimensions concept.
