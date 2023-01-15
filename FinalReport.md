@@ -1,8 +1,8 @@
 <div dir="rtl">DATA ENGINEERING (LTAT.02.007)</div>
 <div dir="rtl">GROUP 12</div>
-<div dir="rtl">Timofei Ganjušev,</div>
-<div dir="rtl">Siim Karel Koger,</div>
-<div dir="rtl">Ida Rahu,</div>
+<div dir="rtl">Timofei Ganjušev</div>
+<div dir="rtl">Siim Karel Koger</div>
+<div dir="rtl">Ida Rahu</div>
 <div dir="rtl">Ihar Suvorau</div>
 
 # FINAL REPORT
