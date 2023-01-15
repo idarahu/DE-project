@@ -6,5 +6,6 @@ venv
 data
 ETL/airflow/data
 ETL/airflow/logs
+ETL/airflow/inputs/*.json
 ETL/neo4j/*
 !ETL/neo4j/plugins

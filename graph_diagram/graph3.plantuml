@@ -7,12 +7,11 @@ entity Publication {
     doi
     title
     year
-    venue
 }
 
 entity Author {
     full_name
-    h_index
+    h_index_calculated
 }
 
 entity Affiliation {
@@ -21,9 +20,7 @@ entity Affiliation {
 }
 
 entity Venue {
-    issn
     name
-    h_index
 }
 
 entity ScientificDomain {
