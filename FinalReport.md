@@ -156,26 +156,26 @@ print(author['hindex'])
 39
 ```
 *However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function 'get_authors_and_affiliations_data()' should be commented out before running the pipeline if one wants to use scholarly.
-5.	The TSV files ('authors_df.tsv' and 'affiliations_df.tsv') needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
+5.	The TSV files (`authors_df.tsv` and `affiliations_df.tsv`) needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
 ![image](https://user-images.githubusercontent.com/102286655/212534810-9b1108d0-d329-412b-ae2d-f30decfb9b85.png)
  
-**Figure 8** Schema of the task 'transform_authors_and_affiliations_data'
-(P.S. During these three tasks, all the missing strings are replaced with 'None' and integers with '-1.')
+**Figure 8** Schema of the task `transform_authors_and_affiliations_data`
+(P.S. During these three tasks, all the missing strings are replaced with `None` and integers with `-1.`)
 After these tasks, the data is loaded into the up-to-date DB. In the cases where it is necessary to check that only new data is loaded to ensure that there would be no duplicates in the DB,  the additional temporary tables (such as "AFFILIATION2PUBLICATION_TEMP",  "AFFILIATIOS_TEMP", "AUTHORS_TEMP" and "PUBLICATIONS_TEMP") are used. (These tables are always emptied before a new batch of data.) To illustrate how the temporary tables are used, the following example is given. Initially, data about authors is bulk inserted into the "AUTHORS_TEMP" table. Then the data of each author is compared with the data of each author in the "AUTHORS" table. If the author's information is not already present in the DB, a new author is inserted into the "AUTHORS" table. Otherwise, the data about the author is discarded. The same comparison is made between all the corresponding temporary and permanent tables.
 
-In the last step of the transformation pipeline, the data in the database is copied and stored in CSV files. These files are used for loading the data into DWH and graph DB. Appropriate views are generated beforehand to get all the required information (like calculated h-indices of the venues and authors). Also, the field of study is normalised. For that, each arXiv category is mapped against the Scientific Disciplines classification table4. (This table is stored in suitable form in "lookup_table_comains.csv".) For example, if the value in the arXiv category field is "cs.AI" after the mapping, besides this tag, there are three new tags: major_field: "natural sciences", sub_category: "computer sciences" and exact_category: "artificial intelligence".
+In the last step of the transformation pipeline, the data in the database is copied and stored in CSV files. These files are used for loading the data into DWH and graph DB. Appropriate views are generated beforehand to get all the required information (like calculated h-indices of the venues and authors). Also, the field of study is normalised. For that, each arXiv category is mapped against the Scientific Disciplines classification table4. (This table is stored in suitable form in `lookup_table_comains.csv`.) For example, if the value in the arXiv category field is `cs.AI` after the mapping, besides this tag, there are three new tags: `major_field: natural sciences`, `sub_category: computer sciences` and `exact_category: artificial intelligence`.
 
 
 
 ### Updating pipeline (1B)
 
-To fulfil the prerequisites of using the up-to-date DB approach, the data about publications in the database should be updated periodically (for example, monthly). For that reason, the Airflow DAG update_articles_in_DB was built (see figure 9). 
+To fulfil the prerequisites of using the up-to-date DB approach, the data about publications in the database should be updated periodically (for example, monthly). For that reason, the Airflow DAG [`transform_periodic_update`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/transform_periodic_update.py) was built (see figure 9). 
  ![image](https://user-images.githubusercontent.com/102286655/212534828-e66977b9-ec0c-4ce0-b796-b5cae1ddc904.png)
-**Figure 9** Airflow DAG update_articles_in_DB
+**Figure 9** Airflow DAG `transform_periodic_update`
 
 During the run of this DAG, the publications with DOIs, that are stored in DB are updated by using their DOIs and OpenCitations API. In this project, only the number of citations is considered as changing field. If the API call returns a new value for this variable, the data about publication is updated. Since venues' and authors' h-indices depend on the number of citations, the relevant views are refreshed after updates.
 Similarly to the transformation pipeline, updating the pipeline ends with copying the data. However, at this time, only publications', authors' and venues' data is copied and saved as CSV files ready for the following pipeline parts (other tables in DB do not change).
-(Since API calls are very time-consuming, additional DAG update_articles_in_DB_presentation was generated. This DAG is a copy-paste version of the DAG update_articles_in_DB. The only difference is that instead of pulling all publications' data from DB, it limits the number of publications to 200. This DAG has only the illustrative purpose.)
+(Since API calls are very time-consuming, additional DAG [`transform_periodic_update_presentation`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/transform_periodic_update_presentation.py) was generated. This DAG is a copy-paste version of the DAG update_articles_in_DB. The only difference is that instead of pulling all publications' data from DB, it limits the number of publications to 200. This DAG has only the illustrative purpose of how the updates should work – updating all the publications at once is out of this project's scope.))
 
 
 ## Part 2
@@ -307,16 +307,17 @@ Postgres with Citus extension is used on Azure for a petabyte-scale analytical s
 
 ### Design
 
-The initial design of the graph database has not been changed significantly. The changes are the following:
+The labelled property graph model is used instead of RDF to design the graph database. It makes the graph look more concise and allows to specify properties next to nodes and edges. The initial design of the graph database, described in the "Group12 Design Document", has not changed significantly. In the following list, all the changes are given:
 
 * The relationship between the author and affiliation has been renamed from WORKS_AT to WORKS_IN
 * WORKS_IN `data` attribute has been dropped to simplify the graph and reduce the team's workload. However, that information still can be retrieved by querying the author's publications that have the `year` attribute.
 * COVERED_BY relationship between ScientificDomain and Venue has been dropped. Venues for scientific domains can be retrieved by querying publications or affiliations that have direct relationships with venues.
 
-![](diagrams/out/graph/GraphFinal.png)
+The property graph diagram below (figure 11) shows the database entities and their relationships. The entities are represented as nodes; the relationships are represented as directed edges, and node properties are specified inside nodes. In Table 4, the same entities together with properties and in Table 5, the same relationships are also given.
+![](graph_diagram/out/graph/GraphFinal.png)
 
 **Figure 1**. Schema of the graph database
-
+**Table 4** Entities and their properties that are used in the graph database
 | Entity           | Properties                                                |
 |------------------|-----------------------------------------------------------|
 | Author           | full_name, h_index_calculated                             |
@@ -325,34 +326,35 @@ The initial design of the graph database has not been changed significantly. The
 | ScientificDomain | major_field, sub_category, exact_category, arxiv_category |
 | Venue            | full_name                                                 |
 
-**Table 1**. Graph entities with properties
-
-List of the graph relationships:
-
-- AUTHOR_OF: `(:Author)-[:AUTHOR_OF]->(:Publication)`
-- COLLABORATES_WITH: `(:Author)-[:COLLABORATES_WITH]->(:Author)`
-- WORKS_IN: `(:Author)-[:WORKS_IN}]->(:Affiliation)`
-- PUBLISHED_IN: `(:Publication)-[:PUBLISHED_IN]->(:Venue)`
-- BELONGS_TO: `(:Publication)-[:COVERS]->(:ScientificDomain)`
-- CITED_BY: `(:Publication)-[:CITED_BY]->(:Publication)]`
-- COVERS: `(:Affiliation)-[:COVERS]->(:ScientificDomain)`
-- PUBLISHES_IN: `(:Affiliation)-[:PUBLISHES_IN]->(:Venue)`
-- COLLABORATES_WITH: `(:Affiliation)-[:COLLABORATES_WITH]->`(:Affiliation)
+**Table 5** Relationships between the entities in the graph DB
+| Relationship|Representation |
+|:-:|---|
+|AUTHOR_OF|`(:Author)-[:AUTHOR_OF]->(:Publication)`|
+|COLLABORATES_WITH|`(:Author)-[:COLLABORATES_WITH]->(:Author)`|
+|WORKS_IN|`(:Author)-[:WORKS_IN}]->(:Affiliation)`|
+|PUBLISHED_IN|`(:Publication)-[:PUBLISHED_IN]->(:Venue)`|
+|BELONGS_TO|`(:Publication)-[:COVERS]->(:ScientificDomain)`|
+|CITED_BY|`(:Publication)-[:CITED_BY]->(:Publication)`|
+|COVERS|`(:Affiliation)-[:COVERS]->(:ScientificDomain)`|
+|PUBLISHES_IN|`(:Affiliation)-[:PUBLISHES_IN]->(:Venue)`|
+|COLLABORATES_WITH|`(:Affiliation)-[:COLLABORATES_WITH]->(:Affiliation)`|
 
 ### Implementation
 
 After the initial transformation and data enrichment finishes, Airflow triggers the two DAGs:
-
-- transform_for_graph_injection
-- load_graph_db
-
-The `transform_for_graph_injection` DAG prepares CSV files for the graph database injection. It determines the necessary relationships between entities, and it also splits the data into format required by the `neo4j-admin import` command.
+•	[`transform_for_graph_injection`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/transform_for_graph_injection.py) (figure 12)
+•	[`load_graph_db`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/load_graph_db.py) (figure 13)
+The `transform_for_graph_injection` DAG prepares CSV files for the graph database injection. It determines the necessary relationships between entities and splits the data into the format required by the `neo4j-admin import` command.
+![image](https://user-images.githubusercontent.com/102286655/212559941-b644c76d-c213-49e8-bf2c-ba2b2aff8a33.png)
+**Figure 12** Airflow DAG `transform_for_graph_injection`
 
 The `load_graph_db` DAG starts a container from the custom-built Docker image. First, the container runs `neo4j-admin import` command to load the data into the graph database by overwriting the previously existing data. Then, it runs the `neo4j` command to start the Neo4j server in the `console` mode. The database is ready to be queried at http://localhost:7474.
+![image](https://user-images.githubusercontent.com/102286655/212559971-3c5065aa-941e-4716-ad9e-67b0b16fe609.png)
+**Figure 13** Airflow DAG `load_graph_db`
 
 ### Graph Queries
 
-The graph database has been designed to answer many questions about its entities and relationships between them. Below is the table with questions and the corresponding Cypher queries.
+The graph database has been designed to answer many questions about its entities and the relationships between them. The questions and corresponding Cypher queries are given in the table below.
 
 #### Basic Queries
 
@@ -401,18 +403,16 @@ Getting a publication venue:
 | that covers a given scientific domain  | `MATCH (:ScientificDomain {sub_category: "physical sciences"})-[:COVERS]-(:Affiliation)-[:PUBLISHES_IN]-(v:Venue) RETURN v LIMIT 25` |
 | that publishes for a given affiliation | `MATCH (a:Affiliation)-[:PUBLISHES_IN]-(v:Venue) WHERE a.name = "Iowa State University" RETURN v LIMIT 25`                           |
 | that publishes for a given author      | `MATCH (a:Author {author_id: "224"})-[:AUTHOR_OF]-(:Publication)-[:PUBLISHED_IN]-(v:Venue) RETURN v LIMIT 25`                        |
-
+#### Analytical queries
+Besides the basic queries also, analytical queries were carried out.
 #### Influential publications using PageRank
 
-To find the most influential publications, we use the [Page Rank](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/) algorithm.
-
-First, we create a graph projection to use with the the [Graph Data Science Library](https://neo4j.com/docs/graph-data-science/current/) v2.2 library:
-
+The [Page Rank](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/) algorithm was used to find the most influential publications. For that, firstly, the graph projection was created to use with the  [Graph Data Science Library](https://neo4j.com/docs/graph-data-science/current/) v2.2 library
 ```cypher
 CALL gds.graph.project.cypher('influential_publications', 'MATCH (p:Publication) RETURN id(p) AS id', 'MATCH (p1:Publication)-[:CITED_BY]->(p2:Publication) RETURN id(p1) AS source, id(p2) AS target')
 ```
 
-Then, we run the algorithm:
+After that, the algorithm was run:
 
 ```cypher
 CALL gds.pageRank.stream('influential_publications') 
@@ -422,30 +422,25 @@ ORDER BY score DESC
 LIMIT 25
 ```
 
-Resulting table:
+In the following figure, the resulting table is shown.
 
 <img width="1285" alt="Screenshot 2023-01-15 at 12 47 26" src="https://user-images.githubusercontent.com/6259054/212536500-c62d98c9-cc7b-4783-bb8c-9cd489d1fcb9.png">
 
 #### Communities detection using Louvain
 
-To find communities of authors that cover a particular scientific domain, we use the [Louvain](https://neo4j.com/docs/graph-data-science/current/algorithms/louvain/#algorithms-louvain-examples-stream) method from GDS with the following Cypher queries.
-
-First, we project the graph:
-
+The [Louvain](https://neo4j.com/docs/graph-data-science/current/algorithms/louvain/#algorithms-louvain-examples-stream) method from GDS with the following Cypher queries is used to find communities of authors that cover a particular scientific domain.
+Firstly, the graph is projected:
 ```cyper
 CALL gds.graph.project.cypher('community_by_domain', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:AUTHOR_OF]->(p:Publication)-[:BELONGS_TO]->(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" MATCH (a2:Author)-[:AUTHOR_OF]->(p) WHERE a1 <> a2 RETURN id(a1) AS source, id(a2) AS target')
 ```
-
-Then, we can write the community_by_domain ID to the authors' nodes as a property:
+Then, it is possible to write the community_by_domain ID to the authors' nodes as a property:
 
 ```cyper
 CALL gds.louvain.stream('community_by_domain') 
 YIELD nodeId, communityId 
 WITH gds.util.asNode(nodeId) AS a, communityId AS communityId SET a.community_by_domain = communityId
 ```
-
-After that, we query a community where the amount of authors is greater than 1:
-
+After that, the communities where the amount of authors is greater than 1 are queried:
 ```cyper
 MATCH (a:Author) 
 WHERE a.community_by_domain IS NOT NULL 
@@ -453,10 +448,10 @@ WITH a.community_by_domain AS communityId, COUNT(a) AS amount WHERE amount > 1
 RETURN communityId, amount 
 ORDER BY amount DESC
 ```
-
+The results of this query are illustrated in the following figure.
 <img width="1427" alt="Screenshot 2023-01-15 at 12 53 51" src="https://user-images.githubusercontent.com/6259054/212536634-e642feee-d8af-4147-a47f-1549aafd6ee0.png">
 
-Finally, we can take the biggest community and display it with the query:
+Finally, it is possible to filter out the biggest community and display it with the query:
 ```cyper
 MATCH (a:Author {community_by_domain: 35739}) RETURN a LIMIT 25
 ```
@@ -465,19 +460,17 @@ MATCH (a:Author {community_by_domain: 35739}) RETURN a LIMIT 25
 
 #### Missing links between authors using Delta-Stepping Single-Source Shortest Path
 
-To search for a missing link between two authors, we use the [Single-Source Shortest Path](https://neo4j.com/docs/graph-data-science/current/algorithms/delta-single-source/) from GDS.
-
-First, we create a projection:
-
+The [Single-Source Shortest Path](https://neo4j.com/docs/graph-data-science/current/algorithms/delta-single-source/) from GDS is used to search for a missing link between two authors.
+In the first step, the projection is made:
 ```cypher
 CALL gds.graph.project.cypher('missing_link', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:COLLABORATES_WITH]-(a2:Author) RETURN id(a1) AS source, id(a2) AS target')
 ```
 
-Then, we pick two authors who have not collaborated with each other, e.g., "T. Nagao" and "T.H. Puzia":
+Then, two authors who have not collaborated with each other, e.g., "T. Nagao" and "T.H. Puzia", are picked out. 
 
 <img width="1427" alt="Screenshot 2023-01-15 at 12 36 55" src="https://user-images.githubusercontent.com/6259054/212536677-2e474212-6ef5-49c9-8ffb-bca78ea301b3.png">
 
-Finally, we find the shortest path between the authors with author_id 36102 and 34512:
+Finally, the shortest path between the authors with author_id 36102 and 34512 is found:
 
 ```cypher
 MATCH (source:Author {author_id: "36102"})
@@ -492,57 +485,4 @@ LIMIT 25
 <img width="1431" alt="Screenshot 2023-01-15 at 12 29 56" src="https://user-images.githubusercontent.com/6259054/212536728-d1640553-c8f7-4963-a635-bdc5d03e895a.png">
 
 
-## Guidelines for running the overall pipeline
-
-...
-
-## References
-
-1. Bartell, A. REST API. _Crossref_ https://www.crossref.org/documentation/retrieve-metadata/rest-api/.
-
-2. Peroni, S. & Shotton, D. Open Citation: Definition. 95436 Bytes (2018) doi:10.6084/M9.FIGSHARE.6683855.
-
-3. Kannawadi, S. A. C., Panos Ipeirotis, Victor Silva, Arun. scholarly: Simple access to Google Scholar authors and citations https://pypi.org/project/scholarly/.
-
-4. Scientific Disciplines - EGI Glossary - EGI Confluence. https://confluence.egi.eu/display/EGIG/Scientific+Disciplines.
-
-5. Mundy, J. Design Tip #145 Timespan Accumulating Snapshot Fact Tables. _Kimball Group_ https://www.kimballgroup.com/2012/05/design-tip-145-time-stamping-accumulating-snapshot-fact-tables/ (2012).
-
-6. Timespan Tracking in Fact Tables | Kimball Dimensional Modeling Techniques. _Kimball Group_ https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/timespan-fact-table/.
-
-7. Thornthwaite, W. Design Tip #142 Building Bridges. _Kimball Group_ https://www.kimballgroup.com/2012/02/design-tip-142-building-bridges/ (2012).
-
-8. Kimball, R. Slowly Changing Dimensions. _Kimball Group_ https://www.kimballgroup.com/2008/08/slowly-changing-dimensions/ (2008).
-
-9. Kimball, R. Slowly Changing Dimensions, Part 2. _Kimball Group_ https://www.kimballgroup.com/2008/09/slowly-changing-dimensions-part-2/ (2008).
-
-10. Multivalued Dimensions and Bridge Tables | Kimball Dimensional Modeling Techniques. _Kimball Group_ https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/multivalued-dimension-bridge-table/.
-
-11. postgres/postgres. (2022) https://github.com/postgres/postgres.
-
-12. PostgreSQL - INDEXES. https://www.tutorialspoint.com/postgresql/postgresql\_indexes.
-
-13. 5.11. Table Partitioning. _PostgreSQL Documentation_ https://www.postgresql.org/docs/15/ddl-partitioning.html (2022).
-
-14. citusdata/citus. (2022) https://github.com/citusdata/citus.
-
-15. Our Story | Citus Data, now part of Microsoft. https://www.citusdata.com/about/our-story/.
-
-16. Hybrid Transaction/Analytical Processing Will Foster Opportunities for Dramatic Business Innovation. _Gartner_ https://www.gartner.com/en/documents/2657815.
-
-17. Architecting petabyte-scale analytics by scaling out Postgres on Azure with the Citus extension. _TECHCOMMUNITY.MICROSOFT.COM_ https://techcommunity.microsoft.com/t5/azure-database-for-postgresql/architecting-petabyte-scale-analytics-by-scaling-out-postgres-on/ba-p/969685 (2019).
-
-18. Article Rank - Neo4j Graph Data Science. _Neo4j Graph Data Platform_ https://neo4j.com/docs/graph-data-science/2.2/algorithms/article-rank/.
-
-19. Louvain - Neo4j Graph Data Science. _Neo4j Graph Data Platform_ https://neo4j.com/docs/graph-data-science/2.2/algorithms/louvain/.
-
-20. K-Means Clustering - Neo4j Graph Data Science. _Neo4j Graph Data Platform_ https://neo4j.com/docs/graph-data-science/2.2/algorithms/alpha/kmeans/.
-
-21. A\* Shortest Path - Neo4j Graph Data Science. _Neo4j Graph Data Platform_ https://neo4j.com/docs/graph-data-science/2.2/algorithms/astar/.
-
-22. Yen's algorithm Shortest Path - Neo4j Graph Data Science. _Neo4j Graph Data Platform_ https://neo4j.com/docs/graph-data-science/2.2/algorithms/yens/.
-
-23. Cypher Query Language - Developer Guides. _Neo4j Graph Data Platform_ https://neo4j.com/developer/cypher/.
-
-24. Neo4j Open Source Project. _Neo4j Graph Data Platform_ https://neo4j.com/open-source-project/.
-
+## [Guidelines for running the overall pipeline](https://github.com/idarahu/DE-project/blob/main/ETL/README.md)
