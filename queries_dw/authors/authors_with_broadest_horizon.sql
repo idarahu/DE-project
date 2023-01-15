@@ -3,7 +3,8 @@
 -- amount of different scientific domains)
 SELECT
 	COUNT(DISTINCT scientific_domain.id) AS num_of_domains,
-	aut.full_name
+	aut.full_name,
+	aut.first_name
 FROM warehouse.publications pub
 -- join authors with publications
 JOIN warehouse.publication_author pub_auth

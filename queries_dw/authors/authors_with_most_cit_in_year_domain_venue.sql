@@ -1,6 +1,7 @@
 -- Ranking authors with the most citations in a given year, scientific domain and/or publication venue
 SELECT
 	aut.full_name,
+	aut.first_name,
 	SUM(pub.pub_num_of_citations) AS number_of_citations
 FROM
 	-- use latest DOIs
