@@ -48,6 +48,8 @@ After the transformation step,
 
 # Graph Database Queries
 
+## Basic Queries
+
 Getting an author:
 
 | Question                                             | Cypher Query                                                                                                                                                    | Notes |
@@ -60,13 +62,13 @@ Getting an author:
 
 Getting a publication:
 
-| Question                            | Cypher Query                                                                                                                  | Notes           |
-|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|-----------------|
-| cited by a given publication        | ``                                                                                                                            | Not enough data | 
-| cited by a given author             | ``                                                                                                                            | Not enough data | 
-| published in a given venue          | `MATCH (p:Publication)-[:PUBLISHED_IN]-(v:Venue {full_name: "Lecture Notes in Computer Science"}) RETURN p LIMIT 25`          |                 | 
-| affiliated with a given affiliation | `MATCH (p:Publication)-[:AUTHOR_OF]-(a:Author)-[:WORKS_IN]-(af:Affiliation {name: "Princeton University"}) RETURN p LIMIT 25` |                 | 
-| from a given scientific domain      | `MATCH (p:Publication)-[:BELONGS_TO]-(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" RETURN p LIMIT 25`             |                 |
+| Question                            | Cypher Query                                                                                                                  | Notes |
+|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|-------|
+| cited by a given publication        | `MATCH (p:Publication)-[:CITED_BY]->(:Publication {publication_id: "44324"}) RETURN p LIMIT 25`                               |       | 
+| cited by a given author             | `MATCH (p:Publication)-[:CITED_BY]->(:Publication)-[:AUTHOR_OF]-(a:Author {author_id: "6616"}) RETURN p LIMIT 25`             |       | 
+| published in a given venue          | `MATCH (p:Publication)-[:PUBLISHED_IN]-(v:Venue {full_name: "Lecture Notes in Computer Science"}) RETURN p LIMIT 25`          |       | 
+| affiliated with a given affiliation | `MATCH (p:Publication)-[:AUTHOR_OF]-(a:Author)-[:WORKS_IN]-(af:Affiliation {name: "Princeton University"}) RETURN p LIMIT 25` |       | 
+| from a given scientific domain      | `MATCH (p:Publication)-[:BELONGS_TO]-(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" RETURN p LIMIT 25`             |       |
 
 Getting an affiliation:
 
@@ -92,14 +94,27 @@ Getting a publication venue:
 | that publishes for a given affiliation | `MATCH (a:Affiliation)-[:PUBLISHES_IN]-(v:Venue) WHERE a.name = "Iowa State University" RETURN v LIMIT 25`                           |       |
 | that publishes for a given author      | `MATCH (a:Author {author_id: "224"})-[:AUTHOR_OF]-(:Publication)-[:PUBLISHED_IN]-(v:Venue) RETURN v LIMIT 25`                        |       |
 
-What is the most influential publication:
+## Influential publications using PageRank
 
-| Question                     | Cypher Query                                                                                                                                                                                                                                               | Notes           |
-|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
-| in a given year              | `MATCH (p:Publication)-[:CITED_BY]->(cited:Publication) WHERE p.year = 2007 WITH p, COUNT(cited) AS citedCount ORDER BY citedCount DESC LIMIT 1 RETURN p`                                                                                                  | Not enough data |
-| in a given scientific domain | `MATCH (p:Publication)-[:BELONGS_TO]-(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" MATCH (p:Publication)-[:CITED_BY]->(cited:Publication) WITH p, COUNT(DISTINCT cited) AS citedCount ORDER BY citedCount DESC LIMIT 1 RETURN p`               | Not enough data |
-| in a given venue             | `MATCH (p:Publication)-[:PUBLISHED_IN]-(v:Venue) WHERE v.full_name = "International Journal of Astrobiology" MATCH (p:Publication)-[:CITED_BY]->(cited:Publication) WITH p, COUNT(DISTINCT cited) AS citedCount ORDER BY citedCount DESC LIMIT 1 RETURN p` | Not enough data |
-| in a given affiliation       | `MATCH (af:Affiliation {name: "Princeton University"})-[:WORKS_IN]-(:Author)-[:AUTHOR_OF]-(p:Publication)-[:CITED_BY]->(cited:Publication) WITH p, COUNT(cited) AS citedCount ORDER BY citedCount DESC LIMIT 1 RETURN p`                                   | Not enough data |
+To find the most influential publications, we use the [Page Rank](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/) algorithm:
+
+Create a projection:
+
+```cypher
+CALL gds.graph.project.cypher('influential_publications', 'MATCH (p:Publication) RETURN id(p) AS id', 'MATCH (p1:Publication)-[:CITED_BY]->(p2:Publication) RETURN id(p1) AS source, id(p2) AS target')
+```
+
+Run the algorithm:
+
+```cypher
+CALL gds.pageRank.stream('influential_publications') 
+YIELD nodeId, score 
+RETURN gds.util.asNode(nodeId).title AS title, score 
+ORDER BY score DESC 
+LIMIT 25
+```
+
+## Communities detection using Louvain
 
 To find communities of authors that cover a particular scientific domain, we use the [Louvain](https://neo4j.com/docs/graph-data-science/current/algorithms/louvain/#algorithms-louvain-examples-stream) method from GDS with the following Cypher queries:
 
@@ -112,24 +127,42 @@ CALL gds.graph.project.cypher('community_by_domain', 'MATCH (a:Author) RETURN id
 Write the community_by_domain id to the authors:
 
 ```cyper
-CALL gds.louvain.stream('community_by_domain') YIELD nodeId, communityId WITH gds.util.asNode(nodeId) AS a, communityId AS communityId SET a.community_by_domain = communityId
+CALL gds.louvain.stream('community_by_domain') 
+YIELD nodeId, communityId 
+WITH gds.util.asNode(nodeId) AS a, communityId AS communityId SET a.community_by_domain = communityId
 ```
 
 Query the community where amount of authors is greater than 1:
 
 ```cyper
-MATCH (a:Author) WHERE a.community_by_domain IS NOT NULL WITH a.community_by_domain AS communityId, COUNT(a) AS amount WHERE amount > 1 RETURN communityId, amount ORDER BY amount DESC
+MATCH (a:Author) 
+WHERE a.community_by_domain IS NOT NULL 
+WITH a.community_by_domain AS communityId, COUNT(a) AS amount WHERE amount > 1 
+RETURN communityId, amount 
+ORDER BY amount DESC
 ```
 
 ```cyper
 MATCH (a:Author {community_by_domain: 0}) RETURN a LIMIT 25
 ```
 
-Other queries:
+## Missing links between authors using Delta-Stepping Single-Source Shortest Path
 
-| Question                                                                                                | Cypher Query                                                                                                                                                                                                                | Notes |
-|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------|
-| Which author has the most self-citations (or citations to other authors from the same affiliation)?     | `MATCH (a1:Author)-[:AUTHOR_OF]->(p:Publication)-[:CITED_BY]->(cited:Publication)-[:AUTHOR_OF]-(a2:Author) WHERE a1.author_id = a2.author_id WITH COUNT(cited) AS citations, a1 ORDER BY citations DESC RETURN a1 LIMIT 25` |       |
-| Which author has the most collaborations?                                                               | `MATCH (author:Author)-[:COLLABORATES_WITH]->(otherAuthor:Author) WITH author, COUNT(DISTINCT otherAuthor) as collaborations ORDER BY collaborations DESC LIMIT 1 RETURN author, collaborations`                            |       |
-| Is there a connection between co-authors and where they publish their papers?                           | ``                                                                                                                                                                                                                          |       |
-| What is the missing link between two authors from different affiliations who have not collaborated yet? | ``                                                                                                                                                                                                                          |       |
+To search for a missing link between two authors, we use the [Single-Source Shortest Path](https://neo4j.com/docs/graph-data-science/current/algorithms/delta-single-source/) from GDS:
+
+Create a projection:
+
+```cypher
+CALL gds.graph.project.cypher('missing_link', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:COLLABORATES_WITH]-(a2:Author) RETURN id(a1) AS source, id(a2) AS target')
+```
+
+Finding the shortest path between two authors with author_id 36102 and 34512:
+
+```cypher
+MATCH (source:Author {author_id: "36102"})
+CALL gds.allShortestPaths.delta.stream('missing_link_2', {sourceNode: source})
+YIELD index, sourceNode, targetNode, path
+WHERE gds.util.asNode(targetNode).author_id = "34512"
+RETURN index, gds.util.asNode(sourceNode).full_name AS sourceNodeName, gds.util.asNode(targetNode).full_name AS targetNodeName, nodes(path) as path
+ORDER BY index
+LIMIT 25```
