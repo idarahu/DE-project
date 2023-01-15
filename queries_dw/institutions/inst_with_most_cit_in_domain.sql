@@ -12,7 +12,10 @@ FROM
 			pu.number_of_citations AS pub_num_of_citations,
 			pu.venue_id AS pub_venue_id
 		FROM warehouse.publications pu
-		ORDER BY pu.doi, pu.snapshot_valid_to DESC
+		-- join time with publications
+        JOIN warehouse.publication_time pub_time
+            ON pu.time_id = pub_time.id
+		ORDER BY pu.doi, pub_time.date DESC
 	) pub
 -- join institutions with publications
 JOIN warehouse.publication_institution pub_inst
