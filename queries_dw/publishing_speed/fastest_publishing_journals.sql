@@ -5,7 +5,7 @@ SELECT
 FROM
 	-- get latest DOIs
 	(
-		SELECT DISTINCT ON (pu.doi)
+		SELECT
 			pu.title AS pub_title,
 			pu.doi AS pub_doi,
 			pub_time.date AS latest_release_date,
@@ -17,7 +17,8 @@ FROM
 		-- join venues with publications
 		JOIN warehouse.publication_venues pub_venues
 			ON pub_venues.id = pu.venue_id
-		ORDER BY pu.doi, pub_time.date DESC
+		WHERE pu.snapshot_valid_to is NULL
+		LIMIT 1
 	) pub_latest
 JOIN
 	-- get earliest DOIs

@@ -4,7 +4,7 @@
 SELECT
 	aut.full_name,
 	aut.first_name,
-	COUNT(DISTINCT scientific_domain.id) AS num_of_domains
+	COUNT(DISTINCT pub_domain.domain_id) AS num_of_domains
 FROM warehouse.publications pub
 -- join authors with publications
 JOIN warehouse.publication_author pub_auth
@@ -14,7 +14,5 @@ JOIN warehouse.authors aut
 -- join scientific domains with publications
 JOIN warehouse.publication_domain pub_domain
 	ON pub_domain.publication_id = pub.id
-JOIN warehouse.scientific_domain scientific_domain
-	ON pub_domain.domain_id = scientific_domain.id
 GROUP BY aut.id
 ORDER BY num_of_domains DESC;
