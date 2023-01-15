@@ -205,9 +205,6 @@ After thoroughly investigating the data to understand what parts of it are usabl
 - How does the number of publications on a given topic change during a given time frame?
 #### [Publish speed](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publishing_speed)
 - Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
-#### [Change in H-index](https://github.com/idarahu/DE-project/tree/main/queries_dwh/hottest_topics)
-- Who is the author whose h-index has increased the most during the given time?
-- Which journal's h-index has increased the most during the given time?
 
 SCHEMA
 
