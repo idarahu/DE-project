@@ -12,6 +12,7 @@ import pandas as pd
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.dates import days_ago
 
 
@@ -736,6 +737,12 @@ prepare_affiliation_publishes_in_relationships = PythonOperator(
 
 # Flow
 
+next_trigger = TriggerDagRunOperator(
+    task_id='load_graph_db',
+    trigger_dag_id='load_graph_db',
+    dag=dag,
+)
+
 EmptyOperator(task_id='start') >> [
     prepare_venue_entities,
     prepare_author_entities,
@@ -751,7 +758,7 @@ EmptyOperator(task_id='start') >> [
     prepare_affiliation_covers_domain_relationships,
     prepare_affiliation_collaborates_with_relationships,
     prepare_affiliation_publishes_in_relationships,
-]
+] >> next_trigger
 
 # Localhost Testing
 #

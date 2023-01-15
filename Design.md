@@ -271,8 +271,8 @@ The property graph diagram below shows entities of the database and their relati
 
 All entities contain properties relevant to queries above. One of the edges, `(:Author)-[:works_at {date}]->(:Affiliation)`, also contains a property to indicate that the relationship is temporal and that might be important for some queries. Nodes like `(:Author)`, `(:Affiliation)`, and `(:Publication)` can have self loops to indicate co-authorship, employment, and self-citations, respectively.
 
-![Graph Schema](graph_diagram/out/graph/Graph.png)
-![Graph Schema](graph_diagram/out/graph/Graph2.png)
+![Graph Schema](diagrams/out/graph/Graph.png)
+![Graph Schema](diagrams/out/graph/Graph2.png)
 
 #### Entities with properties
 

@@ -12,6 +12,7 @@ from airflow import DAG
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 DEFAULT_ARGS = {
@@ -901,7 +902,21 @@ copy_publication2arxiv = PythonOperator(
     }
 )
 
+next_trigger_graph = TriggerDagRunOperator(
+    task_id='transform_for_graph_injection',
+    trigger_dag_id='transform_for_graph_injection',
+    dag=articles2DB_dag,
+)
+
+next_trigger_dwh = TriggerDagRunOperator(
+    task_id='load_dwh_db',
+    trigger_dag_id='load_dwh_db',
+    dag=articles2DB_dag,
+)
+
 connector4 = EmptyOperator(task_id='connector4')
 connector3 >> [copy_affiliations, copy_authors, copy_venues, copy_affiliation2publication,
                copy_author2affiliation, copy_author2publication, copy_publications,
                copy_publication2arxiv] >> connector4
+
+connector4 >> [next_trigger_graph, next_trigger_dwh]
