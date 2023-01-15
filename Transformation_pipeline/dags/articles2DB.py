@@ -398,7 +398,7 @@ def parse_first_name(first_name_raw_to_parse):
         first_name_abbr = ('. '.join(splitted_first) + '.').upper()
     return first_name, first_name_abbr
 
-def extra_or_venue(value1, value2):
+def extra_or_affiliation(value1, value2):
     if value1.upper() in ['JR', 'JR.', 'I', 'II', 'III', 'IV', 'V']:
         return [value1, value2]
     else:
@@ -484,7 +484,7 @@ def get_authors_and_affiliations_data():
     metadata_df = metadata_df.iloc[:, 0:5]
     metadata_df = metadata_df.rename(columns={0: 'last_name', 1: 'first_name_raw', 2: 'raw1', 3: 'raw2'})
     metadata_df[['first_name', 'first_name_abbr']] = metadata_df.apply(lambda x: parse_first_name(x.first_name_raw) if x.first_name_raw is not None else [None, None], axis=1, result_type='expand')
-    metadata_df[['extra', 'institution_name_raw']] = metadata_df.apply(lambda x: extra_or_venue(x.raw1, x.raw2) if x.raw1 != '' else [None, None], axis = 1, result_type='expand')
+    metadata_df[['extra', 'institution_name_raw']] = metadata_df.apply(lambda x: extra_or_affiliation(x.raw1, x.raw2) if x.raw1 != '' else [None, None], axis = 1, result_type='expand')
     metadata_df[['institution_name', 'institution_place']] = metadata_df.apply(lambda x: find_institution_information(x.institution_name_raw, universities_lookup, cities_lookup) if x.institution_name_raw is not None else [None, None], axis=1, result_type='expand')
     # Scholarly has limited times for receiving the data - therefore the following code line is commented in and the line after that is used.
     # Also this step is very time-consuming and out of this project's scope.
