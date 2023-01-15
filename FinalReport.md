@@ -179,7 +179,7 @@ Similarly to the transformation pipeline, updating the pipeline ends with copyin
 
 After thoroughly investigating the data to understand what parts of it are usable for the project, it is possible to phrase the BI queries that would be the basis for developing a data warehouse. In the subsequent sections, the BI queries, the schema of DWH and the technologies that will be used are discussed.
 
-QUERIES
+### QUERIES
 
 #### [Ranking authors](https://github.com/idarahu/DE-project/tree/main/queries_dwh/authors)
 - With the most publications in a given year, scientific domain and/or publication venue
@@ -198,9 +198,12 @@ QUERIES
 #### [Publications over time](https://github.com/idarahu/DE-project/tree/main/queries_dwh/change_in_num_of_publications) 
 - How does the number of publications on a given topic change during a given time frame?
 #### [Publish speed](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publishing_speed)
-- Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
+- Which papers have the most prolonged period between the first and last version? 
+- Are there any journals where publishing takes much more time compared to others?
 
-SCHEMA
+### SCHEMA
+
+![DWH schema](https://github.com/idarahu/DE-project/tree/main/queries_dwh/dwh_ER_diagram.png)
 
 Based on the formulated BI queries, the proper schema of a data warehouse for storing data about scientific publications would contain a fact table, "PUBLICATIONS", and five dimension tables: "AUTHORS", "AUTHORS' AFFILIATIONS", "PUBLICATION VENUES", "SCIENTIFIC DOMAINS" and "TIME" (see Figure 2).
 
