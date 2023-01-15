@@ -28,6 +28,6 @@ WHERE
 	-- could do the filtering by major field, sub cat, or id, or exact cat if desired
 	-- but in project preparation we mostly talked about major_field
 	-- additional queries could easily be added in few clicks
-	AND scientific_domain.major_field = 'major_field'
+	scientific_domain.major_field = 'major_field'
 GROUP BY pub_time.year
 ORDER BY num_of_publications DESC;
