@@ -41,7 +41,7 @@ JOIN warehouse.publication_time pub_time
 WHERE
 	pub_time.year = '2023'
 	AND inst.id = 1
-	AND pub_venues.id = 1
+	AND pub_venues.full_name = ''
 GROUP BY scientific_domain.id
 ORDER BY num_of_publications DESC;
 
@@ -84,7 +84,7 @@ JOIN warehouse.publication_time pub_time
 WHERE
 	pub_time.year = '2023'
 	AND inst.id = 1
-	AND pub_venues.id = 1
+	AND pub_venues.full_name = ''
 GROUP BY scientific_domain.major_field
 ORDER BY num_of_publications DESC;
 
@@ -150,7 +150,7 @@ JOIN warehouse.scientific_domain scientific_domain
 JOIN warehouse.publication_venues pub_venues
 	ON pub_venues.id = pub.pub_venue_id
 WHERE
-	pub_venues.id = 1
+	pub_venues.full_name = ''
 GROUP BY scientific_domain.major_field
 ORDER BY num_of_publications DESC;
 

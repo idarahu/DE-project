@@ -50,7 +50,7 @@ JOIN warehouse.institution inst
 JOIN warehouse.publication_venues pub_venues
 	ON pub_venues.id = pub.venue_id
 WHERE
-	pub_venues.id = 1
+	pub_venues.full_name = ''
 GROUP BY inst.id
 ORDER BY num_of_publications DESC;
 
@@ -78,7 +78,7 @@ JOIN warehouse.publication_time pub_time
 WHERE
 	pub_time.year = '2023'
 	AND scientific_domain.id = 1
-	AND pub_venues.id = 1
+	AND pub_venues.full_name = ''
 GROUP BY inst.id
 ORDER BY num_of_publications DESC;
 
@@ -167,7 +167,7 @@ JOIN warehouse.institution inst
 JOIN warehouse.publication_venues pub_venues
 	ON pub_venues.id = pub.pub_venue_id
 WHERE
-	pub_venues.id = 1
+	pub_venues.full_name = ''
 GROUP BY inst.id
 ORDER BY number_of_citations DESC;
 
@@ -206,7 +206,7 @@ JOIN warehouse.publication_time pub_time
 WHERE
 	pub_time.year = '2023'
 	AND scientific_domain.id = 1
-	AND pub_venues.id = 1
+	AND pub_venues.full_name = ''
 GROUP BY inst.id
 ORDER BY number_of_citations DESC;
 
