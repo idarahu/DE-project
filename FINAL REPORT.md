@@ -139,6 +139,7 @@ print(open_citation_result)
 
 During the task transform_arxiv_data, the field categories in "metadata_df.tsv" is used to map each publication with arXiv categories (stored in "arxiv_categories.csv"). The received information is saved as file "publication2arxiv_df.tsv". In the end, arXiv categories are stored in up-to-date DB in the table "ARXIV_CATEGORIES" and mapping data in the table "PUBLICATION2ARXIV".
 ![image](https://user-images.githubusercontent.com/102286655/212534753-b0465734-6fc8-4227-9154-b7e119441f14.png)
+
 **Figure 7** Schema of the task transform_arxiv_data
 
 And last but not least, the following list explains the steps carried out during the task transform_authors_and_affiliations_data.
