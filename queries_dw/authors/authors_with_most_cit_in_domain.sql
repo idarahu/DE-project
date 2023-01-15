@@ -7,12 +7,12 @@ FROM
 	-- use latest DOIs
 	(
 		SELECT
-			DISTINCT ON (pu.doi)
 			pu.id AS pub_id,
 			pu.time_id AS pub_time_id,
 			pu.number_of_citations AS pub_num_of_citations
 		FROM warehouse.publications pu
-		ORDER BY pu.doi, pu.snapshot_valid_to DESC
+		WHERE pu.snapshot_valid_to is NULL
+		LIMIT 1
 	) pub
 -- join authors with publications
 JOIN warehouse.publication_author pub_auth

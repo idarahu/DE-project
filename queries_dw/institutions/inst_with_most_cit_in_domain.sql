@@ -6,7 +6,6 @@ FROM
 	-- use latest DOIs
 	(
 		SELECT
-			DISTINCT ON (pu.doi)
 			pu.id AS pub_id,
 			pu.time_id AS pub_time_id,
 			pu.number_of_citations AS pub_num_of_citations,
@@ -15,7 +14,8 @@ FROM
 		-- join time with publications
         JOIN warehouse.publication_time pub_time
             ON pu.time_id = pub_time.id
-		ORDER BY pu.doi, pub_time.date DESC
+		WHERE pu.snapshot_valid_to is NULL
+		LIMIT 1
 	) pub
 -- join institutions with publications
 JOIN warehouse.publication_institution pub_inst

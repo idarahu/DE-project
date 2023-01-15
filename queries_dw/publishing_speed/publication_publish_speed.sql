@@ -6,14 +6,15 @@ SELECT
 FROM
 	-- get latest DOIs
 	(
-		SELECT DISTINCT ON (pu.doi)
+		SELECT
 			pu.title AS pub_title,
 			pu.doi AS pub_doi,
 			pub_time.date AS latest_release_date
 		FROM warehouse.publications pu
 		JOIN warehouse.publication_time pub_time
 			ON pu.time_id = pub_time.id
-		ORDER BY pu.doi, pu.snapshot_valid_to DESC
+		WHERE pu.snapshot_valid_to is NULL
+		LIMIT 1
 	) pub_latest
 JOIN
 	-- get earliest DOIs
