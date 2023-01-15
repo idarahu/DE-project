@@ -345,10 +345,12 @@ After the initial transformation and data enrichment finishes, Airflow triggers 
 •	[`transform_for_graph_injection`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/transform_for_graph_injection.py) (figure 12)
 •	[`load_graph_db`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/load_graph_db.py) (figure 13)
 The `transform_for_graph_injection` DAG prepares CSV files for the graph database injection. It determines the necessary relationships between entities and splits the data into the format required by the `neo4j-admin import` command.
+
 ![image](https://user-images.githubusercontent.com/102286655/212559941-b644c76d-c213-49e8-bf2c-ba2b2aff8a33.png)
 **Figure 12** Airflow DAG `transform_for_graph_injection`
 
 The `load_graph_db` DAG starts a container from the custom-built Docker image. First, the container runs `neo4j-admin import` command to load the data into the graph database by overwriting the previously existing data. Then, it runs the `neo4j` command to start the Neo4j server in the `console` mode. The database is ready to be queried at http://localhost:7474.
+
 ![image](https://user-images.githubusercontent.com/102286655/212559971-3c5065aa-941e-4716-ad9e-67b0b16fe609.png)
 **Figure 13** Airflow DAG `load_graph_db`
 
