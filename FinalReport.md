@@ -204,6 +204,22 @@ After thoroughly investigating the data to understand what parts of it are usabl
 - Which papers have the most prolonged period between the first and last version? 
 - Are there any journals where publishing takes much more time compared to others?
 
+### Queries examples
+Basic:
+"Authors with most publications in given year."
+SQL:
+https://github.com/idarahu/DE-project/blob/main/queries_dwh/authors/authors_with_most_pubs_in_year.sql
+
+INSERT PIC 1
+
+
+More interesting
+"Hottest topics (major field) in year 2022"
+SQL:
+https://github.com/idarahu/DE-project/blob/main/queries_dwh/hottest_topics/hottest_topics_major_field_by_time.sql
+
+INSERT PIC 2
+
 ### SCHEMA
 
 
