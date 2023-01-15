@@ -103,7 +103,7 @@ The next three tasks that run in parallel, `transform_venues_and_publications_da
 During the task `transform_venues_and_publications_data`, the following steps are carried out.
 1.	The title of the publication is cleaned (the symbols of the newline are removed).
 2.	To get the information about venues (name and abbreviation), the field `journal_ref` (present in `metadata_df.tsv`) is used. The data in this field is cleaned and then checked if it matches with any venue in the lookup table `venues_lookup.tsv` (by using the function `find_venue(venue_data_raw)`). (At the end, these values are stored in up-to-date DB in the table "VENUES").
-3.	The field `doi` is used for getting additional information (its type, number of references, citations/number of citations, page numbers, and different attributes relevant to journal articles, such as an issue number) about the publication. This method for enrichment is considered only when the DOI of publication is in the file `DOIs_for_enrichment.csv`, as mentioned before (see chapter "Dataset and pre-pipeline processing"). Two APIs are used to retrieve a piece of extra information: Crossref REST API and OpenCitations API (see the following examples). 
+3.	The field `doi` is used for getting additional information (its type, number of references, citations/number of citations, page numbers, and different attributes relevant to journal articles, such as an issue number) about the publication. This method for enrichment is considered only when the DOI of publication is in the file `DOIs_for_enrichment.csv`, as mentioned before (see chapter "Dataset and pre-pipeline processing"). Two APIs are used to retrieve a piece of extra information: [Crossref REST API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/) and [OpenCitations API](https://doi.org/10.6084/M9.FIGSHARE.6683855) (see the following examples). 
 ```
 # Example of retrieving the publication type based on DOI by using the Crossref REST API
 
@@ -131,19 +131,19 @@ print(open_citation_result)
 13
 ```
 
-4.	The unique ID is generated for each venue (field venue_ID). If the publication does not have information about the venue available, the 0 is used as a venue_ID.
-5.	The TSV files ("venues_df.tsv" and "publications_df.tsv") needed for populating the tables "VENUES" and "PUBLICATIONS" in up-to-date DB are written. Additionally, the TSV file ("citing_pub.tsv"), where the publication ID and the DOIs of the publications that cite this publication, are recorded. (This file is required for the graph database.)
+4.	The unique ID is generated for each venue (field `venue_ID`). If the publication does not have information about the venue available, the 0 is used as a `venue_ID`.
+5.	The TSV files (`venues_df.tsv` and `publications_df.tsv`) needed for populating the tables "VENUES" and "PUBLICATIONS" in up-to-date DB are written. Additionally, the TSV file (`citing_pub.tsv`), where the publication ID and the DOIs of the publications that cite this publication, are recorded. (This file is required for the graph database.)
 
-During the task transform_arxiv_data, the field categories in "metadata_df.tsv" is used to map each publication with arXiv categories (stored in "arxiv_categories.csv"). The received information is saved as file "publication2arxiv_df.tsv". In the end, arXiv categories are stored in up-to-date DB in the table "ARXIV_CATEGORIES" and mapping data in the table "PUBLICATION2ARXIV".
+During the task `transform_arxiv_data`, the field categories in `metadata_df.tsv` is used to map each publication with arXiv categories (stored in `arxiv_categories.csv`). The received information is saved as file `publication2arxiv_df.tsv`. In the end, arXiv categories are stored in up-to-date DB in the table "ARXIV_CATEGORIES" and mapping data in the table "PUBLICATION2ARXIV".
 ![image](https://user-images.githubusercontent.com/102286655/212534753-b0465734-6fc8-4227-9154-b7e119441f14.png)
 
-**Figure 7** Schema of the task transform_arxiv_data
+**Figure 7** Schema of the task `transform_arxiv_data`
 
-And last but not least, the following list explains the steps carried out during the task transform_authors_and_affiliations_data.
-1.	The relevant fields, such as publication_ID and  authors_parsed, are filtered out from "metadata_df.tsv".
-2.	The field authors_parsed contains information about the authors' names. Therefore, it is processed (by using functions check_first_name_raw(first_name_raw_to_check) and parse_first_name(first_name_raw_to_parse)) to get the last and first names together with the abbreviation of each author's first name. Sometimes, this field also contains some extra suffixes of the name, such as Jr or II etc., which are also stored. (To check the extra suffixes, the function extra_or_affiliation(value1, value2) is employed.) (At the end, these values are stored in up-to-date DB in the table "AUTHORS"). 
-3.	The field authors_parsed can also include data about authors' affiliations. Thus, the function find_insitution_information(institution_name_raw, universites_lookup, cities_lookup) is called to find whether this raw data field matches any institution or location stored in the "universities_lookup.tsv" or "cities_lookup.tsv". It is important to note that data about location/place after the transformation pipeline is always at the country level. (At the end, these values, institution name and place, are stored in up-to-date DB in the table "AFFILIATIONS").
-4.	*To enrich the authors' information (to receive their real-life h-indices or position), the scholarly3 (and function do_scholarly_call(author)) is used. This module allows retrieving the authors' and publications' information from Google Scholar.* 
+And last but not least, the following list explains the steps carried out during the task `transform_authors_and_affiliations_data`.
+1.	The relevant fields, such as `publication_ID` and `authors_parsed`, are filtered out from `metadata_df.tsv`.
+2.	The field `authors_parsed` contains information about the authors' names. Therefore, it is processed (by using functions `check_first_name_raw(first_name_raw_to_check)` and `parse_first_name(first_name_raw_to_parse)`) to get the last and first names together with the abbreviation of each author's first name. Sometimes, this field also contains some extra suffixes of the name, such as Jr or II *etc*., which are also stored. (To check the extra suffixes, the function `extra_or_affiliation(value1, value2)` is employed.) (At the end, these values are stored in up-to-date DB in the table "AUTHORS"). 
+3.	The field `authors_parsed` can also include data about authors' affiliations. Thus, the function `find_insitution_information(institution_name_raw, universites_lookup, cities_lookup)` is called to find whether this raw data field matches any institution or location stored in the `universities_lookup.tsv` or `cities_lookup.tsv`. It is important to note that data about location/place after the transformation pipeline is always at the country level. (At the end, these values, institution name and place, are stored in up-to-date DB in the table "AFFILIATIONS").
+4.	*To enrich the authors' information (to receive their real-life h-indices or position), the [scholarly](https://github.com/scholarly-python-package/scholarly) (and function `do_scholarly_call(author)`) is used. This module allows retrieving the authors' and publications' information from Google Scholar.* 
 ```
 # Example of retrieving the author's real-life h-index by using a scholarly module
 
@@ -155,12 +155,12 @@ print(author['hindex'])
 # Output:
 39
 ```
-*However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function get_authors_and_affiliations_data() should be commented out before running the pipeline if one wants to use scholarly.
-5.	The TSV files ("authors_df.tsv" and "affiliations_df.tsv") needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
+*However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function 'get_authors_and_affiliations_data()' should be commented out before running the pipeline if one wants to use scholarly.
+5.	The TSV files ('authors_df.tsv' and 'affiliations_df.tsv') needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
 ![image](https://user-images.githubusercontent.com/102286655/212534810-9b1108d0-d329-412b-ae2d-f30decfb9b85.png)
  
-**Figure 8** Schema of the task transform_authors_and_affiliations_data
-(P.S. During these three tasks, all the missing strings are replaced with None and integers with -1.)
+**Figure 8** Schema of the task 'transform_authors_and_affiliations_data'
+(P.S. During these three tasks, all the missing strings are replaced with 'None' and integers with '-1.')
 After these tasks, the data is loaded into the up-to-date DB. In the cases where it is necessary to check that only new data is loaded to ensure that there would be no duplicates in the DB,  the additional temporary tables (such as "AFFILIATION2PUBLICATION_TEMP",  "AFFILIATIOS_TEMP", "AUTHORS_TEMP" and "PUBLICATIONS_TEMP") are used. (These tables are always emptied before a new batch of data.) To illustrate how the temporary tables are used, the following example is given. Initially, data about authors is bulk inserted into the "AUTHORS_TEMP" table. Then the data of each author is compared with the data of each author in the "AUTHORS" table. If the author's information is not already present in the DB, a new author is inserted into the "AUTHORS" table. Otherwise, the data about the author is discarded. The same comparison is made between all the corresponding temporary and permanent tables.
 
 In the last step of the transformation pipeline, the data in the database is copied and stored in CSV files. These files are used for loading the data into DWH and graph DB. Appropriate views are generated beforehand to get all the required information (like calculated h-indices of the venues and authors). Also, the field of study is normalised. For that, each arXiv category is mapped against the Scientific Disciplines classification table4. (This table is stored in suitable form in "lookup_table_comains.csv".) For example, if the value in the arXiv category field is "cs.AI" after the mapping, besides this tag, there are three new tags: major_field: "natural sciences", sub_category: "computer sciences" and exact_category: "artificial intelligence".
