@@ -223,7 +223,9 @@ The fact table "PUBLICATIONS" will store the primary keys of dimension tables (o
 | **Attribute** | **Explanation** |
 |
 | --- | --- | --- |
+| **Attribute** | **Explanation** |
 | --- | --- |
+| authors\_group\_key | the "AUTHORS" dimension group key; is required to get information about the authors of the publication |
 | venue\_ID | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published |
 | domain\_group\_key | the "SCIENTIFIC DOMAINS" dimension group key; is required to get information about the field of study |
 | time\_ID | the primary key of the "TIME" dimension; is required to query when the publication was published (time information about the last version in the arXiv dataset at the moment when data was added to the DWH) |
