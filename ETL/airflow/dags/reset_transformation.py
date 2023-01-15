@@ -100,7 +100,7 @@ DROP TABLE IF EXISTS updated_publications CASCADE;
 
 create_tables_trigger = TriggerDagRunOperator(
     task_id='create_tables',
-    trigger_dag_id='create_DB_tables_and_SQL_statements',
+    trigger_dag_id='transform_create_tables',
     dag=dag,
 )
 
