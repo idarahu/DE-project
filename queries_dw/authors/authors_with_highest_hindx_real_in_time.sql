@@ -1,7 +1,6 @@
 -- Ranking authors with the highest h-index (real) in a given time period
 SELECT au.full_name, au.first_name, au.h_index_real FROM (
-	SELECT
-		DISTINCT ON (aut.full_name)
+	SELECT DISTINCT ON (aut.full_name)
 		aut.full_name AS full_name,
 		aut.first_name AS first_name,
 		aut.h_index_real AS h_index_real
