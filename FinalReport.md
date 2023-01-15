@@ -1,22 +1,16 @@
-DATA ENGINEERING (LTAT.02.007)
-
-GROUP 12
-
-Timofei Ganjušev,
-
-Siim Karel Koger,
-
-Ida Rahu,
-
-Ihar Suvorau
+<div dir="rtl">DATA ENGINEERING (LTAT.02.007)</div>
+<div dir="rtl">GROUP 12</div>
+<div dir="rtl">Timofei Ganjušev</div>
+<div dir="rtl">Siim Karel Koger</div>
+<div dir="rtl">Ida Rahu</div>
+<div dir="rtl">Ihar Suvorau</div>
 
 # FINAL REPORT
 
-"_Data is like garbage. You'd better know what_
+<div dir="rtl">Data is like garbage. You'd better know what</div>
+<div dir="rtl">you are going to do with it before you collect it.</div>
+<div dir="rtl">— Mark Twain</div>
 
-_you are going to do with it before you collect it._"
-
-— Mark Twain
 
 In this project, a data pipeline to analyse data about scientific publications was built. In figure 1, the overall pipeline design is shown. As one can see, the pipeline can be divided into three main parts/stages and the first part additionally into two subparts (1A so-called transformation pipeline and 1B so-called updating pipeline). In the first part, 1A, the new raw data in JSON format is ingested into the pipeline, where it is transformed and enriched and then loaded into the up-to-date database. In subpart 1B, the data in the up-to-date database is updated periodically. Also, in the first part of the pipeline, the data is prepared in the correct form (the CSV files are written), so it can be uploaded into the data warehouse (DWH) (part 2) and the graph database (DB) (part 3). In the final report, all these stages are thoroughly covered, including the DWH and graph DB designs, together with relevant queries that DWH and graph DB will answer. And last but not least, the guidelines for running the built data pipeline are given.
 
@@ -185,7 +179,7 @@ Similarly to the transformation pipeline, updating the pipeline ends with copyin
 
 After thoroughly investigating the data to understand what parts of it are usable for the project, it is possible to phrase the BI queries that would be the basis for developing a data warehouse. In the subsequent sections, the BI queries, the schema of DWH and the technologies that will be used are discussed.
 
-### Data Warehouse BI queries
+QUERIES
 
 #### [Ranking authors](https://github.com/idarahu/DE-project/tree/main/queries_dwh/authors)
 - With the most publications in a given year, scientific domain and/or publication venue
