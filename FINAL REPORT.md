@@ -178,7 +178,7 @@ To fulfil the prerequisites of using the up-to-date DB approach, the data about 
 
 During the run of this DAG, the publications with DOIs, that are stored in DB are updated by using their DOIs and OpenCitations API. In this project, only the number of citations is considered as changing field. If the API call returns a new value for this variable, the data about publication is updated. Since venues' and authors' h-indices depend on the number of citations, the relevant views are refreshed after updates.
 Similarly to the transformation pipeline, updating the pipeline ends with copying the data. However, at this time, only publications', authors' and venues' data is copied and saved as CSV files ready for the following pipeline parts (other tables in DB do not change).
-(Since API calls are very time-consuming, additional DAG update_articles_in_DB_presentation was generated. This DAG is a copy-paste version of the DAG update_articles_in_DB. The only difference is that instead of pulling all publications' data from DB, it limits the number of publications to 200. (This DAG has only the illustrative purpose.)
+(Since API calls are very time-consuming, additional DAG update_articles_in_DB_presentation was generated. This DAG is a copy-paste version of the DAG update_articles_in_DB. The only difference is that instead of pulling all publications' data from DB, it limits the number of publications to 200. This DAG has only the illustrative purpose.)
 
 
 ## Part 2
