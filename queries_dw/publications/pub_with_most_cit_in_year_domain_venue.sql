@@ -28,8 +28,8 @@ JOIN warehouse.publication_venues pub_venues
 JOIN warehouse.publication_time pub_time
 	ON pub.pub_time_id = pub_time.id
 WHERE
-	pub_time.year = '2023'
-	AND scientific_domain.id = 1
-	AND pub_venues.full_name = ''
+	pub_time.year = '2007'
+	AND scientific_domain.id = 104021
+	AND pub_venues.full_name = 'Astrophysical Journal'
 GROUP BY pub.pub_doi, pub.pub_title
 ORDER BY number_of_citations DESC;

@@ -17,7 +17,7 @@ FROM
 		-- join venues with publications
 		JOIN warehouse.publication_venues pub_venues
 			ON pub_venues.id = pu.venue_id
-		ORDER BY pu.doi, pu.snapshot_valid_to DESC
+		ORDER BY pu.doi, pub_time.date DESC
 	) pub_latest
 JOIN
 	-- get earliest DOIs
@@ -32,7 +32,7 @@ JOIN
 		-- join venues with publications
 		JOIN warehouse.publication_venues pub_venues
 			ON pub_venues.id = pu.venue_id
-		ORDER BY pu.doi, pu.snapshot_valid_to
+		ORDER BY pu.doi, pub_time.date
 	) pub_earliest
 	ON pub_latest.pub_doi = pub_earliest.pub_doi
 GROUP BY pub_latest.pub_venue_name
