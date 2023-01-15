@@ -96,15 +96,15 @@ Getting a publication venue:
 
 ## Influential publications using PageRank
 
-To find the most influential publications, we use the [Page Rank](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/) algorithm:
+To find the most influential publications, we use the [Page Rank](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/) algorithm.
 
-Create a projection:
+First, we create a graph projection for using with GDS:
 
 ```cypher
 CALL gds.graph.project.cypher('influential_publications', 'MATCH (p:Publication) RETURN id(p) AS id', 'MATCH (p1:Publication)-[:CITED_BY]->(p2:Publication) RETURN id(p1) AS source, id(p2) AS target')
 ```
 
-Run the algorithm:
+Then, we run the algorithm:
 
 ```cypher
 CALL gds.pageRank.stream('influential_publications') 
@@ -114,17 +114,21 @@ ORDER BY score DESC
 LIMIT 25
 ```
 
+Results:
+
+<img width="1285" alt="Screenshot 2023-01-15 at 12 47 26" src="https://user-images.githubusercontent.com/6259054/212536500-c62d98c9-cc7b-4783-bb8c-9cd489d1fcb9.png">
+
 ## Communities detection using Louvain
 
-To find communities of authors that cover a particular scientific domain, we use the [Louvain](https://neo4j.com/docs/graph-data-science/current/algorithms/louvain/#algorithms-louvain-examples-stream) method from GDS with the following Cypher queries:
+To find communities of authors that cover a particular scientific domain, we use the [Louvain](https://neo4j.com/docs/graph-data-science/current/algorithms/louvain/#algorithms-louvain-examples-stream) method from GDS with the following Cypher queries.
 
-Projecting the graph:
+First, we project the graph:
 
 ```cyper
 CALL gds.graph.project.cypher('community_by_domain', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:AUTHOR_OF]->(p:Publication)-[:BELONGS_TO]->(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" MATCH (a2:Author)-[:AUTHOR_OF]->(p) WHERE a1 <> a2 RETURN id(a1) AS source, id(a2) AS target')
 ```
 
-Write the community_by_domain id to the authors:
+Then, we can write the community_by_domain ID to the authors' nodes as a property:
 
 ```cyper
 CALL gds.louvain.stream('community_by_domain') 
@@ -132,7 +136,7 @@ YIELD nodeId, communityId
 WITH gds.util.asNode(nodeId) AS a, communityId AS communityId SET a.community_by_domain = communityId
 ```
 
-Query the community where amount of authors is greater than 1:
+After that, we query a community where the amount of authors is greater than 1:
 
 ```cyper
 MATCH (a:Author) 
@@ -142,21 +146,30 @@ RETURN communityId, amount
 ORDER BY amount DESC
 ```
 
+<img width="1427" alt="Screenshot 2023-01-15 at 12 53 51" src="https://user-images.githubusercontent.com/6259054/212536634-e642feee-d8af-4147-a47f-1549aafd6ee0.png">
+
+Finally, we can take the biggest community and display it with the query:
 ```cyper
-MATCH (a:Author {community_by_domain: 0}) RETURN a LIMIT 25
+MATCH (a:Author {community_by_domain: 35739}) RETURN a LIMIT 25
 ```
+
+<img width="1429" alt="Screenshot 2023-01-15 at 12 54 21" src="https://user-images.githubusercontent.com/6259054/212536657-9f554d2c-cc29-431b-9721-297ca293ff79.png">
 
 ## Missing links between authors using Delta-Stepping Single-Source Shortest Path
 
-To search for a missing link between two authors, we use the [Single-Source Shortest Path](https://neo4j.com/docs/graph-data-science/current/algorithms/delta-single-source/) from GDS:
+To search for a missing link between two authors, we use the [Single-Source Shortest Path](https://neo4j.com/docs/graph-data-science/current/algorithms/delta-single-source/) from GDS.
 
-Create a projection:
+First, we create a projection:
 
 ```cypher
 CALL gds.graph.project.cypher('missing_link', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:COLLABORATES_WITH]-(a2:Author) RETURN id(a1) AS source, id(a2) AS target')
 ```
 
-Finding the shortest path between two authors with author_id 36102 and 34512:
+Then, we pick two authors who have not collaborated with each other, e.g., "T. Nagao" and "T.H. Puzia":
+
+<img width="1427" alt="Screenshot 2023-01-15 at 12 36 55" src="https://user-images.githubusercontent.com/6259054/212536677-2e474212-6ef5-49c9-8ffb-bca78ea301b3.png">
+
+Finally, we find the shortest path between the authors with author_id 36102 and 34512:
 
 ```cypher
 MATCH (source:Author {author_id: "36102"})
@@ -165,4 +178,7 @@ YIELD index, sourceNode, targetNode, path
 WHERE gds.util.asNode(targetNode).author_id = "34512"
 RETURN index, gds.util.asNode(sourceNode).full_name AS sourceNodeName, gds.util.asNode(targetNode).full_name AS targetNodeName, nodes(path) as path
 ORDER BY index
-LIMIT 25```
+LIMIT 25
+```
+
+<img width="1431" alt="Screenshot 2023-01-15 at 12 29 56" src="https://user-images.githubusercontent.com/6259054/212536728-d1640553-c8f7-4963-a635-bdc5d03e895a.png">
