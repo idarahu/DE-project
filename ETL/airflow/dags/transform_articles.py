@@ -5,18 +5,14 @@ Finally, the DAG generates the CSV files (based on the data in the DB) needed fo
 """
 
 import datetime
-import io
 import os
 from datetime import datetime, timedelta, timezone
 
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.operators.bash_operator import BashOperator
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.sensors.external_task import ExternalTaskMarker, ExternalTaskSensor
-from airflow.utils.task_group import TaskGroup
-from airflow.operators.empty import EmptyOperator
 from airflow.hooks.postgres_hook import PostgresHook
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python_operator import PythonOperator
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 DEFAULT_ARGS = {
     'owner': 'Ida',
@@ -126,9 +122,7 @@ def parse_venue(x):
 
 
 def find_venue(venue_data_raw, venues_lookup):
-    import pandas as pd
     import re
-    import numpy as np
     try:
         venue_data_check = re.sub(r'\W', '', venue_data_raw).lower()
         found_venue1 = venues_lookup[['abbrev.dots', 'full']].to_numpy()[
@@ -443,10 +437,9 @@ def extra_or_affiliation(value1, value2):
 
 
 def find_institution_information(institution_name_raw, universities_lookup, cities_lookup):
-    import pandas as pd
     import re
     try:
-        splitted_institution_name = re.sub(r'\s', '', institution_name_raw).split(',')
+        splitted_institution_name = re.sub(r'\s', '', institution_name_raw)
         institution_name = None
         institution_place = None
         memory = None
