@@ -1,22 +1,16 @@
-DATA ENGINEERING (LTAT.02.007)
-
-GROUP 12
-
-Timofei Ganjušev,
-
-Siim Karel Koger,
-
-Ida Rahu,
-
-Ihar Suvorau
+<div dir="rtl">DATA ENGINEERING (LTAT.02.007)</div>
+<div dir="rtl">GROUP 12</div>
+<div dir="rtl">Timofei Ganjušev</div>
+<div dir="rtl">Siim Karel Koger</div>
+<div dir="rtl">Ida Rahu</div>
+<div dir="rtl">Ihar Suvorau</div>
 
 # FINAL REPORT
 
-"_Data is like garbage. You'd better know what_
+<div dir="rtl">Data is like garbage. You'd better know what</div>
+<div dir="rtl">you are going to do with it before you collect it.</div>
+<div dir="rtl">— Mark Twain</div>
 
-_you are going to do with it before you collect it._"
-
-— Mark Twain
 
 In this project, a data pipeline to analyse data about scientific publications was built. In figure 1, the overall pipeline design is shown. As one can see, the pipeline can be divided into three main parts/stages and the first part additionally into two subparts (1A so-called transformation pipeline and 1B so-called updating pipeline). In the first part, 1A, the new raw data in JSON format is ingested into the pipeline, where it is transformed and enriched and then loaded into the up-to-date database. In subpart 1B, the data in the up-to-date database is updated periodically. Also, in the first part of the pipeline, the data is prepared in the correct form (the CSV files are written), so it can be uploaded into the data warehouse (DWH) (part 2) and the graph database (DB) (part 3). In the final report, all these stages are thoroughly covered, including the DWH and graph DB designs, together with relevant queries that DWH and graph DB will answer. And last but not least, the guidelines for running the built data pipeline are given.
 
@@ -30,24 +24,24 @@ In this project, a data pipeline to analyse data about scientific publications w
 
 ArXiv is the open-access archive for scholarly articles from a wide range of different scientific fields. The dataset given for the project contains metadata of the original arXiv data, _i.e._ metadata of papers in the arXiv. The metadata is given in JSON format and contains the following fields:
 
-- id – publication arXiv ID
-- submitter – the name of the person who submitted the paper/corresponding author
-- authors – list of the names of the authors of the paper (in some cases, this field includes additional information about the affiliations of the authors)
-- title – the title of the publication
-- comments – additional information about the paper (such as the number of figures, tables and pages)
-- journal-ref – information about the journal where the article was published
-- doi – Digital Object Identifier (DOI) of the paper
-- report-no – institution's locally assigned publication number
-- categories – categories/tags in the arXiv system, i.e. field of the current study
-- license – license information
-- abstract – abstract of the publication
-- versions – history of the versions (version number together with timestamp/date)
-- update\_date – timestamp of the last update in arXiv
-- authors\_parsed – previous authors field in the parsed form
+- `id` – publication arXiv ID
+- `submitter` – the name of the person who submitted the paper/corresponding author
+- `authors` – list of the names of the authors of the paper (in some cases, this field includes additional information about the affiliations of the authors)
+- `title` – the title of the publication
+- `comments` – additional information about the paper (such as the number of figures, tables and pages)
+- `journal-ref` – information about the journal where the article was published
+- `doi` – Digital Object Identifier (DOI) of the paper
+- `report-no` – institution's locally assigned publication number
+- `categories` – categories/tags in the arXiv system, i.e. field of the current study
+- `license` – license information
+- `abstract` – abstract of the publication
+- `versions` – history of the versions (version number together with timestamp/date)
+- `update_date` – timestamp of the last update in arXiv
+- `authors_parsed` – previous authors field in the parsed form
 
-In this project's scope, the fields of submitter, title, journal-ref, doi, categories, versions and authors_parsed  were used (all the others were dropped). 
+In this project's scope, the fields of `submitter`, `title`, `journal-ref`, `doi`, `categories`, `versions` and `authors_parsed` were used (all the others were dropped). 
 
-The original dataset contains information about more than 2 million publications. The original dataset was split into smaller parts (44 parts in total, each containing information about 50K publications) to simulate a real-life situation where new data is coming in continuously. (The dataset splitting was conducted using the split_dataset.py script.) Also, before ingesting the data into the pipeline, the publications whose data will be enriched were selected. This preselection was made because the enrichment process via API calls is very time-consuming; therefore, enriching all the publications' data is out of this project's scope. (While running the transformation pipeline, this difference is vividly illustrated when one compares the average run times between the first (ingested raw data contains the publication whose data is enriched via API calls) and all the other runs (data is not enriched via API calls).) For picking out the publications for enrichment, the publications with DOI (needed for API calls) were first filtered out. Afterwards, they were grouped by categories (major field + sub-category, see table 1), and 20 publications were selected from each category. (The details about how publications have been divided into these categories are given in the next chapter.) Finally, their DOIs were written into the DOIs_for_enrichment.csv file. This file is used in the transformation pipeline, as explained in the next chapter.
+The original dataset contains information about more than 2 million publications. The original dataset was split into smaller parts (44 parts in total, each containing information about 50K publications) to simulate a real-life situation where new data is coming in continuously. (The dataset splitting was conducted using the [split_dataset.py](https://github.com/idarahu/DE-project/blob/main/ETL/split_dataset.py) script.) Also, before ingesting the data into the pipeline, the publications whose data will be enriched were selected. This preselection was made because the enrichment process via API calls is very time-consuming; therefore, enriching all the publications' data is out of this project's scope. (While running the transformation pipeline, this difference is vividly illustrated when one compares the average run times between the first (ingested raw data contains the publication whose data is enriched via API calls) and all the other runs (data is not enriched via API calls).) For picking out the publications for enrichment, the publications with DOI (needed for API calls) were first filtered out. Afterwards, they were grouped by categories (major field + sub-category, see table 1), and 20 publications were selected from each category. (The details about how publications have been divided into these categories are given in the next chapter.) Finally, their DOIs were written into the [DOIs_for_enrichment.csv](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/data/setups/DOIs_for_enrichment.csv) file. This file is used in the transformation pipeline, as explained in the next chapter.
 
 **Table 1** Categories (major field together with one sub-category forms one category) that are used for selecting the publications that are going to be enriched
 
@@ -65,48 +59,51 @@ In the transformation pipeline, the raw data in JSON format (as explained in the
 
 As one can see, the up-to-date DB consists of 9 relations. The table "AUTHORS" contains all the relevant information, such as last name, first name, the abbreviation of the first name, extra titles (such as Jr., I, II etc.), positions, and real-life h-index, about the publications' authors in the DB. In the table "AFFILIATIONS", the institution names and places where the authors of publications work are gathered. In the table "PUBLICATIONS", the data about publications (such as DOI, title, publishing date of first and last version, name of the submitter, type and language of publication, volume, issue and page numbers, number of references and citations) are recorded. The relation "ARXIV_CATEGORIES" contains information about publications' arXiv categories. In the relation "VENUES", all the data about venues (full name, abbreviation, print and electronic ISSN) where publications were published are collected. All other relations are created to deal with the entities' m:n relationships.
 
-The Airflow DAG "transform_create_tables" (see figure 3) was written to create this Postgres database. This DAG should be run only once at the very beginning of the overall pipeline. During the run, all the database tables are generated. Besides, all the other SQL statements needed in the first part of the overall pipeline are also generated. These SQL statements include the ones used for populating the tables with new data or updating the existing data (considering all the constraints that are present in the DB), together with the statements used for generating the views (authors' view and venues' view) that are needed for getting the data in the correct form to load into the DWH and graph DB. (The mentioned authors' view contains authors' IDs, last, first, and full names, first name abbreviations, positions, real-life h-indices, and the h-indices calculated based on the data present in the DB. In the venues' view, besides the data that this in the "VENUES" table (venue ID, full name, abbreviation, print and electronic ISSN), also the calculated h-index for each venue is given.) 
+The Airflow DAG [`transform_create_tables`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/transform_create_tables.py) (see figure 3) was written to create this Postgres database. This DAG should be run only once at the very beginning of the overall pipeline. During the run, all the database tables are generated. Besides, all the other SQL statements needed in the first part of the overall pipeline are also generated. These SQL statements include the ones used for populating the tables with new data or updating the existing data (considering all the constraints that are present in the DB), together with the statements used for generating the views (authors' view and venues' view) that are needed for getting the data in the correct form to load into the DWH and graph DB. (The mentioned authors' view contains authors' IDs, last, first, and full names, first name abbreviations, positions, real-life h-indices, and the h-indices calculated based on the data present in the DB. In the venues' view, besides the data that this in the "VENUES" table (venue ID, full name, abbreviation, print and electronic ISSN), also the calculated h-index for each venue is given.) 
 
 ![image](https://user-images.githubusercontent.com/102286655/212534149-731ae570-c834-4d6a-8f9c-91ace064498a.png)
 
-**Figure 3** Airflow DAG create\_DB\_tables\_and\_SQL\_statements
+**Figure 3** Airflow DAG `transform_create_tables`
 
-The transformation pipeline itself is implemented as an Airflow DAG "articles2DB". The graph representation of this DAG is shown in the following image.
+The transformation pipeline itself is implemented as an Airflow DAG [`transform_articles`](https://github.com/idarahu/DE-project/blob/main/ETL/airflow/dags/transform_articles.py). The graph representation of this DAG is shown in the following image.
 
 ![image](https://user-images.githubusercontent.com/102286655/212534253-9ebff420-e8ff-484c-af37-481fc1c95322.png)
 
-**Figure 4** Airflow DAG create\_DB\_tables\_and\_SQL\_statements 
+**Figure 4** Airflow DAG `transform_articles`
 
-The prerequisite for running this DAG is that the "data" folder should contain seven subfolders: "inputs", "setups", "metadata", "lookup\_tables", "data2db", "sql", and "final\_data" (see table 2). 
+The prerequisite for running this DAG is that the "data" folder should contain seven subfolders: "inputs", "setups", "metadata", "lookup_tables", "data2db", "sql", and "final_data" (see table 2). 
 
 **Table 2** Data folders required for running the first part of the pipeline
 
 |Subfolder|Explanation|
 |:-:|---|
-|inputs|The raw JSON datasets generated during pre-pipeline processing by splitting the original arXiv dataset are stored in this folder.|
-|setups|It contains three files: "DOIs_for_enrichment.csv", "publication_ID.txt", and "split_no.txt". "DOIs_for_enrichment.csv" contains DOIs of the articles, which data will be enriched during the transformation pipeline (see chapter "Dataset and pre-pipeline processing"). The file "publication_ID.txt" is used for storing the last publication ID to ensure that all the publication IDs are unique. Before the first run of the pipeline, the ID in this file should be 0. The file "split_no.txt" is used for a similar purpose – storing the number of the previously used dataset to ensure that all datasets are ingested only once. Before the first run of the pipeline, the split number should be 0.|
-|metadata|Before the first run of the articles2DB DAG, this folder should be empty. After, it should always contain one file, "metadata_df.tsv ". This file is generated in task convert_metadata_for_ingestion, during which the relevant fields (see the previous chapter) for each publication are filtered out from the raw JSON file. (The received data, ready for further usage in the transformation pipeline, is stored in this TSV file.)|
-|lookup_tables|It contains four tables: "cities_lookup.tsv", "lookup_table_domains.csv", "universities_lookup.tsv", and "venues_lookup.tsv". All these tables (except "lookup_table_domains.csv") are used for enriching and transforming the raw data. For enriching and transforming the: -	affiliations' data the "cities_lookup.tsv" and "universities_lookup.tsv" are used. In the "cities_lookup.tsv", the names of 42905 world's largest cities (including the Unicode and ASCII strings) together with names of countries are given. This data was retrieved from SimpleMaps.com (https://simplemaps.com/data/world-cities). In the "universities_lookup.tsv",  the data (names, countries, cities/locations and abbreviations of locations) of about 1152 world universities are stored. This data was retrieved by merging and preprocessing the World University Rankings (https://www.kaggle.com/datasets/mylesoneill/world-university-rankings) dataset and University Rankings 2017 (https://data.world/education/university-rankings-2017) dataset. -	venues' data the "venues_lookup.tsv" is used. This dataset contains information such as the name and abbreviation (with and without dots) of 87224 venues. This dataset was retrieved from the Web Of Science (https://images.webofknowledge.com/images/help/WOS/A_abrvjt.html). To make the enrichment process easier and faster, the dataset was preprocessed, and therefore the lookup table also contains fields abbrev_check and full_check. The lowercase abbreviations and full names of venues without spaces are stored in these fields.The file "lookup_table_domains.csv" is used in task copy_publication2arxiv. Comprehensive information about scientific domains should be provided to populate the DWH and graph DB with data. However, in up-to-date DB, only arXiv categories are stored (see figure 2). Therefore, the data copied from the DB needs to be enriched before it can be used for DWH and graph DB. The "lookup_table_domains.csv" is employed for that purpose. (More details are provided below.)|
-|data2db|The data that will be loaded into the up-to-date database are stored in this folder. Before the first run, it should contain two files: "arxiv_categories.csv" and "venues_df.tsv". By the way, the latter should contain only the header row (venue_ID\tfull_name\tabbreviation\tprint_issn\telectronic_issn) before the first run of the pipeline. In the "arxiv_categories.csv", the IDs and arXiv category names of 156 categories are stored.|
-|sql|This folder is used for storing all the SQL statements. Before the first run, the folder should be empty, but after running the transform_create_tables DAG, the .sql files are generated and saved in this folder.|
-|final_data|This folder should contain the data in the correct form, ready to be loaded into the DWH and graph DB. Before the first run of the pipeline, this folder should be empty.|
+|[inputs](https://github.com/idarahu/DE-project/tree/main/ETL/airflow/data/inputs)|The raw JSON datasets generated during pre-pipeline processing by splitting the original arXiv dataset are stored in this folder.|
+|[setups](https://github.com/idarahu/DE-project/tree/main/ETL/airflow/data/setups)|It contains three files: `DOIs_for_enrichment.csv`, `publication_ID.txt`, and `split_no.txt`. `DOIs_for_enrichment.csv` contains DOIs of the articles, which data will be enriched during the transformation pipeline (see chapter "Dataset and pre-pipeline processing"). The file `publication_ID.txt` is used for storing the last publication ID to ensure that all the publication IDs are unique. Before the first run of the pipeline, the ID in this file should be 0. The file `split_no.txt` is used for a similar purpose – storing the number of the previously used dataset to ensure that all datasets are ingested only once. Before the first run of the pipeline, the split number should be 0.|
+|[metadata](https://github.com/idarahu/DE-project/tree/main/ETL/airflow/data/metadata)|Before the first run of the `transform_articles` DAG, this folder should be empty. After, it should always contain one file, `metadata_df.tsv`. This file is generated in task `convert_metadata_for_ingestion`, during which the relevant fields (see the previous chapter) for each publication are filtered out from the raw JSON file. (The received data, ready for further usage in the transformation pipeline, is stored in this TSV file.)|
+|[lookup_tables](https://github.com/idarahu/DE-project/tree/main/ETL/airflow/data/lookup_tables)|It contains four tables: `cities_lookup.tsv`, `lookup_table_domains.csv`, `universities_lookup.tsv`, and `venues_lookup.tsv`. All these tables (except `lookup_table_domains.csv`) are used for enriching and transforming the raw data. For enriching and transforming the: 
+||-	affiliations' data the `cities_lookup.tsv` and `universities_lookup.tsv` are used. In the `cities_lookup.tsv`, the names of 42905 world's largest cities (including the Unicode and ASCII strings) together with names of countries are given. This data was retrieved from [SimpleMaps.com](https://simplemaps.com/data/world-cities). In the `universities_lookup.tsv`,  the data (names, countries, cities/locations and abbreviations of locations) of about 1152 world universities are stored. This data was retrieved by merging and preprocessing the [World University Rankings](https://www.kaggle.com/datasets/mylesoneill/world-university-rankings) dataset and [University Rankings 2017](https://data.world/education/university-rankings-2017) dataset.|
+||-	venues' data the `venues_lookup.tsv` is used. This dataset contains information such as the name and abbreviation (with and without dots) of 87224 venues. This dataset was retrieved from the [Web Of Science](https://images.webofknowledge.com/images/help/WOS/A_abrvjt.html). To make the enrichment process easier and faster, the dataset was preprocessed, and therefore the lookup table also contains fields `abbrev_check` and `full_check`. The lowercase abbreviations and full names of venues without spaces are stored in these fields.|
+||The file `lookup_table_domains.csv` is used in task `copy_publication2arxiv`. Comprehensive information about scientific domains should be provided to populate the DWH and graph DB with data. However, in up-to-date DB, only arXiv categories are stored (see figure 2). Therefore, the data copied from the DB needs to be enriched before it can be used for DWH and graph DB. The `lookup_table_domains.csv` is employed for that purpose. (More details are provided below.)|
+|[data2db](https://github.com/idarahu/DE-project/tree/main/ETL/airflow/data/data2db)|The data that will be loaded into the up-to-date database are stored in this folder. Before the first run, it should contain two files: `arxiv_categories.csv` and `venues_df.tsv`. By the way, the latter should contain only the header row (`venue_ID\tfull_name\tabbreviation\tprint_issn\telectronic_issn`) before the first run of the pipeline. In the `arxiv_categories.csv`, the IDs and arXiv category names of 156 categories are stored.|
+|[sql](https://github.com/idarahu/DE-project/tree/main/ETL/airflow/data/sql)|This folder is used for storing all the SQL statements. Before the first run, the folder should be empty, but after running the `transform_create_tables` DAG, the .sql files are generated and saved in this folder.|
+|[final_data](https://github.com/idarahu/DE-project/tree/main/ETL/airflow/data/final_data)|This folder should contain the data in the correct form, ready to be loaded into the DWH and graph DB. Before the first run of the pipeline, this folder should be empty.|
 
-The transformation pipeline starts with the task "convert_metadata_for_ingestion" (see figure 5). During this task, the new dataset (a 50K subset of the original dataset) is selected and ingested into the pipeline.
+The transformation pipeline starts with the task `convert_metadata_for_ingestion` (see figure 5). During this task, the new dataset (a 50K subset of the original dataset) is selected and ingested into the pipeline.
 
 ![image](https://user-images.githubusercontent.com/102286655/212534593-418f0039-f190-493d-975f-19b5b64c10a7.png)
 
-**Figure 5** Schema of the task convert\_metadata\_for\_ingestion
+**Figure 5** Schema of the task `convert_metadata_for_ingestion`
 
-Firstly, the fields submitter, title, journal-ref, doi, categories, versions and authors_parsed are filtered out from the raw JSON file. Then the values of these fields are preprocessed if necessary. For example, the field versions is used to get the date of the first and last version and the total number of versions in arXiv required in the up-to-date DB in the table "PUBLICATIONS". Besides, a new unique ID (publication_ID) is generated for each publication. At the end of the convert_metadata_for_ingestion, all the relevant information retrieved from the original dataset is saved as a file "metadata_df.tsv" (in the folder "metadata"). This file contains the fields publication_ID, submitter, authors, title, journal_ref, doi, categories, no_versions_arxiv, date_of_first_version, and date. Some of the values of these fields (submitter, doi, no_versions_arxiv, date_of_first_version, and date) are used without further processing. (These values are stored in their present form in up-to-date DB in the table "PUBLICATIONS"). The file "metadata_df.tsv" is used for passing the data to the following tasks.
+Firstly, the fields `submitter`, `title`, `journal-ref`, `doi`, `categories`, `versions` and `authors_parsed` are filtered out from the raw JSON file. Then the values of these fields are preprocessed if necessary. For example, the field `versions` is used to get the date of the first and last version and the total number of versions in arXiv required in the up-to-date DB in the table "PUBLICATIONS". Besides, a new unique ID (`publication_ID`) is generated for each publication. At the end of the `convert_metadata_for_ingestion`, all the relevant information retrieved from the original dataset is saved as a file `metadata_df.tsv` (in the folder `metadata`). This file contains the fields `publication_ID`, `submitter`, `authors`, `title`, `journal_ref`, `doi`, `categories`, `no_versions_arxiv`, `date_of_first_version`, and `date`. Some of the values of these fields (`submitter`, `doi`, `no_versions_arxiv`, `date_of_first_version`, and `date`) are used without further processing. (These values are stored in their present form in up-to-date DB in the table "PUBLICATIONS"). The file `metadata_df.tsv` is used for passing the data to the following tasks.
 
-The next three tasks that run in parallel, transform_venues_and_publications_data (figure 6), transform_arxiv_data (figure 7)  and transform_authors_and_affiliations_data (figure 8), can be considered the most critical tasks in the transformation pipeline. The main cleaning, transformation, and enrichment processes are performed during these tasks. 
+The next three tasks that run in parallel, `transform_venues_and_publications_data` (figure 6), `transform_arxiv_data` (figure 7)  and `transform_authors_and_affiliations_data` (figure 8), can be considered the most critical tasks in the transformation pipeline. The main cleaning, transformation, and enrichment processes are performed during these tasks. 
 ![image](https://user-images.githubusercontent.com/102286655/212534653-62c8e040-bba1-4132-b0f5-2c692614470f.png) 
-**Figure 6** Schema of the task transform_venues_and_publications_data
+**Figure 6** Schema of the task `transform_venues_and_publications_data`
 
-During the task transform_venues_and_publications_data, the following steps are carried out.
+During the task `transform_venues_and_publications_data`, the following steps are carried out.
 1.	The title of the publication is cleaned (the symbols of the newline are removed).
-2.	To get the information about venues (name and abbreviation), the field journal_ref (present in "metadata_df.tsv") is used. The data in this field is cleaned and then checked if it matches with any venue in the lookup table "venues_lookup.tsv" (by using the function find_venue(venue_data_raw)). (At the end, these values are stored in up-to-date DB in the table "VENUES").
-3.	The field doi is used for getting additional information (its type, number of references, citations/number of citations, page numbers, and different attributes relevant to journal articles, such as an issue number) about the publication. This method for enrichment is considered only when the DOI of publication is in the file "DOIs_for_enrichment.csv", as mentioned before (see chapter "Dataset and pre-pipeline processing"). Two APIs are used to retrieve a piece of extra information: Crossref REST API1 and OpenCitations API2 (see the following examples). 
+2.	To get the information about venues (name and abbreviation), the field `journal_ref` (present in `metadata_df.tsv`) is used. The data in this field is cleaned and then checked if it matches with any venue in the lookup table `venues_lookup.tsv` (by using the function `find_venue(venue_data_raw)`). (At the end, these values are stored in up-to-date DB in the table "VENUES").
+3.	The field `doi` is used for getting additional information (its type, number of references, citations/number of citations, page numbers, and different attributes relevant to journal articles, such as an issue number) about the publication. This method for enrichment is considered only when the DOI of publication is in the file `DOIs_for_enrichment.csv`, as mentioned before (see chapter "Dataset and pre-pipeline processing"). Two APIs are used to retrieve a piece of extra information: [Crossref REST API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/) and [OpenCitations API](https://doi.org/10.6084/M9.FIGSHARE.6683855) (see the following examples). 
 ```
 # Example of retrieving the publication type based on DOI by using the Crossref REST API
 
@@ -134,19 +131,19 @@ print(open_citation_result)
 13
 ```
 
-4.	The unique ID is generated for each venue (field venue_ID). If the publication does not have information about the venue available, the 0 is used as a venue_ID.
-5.	The TSV files ("venues_df.tsv" and "publications_df.tsv") needed for populating the tables "VENUES" and "PUBLICATIONS" in up-to-date DB are written. Additionally, the TSV file ("citing_pub.tsv"), where the publication ID and the DOIs of the publications that cite this publication, are recorded. (This file is required for the graph database.)
+4.	The unique ID is generated for each venue (field `venue_ID`). If the publication does not have information about the venue available, the 0 is used as a `venue_ID`.
+5.	The TSV files (`venues_df.tsv` and `publications_df.tsv`) needed for populating the tables "VENUES" and "PUBLICATIONS" in up-to-date DB are written. Additionally, the TSV file (`citing_pub.tsv`), where the publication ID and the DOIs of the publications that cite this publication, are recorded. (This file is required for the graph database.)
 
-During the task transform_arxiv_data, the field categories in "metadata_df.tsv" is used to map each publication with arXiv categories (stored in "arxiv_categories.csv"). The received information is saved as file "publication2arxiv_df.tsv". In the end, arXiv categories are stored in up-to-date DB in the table "ARXIV_CATEGORIES" and mapping data in the table "PUBLICATION2ARXIV".
+During the task `transform_arxiv_data`, the field categories in `metadata_df.tsv` is used to map each publication with arXiv categories (stored in `arxiv_categories.csv`). The received information is saved as file `publication2arxiv_df.tsv`. In the end, arXiv categories are stored in up-to-date DB in the table "ARXIV_CATEGORIES" and mapping data in the table "PUBLICATION2ARXIV".
 ![image](https://user-images.githubusercontent.com/102286655/212534753-b0465734-6fc8-4227-9154-b7e119441f14.png)
 
-**Figure 7** Schema of the task transform_arxiv_data
+**Figure 7** Schema of the task `transform_arxiv_data`
 
-And last but not least, the following list explains the steps carried out during the task transform_authors_and_affiliations_data.
-1.	The relevant fields, such as publication_ID and  authors_parsed, are filtered out from "metadata_df.tsv".
-2.	The field authors_parsed contains information about the authors' names. Therefore, it is processed (by using functions check_first_name_raw(first_name_raw_to_check) and parse_first_name(first_name_raw_to_parse)) to get the last and first names together with the abbreviation of each author's first name. Sometimes, this field also contains some extra suffixes of the name, such as Jr or II etc., which are also stored. (To check the extra suffixes, the function extra_or_affiliation(value1, value2) is employed.) (At the end, these values are stored in up-to-date DB in the table "AUTHORS"). 
-3.	The field authors_parsed can also include data about authors' affiliations. Thus, the function find_insitution_information(institution_name_raw, universites_lookup, cities_lookup) is called to find whether this raw data field matches any institution or location stored in the "universities_lookup.tsv" or "cities_lookup.tsv". It is important to note that data about location/place after the transformation pipeline is always at the country level. (At the end, these values, institution name and place, are stored in up-to-date DB in the table "AFFILIATIONS").
-4.	*To enrich the authors' information (to receive their real-life h-indices or position), the scholarly3 (and function do_scholarly_call(author)) is used. This module allows retrieving the authors' and publications' information from Google Scholar.* 
+And last but not least, the following list explains the steps carried out during the task `transform_authors_and_affiliations_data`.
+1.	The relevant fields, such as `publication_ID` and `authors_parsed`, are filtered out from `metadata_df.tsv`.
+2.	The field `authors_parsed` contains information about the authors' names. Therefore, it is processed (by using functions `check_first_name_raw(first_name_raw_to_check)` and `parse_first_name(first_name_raw_to_parse)`) to get the last and first names together with the abbreviation of each author's first name. Sometimes, this field also contains some extra suffixes of the name, such as Jr or II *etc*., which are also stored. (To check the extra suffixes, the function `extra_or_affiliation(value1, value2)` is employed.) (At the end, these values are stored in up-to-date DB in the table "AUTHORS"). 
+3.	The field `authors_parsed` can also include data about authors' affiliations. Thus, the function `find_insitution_information(institution_name_raw, universites_lookup, cities_lookup)` is called to find whether this raw data field matches any institution or location stored in the `universities_lookup.tsv` or `cities_lookup.tsv`. It is important to note that data about location/place after the transformation pipeline is always at the country level. (At the end, these values, institution name and place, are stored in up-to-date DB in the table "AFFILIATIONS").
+4.	*To enrich the authors' information (to receive their real-life h-indices or position), the [scholarly](https://github.com/scholarly-python-package/scholarly) (and function `do_scholarly_call(author)`) is used. This module allows retrieving the authors' and publications' information from Google Scholar.* 
 ```
 # Example of retrieving the author's real-life h-index by using a scholarly module
 
@@ -158,12 +155,12 @@ print(author['hindex'])
 # Output:
 39
 ```
-*However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function get_authors_and_affiliations_data() should be commented out before running the pipeline if one wants to use scholarly.
-5.	The TSV files ("authors_df.tsv" and "affiliations_df.tsv") needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
+*However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function 'get_authors_and_affiliations_data()' should be commented out before running the pipeline if one wants to use scholarly.
+5.	The TSV files ('authors_df.tsv' and 'affiliations_df.tsv') needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
 ![image](https://user-images.githubusercontent.com/102286655/212534810-9b1108d0-d329-412b-ae2d-f30decfb9b85.png)
  
-**Figure 8** Schema of the task transform_authors_and_affiliations_data
-(P.S. During these three tasks, all the missing strings are replaced with None and integers with -1.)
+**Figure 8** Schema of the task 'transform_authors_and_affiliations_data'
+(P.S. During these three tasks, all the missing strings are replaced with 'None' and integers with '-1.')
 After these tasks, the data is loaded into the up-to-date DB. In the cases where it is necessary to check that only new data is loaded to ensure that there would be no duplicates in the DB,  the additional temporary tables (such as "AFFILIATION2PUBLICATION_TEMP",  "AFFILIATIOS_TEMP", "AUTHORS_TEMP" and "PUBLICATIONS_TEMP") are used. (These tables are always emptied before a new batch of data.) To illustrate how the temporary tables are used, the following example is given. Initially, data about authors is bulk inserted into the "AUTHORS_TEMP" table. Then the data of each author is compared with the data of each author in the "AUTHORS" table. If the author's information is not already present in the DB, a new author is inserted into the "AUTHORS" table. Otherwise, the data about the author is discarded. The same comparison is made between all the corresponding temporary and permanent tables.
 
 In the last step of the transformation pipeline, the data in the database is copied and stored in CSV files. These files are used for loading the data into DWH and graph DB. Appropriate views are generated beforehand to get all the required information (like calculated h-indices of the venues and authors). Also, the field of study is normalised. For that, each arXiv category is mapped against the Scientific Disciplines classification table4. (This table is stored in suitable form in "lookup_table_comains.csv".) For example, if the value in the arXiv category field is "cs.AI" after the mapping, besides this tag, there are three new tags: major_field: "natural sciences", sub_category: "computer sciences" and exact_category: "artificial intelligence".
@@ -187,31 +184,24 @@ After thoroughly investigating the data to understand what parts of it are usabl
 
 QUERIES
 
-1. Getting authors (or ranking them)
-
-- with the most publications in a given year, scientific domain and/or publication venue
-- with the most citations in a given year, scientific domain and/or publication venue
-- with the highest h-index in a given time period
-- with the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
-
-1. Getting institutions (or ranking them)
-
-- with the most publications in a given year, scientific domain and/or publication venue
-- that have the highest impact in the scientific world (institutions that have papers which have been cited the most in a given year, scientific domain and/or publication venue)
-
-1. Getting publications (or ranking them)
-
-- with the most citations in a given year, scientific domain and/or publication venue
-
-1. Getting journals (or ranking them)
-
-- with the highest h-index in a given year and/or scientific domain
-
-1. What are the year's hottest topics (categories of scientific disciplines)?
-2. How does the number of publications on a given topic change during a given time frame (histograms of the number of publications on a given topic over a given period of time)?
-3. Who is the author whose h-index has increased the most during the given time?
-4. Which journal's h-index has increased the most during the given time?
-5. Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
+#### [Ranking authors](https://github.com/idarahu/DE-project/tree/main/queries_dwh/authors)
+- With the most publications in a given year, scientific domain and/or publication venue
+- With the most citations in a given year, scientific domain and/or publication venue
+- With the highest h-index in a given time period
+- With the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
+#### [Ranking institutions](https://github.com/idarahu/DE-project/tree/main/queries_dwh/institutions)
+- With the most publications in a given year, scientific domain and/or publication venue
+- That have the highest impact in the scientific world (institutions that have papers which have been cited the most in a given year, scientific domain and/or publication venue)
+#### [Ranking publications](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publications)
+- With the most citations in a given year, scientific domain and/or publication venue
+#### [Ranking journals](https://github.com/idarahu/DE-project/tree/main/queries_dwh/venues)
+- With the highest h-index in a given year and/or scientific domain 
+#### [Hot topics](https://github.com/idarahu/DE-project/tree/main/queries_dwh/hottest_topics)
+- What are the year's hottest topics (categories of scientific disciplines)? 
+#### [Publications over time](https://github.com/idarahu/DE-project/tree/main/queries_dwh/change_in_num_of_publications) 
+- How does the number of publications on a given topic change during a given time frame?
+#### [Publish speed](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publishing_speed)
+- Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
 
 SCHEMA
 
