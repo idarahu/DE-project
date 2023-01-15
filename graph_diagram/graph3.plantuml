@@ -1,0 +1,43 @@
+@startuml GraphFinal
+
+scale 2
+hide methods
+
+entity Publication {
+    doi
+    title
+    year
+}
+
+entity Author {
+    full_name
+    h_index_calculated
+}
+
+entity Affiliation {
+    name
+    place
+}
+
+entity Venue {
+    name
+}
+
+entity ScientificDomain {
+    major_field
+    sub_category
+    exact_category
+    arxiv_category
+}
+
+Author --> Publication : author_of
+Author -> Author : collaborates_with
+Author --> Affiliation : works_in
+Publication --> Venue : published_in
+Publication --> ScientificDomain : belongs_to
+Affiliation --> ScientificDomain : covers
+Publication --> Publication : cited_by
+Affiliation --> Venue : publishes_in
+Affiliation --> Affiliation : collaborates_with
+
+@enduml

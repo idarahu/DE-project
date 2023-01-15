@@ -45,9 +45,9 @@ ArXiv is the open-access archive for scholarly articles from a wide range of dif
 - update\_date – timestamp of the last update in arXiv
 - authors\_parsed – previous authors field in the parsed form
 
-In this project's scope, the fields of submitter, title, journal-ref, doi, categories, versions and authors\_parsed were used (all the others were dropped).
+In this project's scope, the fields of submitter, title, journal-ref, doi, categories, versions and authors_parsed  were used (all the others were dropped). 
 
-The original dataset contains information about more than 2 million publications. To simulate a real-life situation where new data is coming in continuously, the original dataset was split into smaller parts (... parts containing information about ... publications). Also, before ingesting the data into the pipeline, publications, which data will be enriched, were selected. This preselection was made because the enrichment process via API calls is very time-consuming; therefore, enriching all the publications' data is out of this project's scope. The preselection was made by filtering out all the publications with DOI (needed for API calls) and then grouping them by categories (major field + sub-category, see table 1). (The details about how publications have been divided into these categories are given in the next chapter.) From each group, 20 publications, which data will be enriched, were selected, and their DOIs were written into the DOIs\_for\_enrichment.csv file. This file is used in the transformation pipeline, as explained in the next chapter.
+The original dataset contains information about more than 2 million publications. The original dataset was split into smaller parts (44 parts in total, each containing information about 50K publications) to simulate a real-life situation where new data is coming in continuously. (The dataset splitting was conducted using the split_dataset.py script.) Also, before ingesting the data into the pipeline, the publications whose data will be enriched were selected. This preselection was made because the enrichment process via API calls is very time-consuming; therefore, enriching all the publications' data is out of this project's scope. (While running the transformation pipeline, this difference is vividly illustrated when one compares the average run times between the first (ingested raw data contains the publication whose data is enriched via API calls) and all the other runs (data is not enriched via API calls).) For picking out the publications for enrichment, the publications with DOI (needed for API calls) were first filtered out. Afterwards, they were grouped by categories (major field + sub-category, see table 1), and 20 publications were selected from each category. (The details about how publications have been divided into these categories are given in the next chapter.) Finally, their DOIs were written into the DOIs_for_enrichment.csv file. This file is used in the transformation pipeline, as explained in the next chapter.
 
 **Table 1** Categories (major field together with one sub-category forms one category) that are used for selecting the publications that are going to be enriched
 
@@ -57,74 +57,129 @@ The original dataset contains information about more than 2 million publications
 
 As mentioned before, the first part of the overall pipeline can be divided into two subparts: transformation pipeline (1A) and updating pipeline (1B). This chapter covers the concepts of the transformation pipeline. The details about the updating pipeline are given in the next chapter.
 
-In the transformation pipeline, the raw data in JSON format (as explained in the previous chapter) is ingested into the overall pipeline; then, this data is cleaned and enriched if needed and loaded into the up-to-date database. Because this project uses the approach where the data will be stored in the up-to-date database to simulate the real-life setup where constant data updates are required because of its volatile nature (the number of citations of the publications changes and so on) before discussing all the details about transformation pipeline, main concepts of this database are given. The schema of this DB is shown in figure 2.
+In the transformation pipeline, the raw data in JSON format (as explained in the previous chapter: 50K publications at once) is ingested into the overall pipeline; then, this data is cleaned and enriched if needed and loaded into the up-to-date database. Because this project uses the approach where the data will be stored in the up-to-date database to simulate the real-life setup where constant data updates are required because of its volatile nature (the number of citations of the publications changes and so on) before discussing all the details about transformation pipeline, main concepts of this database are given. The schema of this DB is shown in figure 2.
 
-![DB schema](https://user-images.githubusercontent.com/102286655/212496111-9c03d31d-49c2-4cc7-a1ed-522261e08902.png)
+![DB schema](https://user-images.githubusercontent.com/102286655/212534133-483d9b79-761f-44b9-b73a-ce0843e6c2f6.png)
 
 **Figure 2** Schema of an up-to-date database
 
-As one can see, the up-to-date DB consists of 9 relations. The table "AUTHORS" contains all the relevant information, such as last name, first name, the abbreviation of the first name, extra titles, positions, and real-life h-index, about the publications' authors in the DB. In the table "AFFILIATIONS", the institution names and places where authors work are gathered. In the table "PUBLICATIONS", the data about publications (such as DOI, title, publishing date of first and last version, name of the submitter, type and language of publication, volume, issue and page numbers, number of references and citations) are recorded. The relation "ARXIV\_CATEGORIES" contains information about publications' arXiv categories. In the relation "VENUES", all the data about venues (full name, abbreviation, print and electronic ISSN) where publications were published are collected. All other relations are created to deal with the entities' m:n relationships.
+As one can see, the up-to-date DB consists of 9 relations. The table "AUTHORS" contains all the relevant information, such as last name, first name, the abbreviation of the first name, extra titles (such as Jr., I, II etc.), positions, and real-life h-index, about the publications' authors in the DB. In the table "AFFILIATIONS", the institution names and places where the authors of publications work are gathered. In the table "PUBLICATIONS", the data about publications (such as DOI, title, publishing date of first and last version, name of the submitter, type and language of publication, volume, issue and page numbers, number of references and citations) are recorded. The relation "ARXIV_CATEGORIES" contains information about publications' arXiv categories. In the relation "VENUES", all the data about venues (full name, abbreviation, print and electronic ISSN) where publications were published are collected. All other relations are created to deal with the entities' m:n relationships.
 
-The Airflow DAG "create\_DB\_tables\_and\_SQL\_statements" (see figure 3) was written to create this Postgres database. This DAG should be run only once at the very beginning of the overall pipeline. During the run, all the database tables are generated. Besides, all the other SQL statements needed in the first part of the overall pipeline are also generated. These SQL statements include the ones used for populating the tables with new data or updating the existing data (considering all the constraints that are present in the DB), together with the statements used for generating the views (authors' view and venues' view) that are needed for getting the data in the correct form to load into the DWH and graph DB. (The mentioned authors' view contains authors' IDs, last, first, and full names, first name abbreviations, positions, real-life h-indices, and the h-indices calculated based on the data present in the DB. In the venues' view, besides the data that this in the "VENUES" table (venue ID, full name, abbreviation, print and electronic ISSN), also the calculated h-index for each venue is given.)
+The Airflow DAG "transform_create_tables" (see figure 3) was written to create this Postgres database. This DAG should be run only once at the very beginning of the overall pipeline. During the run, all the database tables are generated. Besides, all the other SQL statements needed in the first part of the overall pipeline are also generated. These SQL statements include the ones used for populating the tables with new data or updating the existing data (considering all the constraints that are present in the DB), together with the statements used for generating the views (authors' view and venues' view) that are needed for getting the data in the correct form to load into the DWH and graph DB. (The mentioned authors' view contains authors' IDs, last, first, and full names, first name abbreviations, positions, real-life h-indices, and the h-indices calculated based on the data present in the DB. In the venues' view, besides the data that this in the "VENUES" table (venue ID, full name, abbreviation, print and electronic ISSN), also the calculated h-index for each venue is given.) 
 
-![image](https://user-images.githubusercontent.com/102286655/211939110-378d7d8c-a3ae-4358-87c3-1a78cbd7a116.png)
+![image](https://user-images.githubusercontent.com/102286655/212534149-731ae570-c834-4d6a-8f9c-91ace064498a.png)
 
-**Figure 3** create\_DB\_tables\_and\_SQL\_statements Airflow DAG
+**Figure 3** Airflow DAG create\_DB\_tables\_and\_SQL\_statements
 
 The transformation pipeline itself is implemented as an Airflow DAG "articles2DB". The graph representation of this DAG is shown in the following image.
 
-![image](https://user-images.githubusercontent.com/102286655/211939134-335c3124-9c4b-4b9e-be83-0bee2bc8db33.png)
+![image](https://user-images.githubusercontent.com/102286655/212534253-9ebff420-e8ff-484c-af37-481fc1c95322.png)
 
-**Figure 4** create\_DB\_tables\_and\_SQL\_statements Airflow DAG
+**Figure 4** Airflow DAG create\_DB\_tables\_and\_SQL\_statements 
 
-To run this DAG, the "data" folder should contain six subfolders: "inputs", "setups", "lookup\_tables", "data2db", "sql", and "final\_data" (see table 2).
+The prerequisite for running this DAG is that the "data" folder should contain seven subfolders: "inputs", "setups", "metadata", "lookup\_tables", "data2db", "sql", and "final\_data" (see table 2). 
 
 **Table 2** Data folders required for running the first part of the pipeline
 
-![image](https://user-images.githubusercontent.com/102286655/211939640-55a7226a-5401-4e97-9901-4eefcfa62876.png)
+|Subfolder|Explanation|
+|:-:|---|
+|inputs|The raw JSON datasets generated during pre-pipeline processing by splitting the original arXiv dataset are stored in this folder.|
+|setups|It contains three files: "DOIs_for_enrichment.csv", "publication_ID.txt", and "split_no.txt". "DOIs_for_enrichment.csv" contains DOIs of the articles, which data will be enriched during the transformation pipeline (see chapter "Dataset and pre-pipeline processing"). The file "publication_ID.txt" is used for storing the last publication ID to ensure that all the publication IDs are unique. Before the first run of the pipeline, the ID in this file should be 0. The file "split_no.txt" is used for a similar purpose – storing the number of the previously used dataset to ensure that all datasets are ingested only once. Before the first run of the pipeline, the split number should be 0.|
+|metadata|Before the first run of the articles2DB DAG, this folder should be empty. After, it should always contain one file, "metadata_df.tsv ". This file is generated in task convert_metadata_for_ingestion, during which the relevant fields (see the previous chapter) for each publication are filtered out from the raw JSON file. (The received data, ready for further usage in the transformation pipeline, is stored in this TSV file.)|
+|lookup_tables|It contains four tables: "cities_lookup.tsv", "lookup_table_domains.csv", "universities_lookup.tsv", and "venues_lookup.tsv". All these tables (except "lookup_table_domains.csv") are used for enriching and transforming the raw data. For enriching and transforming the: -	affiliations' data the "cities_lookup.tsv" and "universities_lookup.tsv" are used. In the "cities_lookup.tsv", the names of 42905 world's largest cities (including the Unicode and ASCII strings) together with names of countries are given. This data was retrieved from SimpleMaps.com (https://simplemaps.com/data/world-cities). In the "universities_lookup.tsv",  the data (names, countries, cities/locations and abbreviations of locations) of about 1152 world universities are stored. This data was retrieved by merging and preprocessing the World University Rankings (https://www.kaggle.com/datasets/mylesoneill/world-university-rankings) dataset and University Rankings 2017 (https://data.world/education/university-rankings-2017) dataset. -	venues' data the "venues_lookup.tsv" is used. This dataset contains information such as the name and abbreviation (with and without dots) of 87224 venues. This dataset was retrieved from the Web Of Science (https://images.webofknowledge.com/images/help/WOS/A_abrvjt.html). To make the enrichment process easier and faster, the dataset was preprocessed, and therefore the lookup table also contains fields abbrev_check and full_check. The lowercase abbreviations and full names of venues without spaces are stored in these fields.The file "lookup_table_domains.csv" is used in task copy_publication2arxiv. Comprehensive information about scientific domains should be provided to populate the DWH and graph DB with data. However, in up-to-date DB, only arXiv categories are stored (see figure 2). Therefore, the data copied from the DB needs to be enriched before it can be used for DWH and graph DB. The "lookup_table_domains.csv" is employed for that purpose. (More details are provided below.)|
+|data2db|The data that will be loaded into the up-to-date database are stored in this folder. Before the first run, it should contain two files: "arxiv_categories.csv" and "venues_df.tsv". By the way, the latter should contain only the header row (venue_ID\tfull_name\tabbreviation\tprint_issn\telectronic_issn) before the first run of the pipeline. In the "arxiv_categories.csv", the IDs and arXiv category names of 156 categories are stored.|
+|sql|This folder is used for storing all the SQL statements. Before the first run, the folder should be empty, but after running the transform_create_tables DAG, the .sql files are generated and saved in this folder.|
+|final_data|This folder should contain the data in the correct form, ready to be loaded into the DWH and graph DB. Before the first run of the pipeline, this folder should be empty.|
 
-The transformation pipeline starts with the task "transform\_the\_data", which can be considered the most important task in this part of the pipeline. In this task, nine different functions (written in Python by one of the authors of this project) are used (see figure 5).
+The transformation pipeline starts with the task "convert_metadata_for_ingestion" (see figure 5). During this task, the new dataset (a 50K subset of the original dataset) is selected and ingested into the pipeline.
 
-![image](https://user-images.githubusercontent.com/102286655/211939153-79a97a7b-7686-4ecd-91d9-ae0e553fab1e.png)
+![image](https://user-images.githubusercontent.com/102286655/212534593-418f0039-f190-493d-975f-19b5b64c10a7.png)
 
-**Figure 5** Schema of the task transform\_the\_data
+**Figure 5** Schema of the task convert\_metadata\_for\_ingestion
 
-During this task, the new dataset (a subset of the original dataset) is selected and ingested into the pipeline. It is important to note that all the publications where essential data (like DOI together with authors and/or title) is missing will be dropped because this may lead to inconsistencies in the final data. (It means if it is impossible to identify the publication unambiguously, all the data about it will be discarded.) Then the fields of submitter, title, journal-ref, doi, categories, versions and authors\_parsed are filtered out and used in the following steps. The only fields used without further processing are the submitter and doi (at the end, these are stored in their present form in up-to-date DB in the table "PUBLICATIONS"). The next list explains the steps that will be carried out to transform and enrich the existing data with relevant and essential information.
+Firstly, the fields submitter, title, journal-ref, doi, categories, versions and authors_parsed are filtered out from the raw JSON file. Then the values of these fields are preprocessed if necessary. For example, the field versions is used to get the date of the first and last version and the total number of versions in arXiv required in the up-to-date DB in the table "PUBLICATIONS". Besides, a new unique ID (publication_ID) is generated for each publication. At the end of the convert_metadata_for_ingestion, all the relevant information retrieved from the original dataset is saved as a file "metadata_df.tsv" (in the folder "metadata"). This file contains the fields publication_ID, submitter, authors, title, journal_ref, doi, categories, no_versions_arxiv, date_of_first_version, and date. Some of the values of these fields (submitter, doi, no_versions_arxiv, date_of_first_version, and date) are used without further processing. (These values are stored in their present form in up-to-date DB in the table "PUBLICATIONS"). The file "metadata_df.tsv" is used for passing the data to the following tasks.
 
-1. The field versions is used to get the dates of the first and last version and the number of versions in the arXiv. (At the end, these values are stored in up-to-date DB in the table "PUBLICATIONS").
-2. To get the information about venues (name and abbreviation), the field journal-ref is used. The data in this field is cleaned and then checked if it matches with any venue in the lookup table venues\_lookup.tsv (by using the function find\_venue(venue\_data\_raw)). (At the end, these values are stored in up-to-date DB in the table "VENUES").
-3. The field authors\_parsed is used for several purposes. First of all, this field contains information about the authors' names. Therefore, it is processed (by using functions check\_first\_name\_raw(first\_name\_raw\_to\_check) and
+The next three tasks that run in parallel, transform_venues_and_publications_data (figure 6), transform_arxiv_data (figure 7)  and transform_authors_and_affiliations_data (figure 8), can be considered the most critical tasks in the transformation pipeline. The main cleaning, transformation, and enrichment processes are performed during these tasks. 
+![image](https://user-images.githubusercontent.com/102286655/212534653-62c8e040-bba1-4132-b0f5-2c692614470f.png) 
+**Figure 6** Schema of the task transform_venues_and_publications_data
 
-parse\_first\_name(first\_name\_raw\_to\_parse)) to get the last and first names together with the abbreviation of each author's first name. Sometimes, this field also contains some extra suffixes of the name, such as Jr or II _etc_., which are also stored. (At the end, these values are stored in up-to-date DB in the table "AUTHORS"). Secondly, this field can also include data about authors' affiliations. Thus, the function find\_insitution\_information(institution\_name\_raw) is called to find whether this raw data field matches any institution or location stored in the universities\_lookup.tsv or cities\_lookup.tsv. It is important to note that data about location/place after the transformation pipeline is always at the country level. (At the end, these values, institution name and place, are stored in up-to-date DB in the table "AFFILIATIONS").
+During the task transform_venues_and_publications_data, the following steps are carried out.
+1.	The title of the publication is cleaned (the symbols of the newline are removed).
+2.	To get the information about venues (name and abbreviation), the field journal_ref (present in "metadata_df.tsv") is used. The data in this field is cleaned and then checked if it matches with any venue in the lookup table "venues_lookup.tsv" (by using the function find_venue(venue_data_raw)). (At the end, these values are stored in up-to-date DB in the table "VENUES").
+3.	The field doi is used for getting additional information (its type, number of references, citations/number of citations, page numbers, and different attributes relevant to journal articles, such as an issue number) about the publication. This method for enrichment is considered only when the DOI of publication is in the file "DOIs_for_enrichment.csv", as mentioned before (see chapter "Dataset and pre-pipeline processing"). Two APIs are used to retrieve a piece of extra information: Crossref REST API1 and OpenCitations API2 (see the following examples). 
+```
+# Example of retrieving the publication type based on DOI by using the Crossref REST API
 
-1. The field categories is used to map each publication with arXiv categories. (At the end, arXiv categories are stored in up-to-date DB in the table "ARXIV\_CATEGORIES").
-2. The field doi is used for getting additional information (its type, number of references, citations/number of citations, page numbers, and different attributes relevant to journal articles, such as an issue number) about the publication. This method for enrichment is considered only when the DOI of publication is in the file DOIs\_for\_enrichment.csv, as mentioned before. Two APIs are used to retrieve a piece of extra information: Crossref REST API1 and OpenCitations API2 (see the following examples).
+crossref_results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysRevA.75.043613')
+print(crossref_results['type'])
 
-![image](https://user-images.githubusercontent.com/102286655/211939840-8599f760-63d2-4300-b928-9dc0d7029ea3.png)
+# Output:
+journal-article
 
-_By using OpenCitations API, also the authors of the publication are received. Names of these authors are used to get more information about them (for example, their real-life h-index or full names). For that purpose, a scholarly __3__ , a module that allows retrieving author and publication information from Google Scholar (and function_ _data\_by\_author(author)__), is used._
+# Example of retrieving the number of references based on DOI by using the Crossref REST API
 
-![image](https://user-images.githubusercontent.com/102286655/211939886-def23ea4-0946-4f97-8752-be4fb87384a1.png)
+crossref_results = crossref_commons.retrieval.get_publication_as_json('10.1103/PhysReVA.75.043613')
+print(crossref_results['reference-count'])
 
-_However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function_ _transform\_and\_enrich\_the\_data()_ _should be commented out before running the pipeline if one wants to use scholarly._
+# Output:
+23
 
-When all the relevant data is gathered and modified, the TSV files needed for populating the up-to-date DB with this data are written. (Additionally, the TSV file (citing\_pub.tsv), where the publication ID and the DOIs of the publications that cite this publication, are recorded. This file is needed for the graph database.)
+# Example of retrieving the number of citations based on DOI by using the OpenCitations API
 
-After that, the data is loaded into the up-to-date DB. In the cases where it is necessary to check that only new data is loaded to ensure that there would be no duplicates in the DB, the additional temporary tables (such as "AFFILIATIOS\_TEMP" and "AUTHORS\_TEMP") are used. (These tables are always emptied before a new batch of data.) For example, the data about authors is bulk inserted into the "AUTHORS\_TEMP" table. Then the data of each author is compared with the data of each author in the "AUTHORS" table. If the author's information is not already present in the DB, a new author is inserted into the "AUTHORS" table. Otherwise, the data about the author is discarded.
+client = opencitingpy.client.Client()
+open_citation_result = client.get_citation_count('10.1103/PhysReVA.75.043613')
+print(open_citation_result)
 
-In the last step of the transformation pipeline, the data in the database is copied and stored in CSV files. These files are used for loading the data into DWH and graph DB. Appropriate views are generated beforehand to get all the required information (like calculated h-indices of the venues and authors). Also, the field of study is normalised. For that, each arXiv category is mapped against the Scientific Disciplines classification table4. (This table is stored in suitable form in lookup\_table\_comains.csv.) For example, if the value in the arXiv category field is "cs.AI" after the mapping, besides this tag, there are three new tags: major\_field: "natural sciences", sub\_category: "computer sciences" and exact\_category: "artificial intelligence".
+# Output:
+13
+```
+
+4.	The unique ID is generated for each venue (field venue_ID). If the publication does not have information about the venue available, the 0 is used as a venue_ID.
+5.	The TSV files ("venues_df.tsv" and "publications_df.tsv") needed for populating the tables "VENUES" and "PUBLICATIONS" in up-to-date DB are written. Additionally, the TSV file ("citing_pub.tsv"), where the publication ID and the DOIs of the publications that cite this publication, are recorded. (This file is required for the graph database.)
+
+During the task transform_arxiv_data, the field categories in "metadata_df.tsv" is used to map each publication with arXiv categories (stored in "arxiv_categories.csv"). The received information is saved as file "publication2arxiv_df.tsv". In the end, arXiv categories are stored in up-to-date DB in the table "ARXIV_CATEGORIES" and mapping data in the table "PUBLICATION2ARXIV".
+![image](https://user-images.githubusercontent.com/102286655/212534753-b0465734-6fc8-4227-9154-b7e119441f14.png)
+
+**Figure 7** Schema of the task transform_arxiv_data
+
+And last but not least, the following list explains the steps carried out during the task transform_authors_and_affiliations_data.
+1.	The relevant fields, such as publication_ID and  authors_parsed, are filtered out from "metadata_df.tsv".
+2.	The field authors_parsed contains information about the authors' names. Therefore, it is processed (by using functions check_first_name_raw(first_name_raw_to_check) and parse_first_name(first_name_raw_to_parse)) to get the last and first names together with the abbreviation of each author's first name. Sometimes, this field also contains some extra suffixes of the name, such as Jr or II etc., which are also stored. (To check the extra suffixes, the function extra_or_affiliation(value1, value2) is employed.) (At the end, these values are stored in up-to-date DB in the table "AUTHORS"). 
+3.	The field authors_parsed can also include data about authors' affiliations. Thus, the function find_insitution_information(institution_name_raw, universites_lookup, cities_lookup) is called to find whether this raw data field matches any institution or location stored in the "universities_lookup.tsv" or "cities_lookup.tsv". It is important to note that data about location/place after the transformation pipeline is always at the country level. (At the end, these values, institution name and place, are stored in up-to-date DB in the table "AFFILIATIONS").
+4.	*To enrich the authors' information (to receive their real-life h-indices or position), the scholarly3 (and function do_scholarly_call(author)) is used. This module allows retrieving the authors' and publications' information from Google Scholar.* 
+```
+# Example of retrieving the author's real-life h-index by using a scholarly module
+
+search_query = scholarly.search_author('S. Wichmann')
+first_author_result = next(search_query)
+author = scholarly.fill(first_author_result)
+print(author['hindex'])
+
+# Output:
+39
+```
+*However, since scholarly has a limited number of times to retrieve the data, this part of the pipeline's code is now commented in to prevent it from running. Therefore, the relevant lines in the function get_authors_and_affiliations_data() should be commented out before running the pipeline if one wants to use scholarly.
+5.	The TSV files ("authors_df.tsv" and "affiliations_df.tsv") needed for populating the tables "AUTHORS" and "AFFILIATIONS" in up-to-date DB are written.* 
+![image](https://user-images.githubusercontent.com/102286655/212534810-9b1108d0-d329-412b-ae2d-f30decfb9b85.png)
+ 
+**Figure 8** Schema of the task transform_authors_and_affiliations_data
+(P.S. During these three tasks, all the missing strings are replaced with None and integers with -1.)
+After these tasks, the data is loaded into the up-to-date DB. In the cases where it is necessary to check that only new data is loaded to ensure that there would be no duplicates in the DB,  the additional temporary tables (such as "AFFILIATION2PUBLICATION_TEMP",  "AFFILIATIOS_TEMP", "AUTHORS_TEMP" and "PUBLICATIONS_TEMP") are used. (These tables are always emptied before a new batch of data.) To illustrate how the temporary tables are used, the following example is given. Initially, data about authors is bulk inserted into the "AUTHORS_TEMP" table. Then the data of each author is compared with the data of each author in the "AUTHORS" table. If the author's information is not already present in the DB, a new author is inserted into the "AUTHORS" table. Otherwise, the data about the author is discarded. The same comparison is made between all the corresponding temporary and permanent tables.
+
+In the last step of the transformation pipeline, the data in the database is copied and stored in CSV files. These files are used for loading the data into DWH and graph DB. Appropriate views are generated beforehand to get all the required information (like calculated h-indices of the venues and authors). Also, the field of study is normalised. For that, each arXiv category is mapped against the Scientific Disciplines classification table4. (This table is stored in suitable form in "lookup_table_comains.csv".) For example, if the value in the arXiv category field is "cs.AI" after the mapping, besides this tag, there are three new tags: major_field: "natural sciences", sub_category: "computer sciences" and exact_category: "artificial intelligence".
+
+
 
 ### Updating pipeline (1B)
 
-To fulfil the prerequisites of using the up-to-date DB approach, the data about publications in the database should be updated periodically. For that reason, the Airflow DAG update\_articles\_in\_DB was built (see figure 6).
-
-![image](https://user-images.githubusercontent.com/102286655/211939185-8fc030d6-203d-4e01-b926-a0b7a5fc9cfb.png)
-
-**Figure 6** update\_articles\_in\_DB Airflow DAG
+To fulfil the prerequisites of using the up-to-date DB approach, the data about publications in the database should be updated periodically (for example, monthly). For that reason, the Airflow DAG update_articles_in_DB was built (see figure 9). 
+ ![image](https://user-images.githubusercontent.com/102286655/212534828-e66977b9-ec0c-4ce0-b796-b5cae1ddc904.png)
+**Figure 9** Airflow DAG update_articles_in_DB
 
 During the run of this DAG, the publications with DOIs, that are stored in DB are updated by using their DOIs and OpenCitations API. In this project, only the number of citations is considered as changing field. If the API call returns a new value for this variable, the data about publication is updated. Since venues' and authors' h-indices depend on the number of citations, the relevant views are refreshed after updates.
+Similarly to the transformation pipeline, updating the pipeline ends with copying the data. However, at this time, only publications', authors' and venues' data is copied and saved as CSV files ready for the following pipeline parts (other tables in DB do not change).
+(Since API calls are very time-consuming, additional DAG update_articles_in_DB_presentation was generated. This DAG is a copy-paste version of the DAG update_articles_in_DB. The only difference is that instead of pulling all publications' data from DB, it limits the number of publications to 200. This DAG has only the illustrative purpose.)
 
-Similarly to the transformation pipeline, updating the pipeline ends with copying the data. However, at this time, only publications', authors' and venues' data is copied and saved as CSV files ready for the following pipeline parts.
 
 ## Part 2
 
@@ -258,110 +313,194 @@ According to the ClickHouse benchmark, the main SQL competitor is MariaDB with C
 
 Postgres with Citus extension is used on Azure for a petabyte-scale analytical solution17.
 
-## Part 3
+## Part 3. Graph Database
 
-The labelled property graph model is used instead of RDF to design the graph database. It makes the graph look more concise and allows to specify properties next to nodes and edges.
+### Design
 
-QUERIES
+The initial design of the graph database has not been changed significantly. The changes are the following:
 
-The database is designed to answer queries about relationships between authors (co-authorship), authors and affiliations (employment), publications and scientific domains, and publications and venues. The following list is a sample list of queries that a user might be interested in:
+* The relationship between the author and affiliation has been renamed from WORKS_AT to WORKS_IN
+* WORKS_IN `data` attribute has been dropped to simplify the graph and reduce the team's workload. However, that information still can be retrieved by querying the author's publications that have the `year` attribute.
+* COVERED_BY relationship between ScientificDomain and Venue has been dropped. Venues for scientific domains can be retrieved by querying publications or affiliations that have direct relationships with venues.
 
-- Getting an author
+![](graph_diagram/out/graph/GraphFinal.png)
 
-- who collaborates with a given author
-- who collaborates with a given author in a given year
-- who writes in a given scientific domain
-- who writes in a given venue
-- who writes for a given affiliation
+**Figure 1**. Schema of the graph database
 
-- Getting a publication:
+| Entity           | Properties                                                |
+|------------------|-----------------------------------------------------------|
+| Author           | full_name, h_index_calculated                             |
+| Affiliation      | name, place                                               |
+| Publication      | doi, title, year                                          |
+| ScientificDomain | major_field, sub_category, exact_category, arxiv_category |
+| Venue            | full_name                                                 |
 
-- cited by a given publication
-- cited by a given author
-- published in a given venue
-- affiliated with a given affiliation
-- from a given scientific domain
+**Table 1**. Graph entities with properties
 
-- Getting an affiliation
+List of the graph relationships:
 
-- that covers a given scientific domain
-- publishes in a given publication venue
-- employs a given author
+- AUTHOR_OF: `(:Author)-[:AUTHOR_OF]->(:Publication)`
+- COLLABORATES_WITH: `(:Author)-[:COLLABORATES_WITH]->(:Author)`
+- WORKS_IN: `(:Author)-[:WORKS_IN}]->(:Affiliation)`
+- PUBLISHED_IN: `(:Publication)-[:PUBLISHED_IN]->(:Venue)`
+- BELONGS_TO: `(:Publication)-[:COVERS]->(:ScientificDomain)`
+- CITED_BY: `(:Publication)-[:CITED_BY]->(:Publication)]`
+- COVERS: `(:Affiliation)-[:COVERS]->(:ScientificDomain)`
+- PUBLISHES_IN: `(:Affiliation)-[:PUBLISHES_IN]->(:Venue)`
+- COLLABORATES_WITH: `(:Affiliation)-[:COLLABORATES_WITH]->`(:Affiliation)
 
-- Getting a scientific domain
+### Implementation
 
-- that is covered by a given affiliation
-- that is covered by a given publication venue
-- that is covered by a given author
+After the initial transformation and data enrichment finishes, Airflow triggers the two DAGs:
 
-- Getting a publication venue
+- transform_for_graph_injection
+- load_graph_db
 
-- that covers a given scientific domain
-- that publishes for a given affiliation
-- that publishes for a given author
+The `transform_for_graph_injection` DAG prepares CSV files for the graph database injection. It determines the necessary relationships between entities, and it also splits the data into format required by the `neo4j-admin import` command.
 
-Besides that, the schema supports more complex analytical questions:
+The `load_graph_db` DAG starts a container from the custom-built Docker image. First, the container runs `neo4j-admin import` command to load the data into the graph database by overwriting the previously existing data. Then, it runs the `neo4j` command to start the Neo4j server in the `console` mode. The database is ready to be queried at http://localhost:7474.
 
-- What is the most influential publication:
+### Graph Queries
 
-- in a given year?
-- in a given scientific domain?
-- in a given venue?
-- in a given affiliation?
+The graph database has been designed to answer many questions about its entities and relationships between them. Below is the table with questions and the corresponding Cypher queries.
 
-- What is a community of authors
+#### Basic Queries
 
-- that covers a given scientific domain?
-- that publishes in a given publication venue?
-- that publishes for a given affiliation?
+This section describes basic queries that can be used to retrieve information about the entities and their relationships.
 
-- Which author has the most self-citations (or citations to other authors from the same affiliation)?
-- Which author has the most collaborations?
-- Is there a connection between co-authors and where they publish their papers?
-- What is the missing link between two authors from different affiliations who have not collaborated yet?
+Getting an author:
 
-For the analytical questions, several graph algorithms are used. For example, the ArticleRank algorithm18 provided by the Neo4j Graph Data Science Library plugin is used to find the most influential publication or author. Communities can be detected by community detection algorithms, _e.g._, Louvain19 or K-Means Clustering20. The path-finding algorithms are used to find a connection between two authors or missing link between them, A\*21 or Yen's Shortest Path22.
+| Question                                             | Cypher Query                                                                                                                                                    |
+|------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| who collaborates with a given author                 | `MATCH (author1:Author)-[:COLLABORATES_WITH]->(author2:Author) WHERE author1.author_id = "224" RETURN author2 LIMIT 25`                                         |
+| who collaborates with a given author in a given year | `MATCH (author1:Author {author_id: "224"})-[:COLLABORATES_WITH]-(author2:Author)-[:AUTHOR_OF]-(p:Publication {year: 2007}) RETURN author2 LIMIT 25`             |
+| who writes in a given scientific domain              | `MATCH (author:Author)-[:AUTHOR_OF]->(p:Publication)-[:BELONGS_TO]->(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" RETURN author LIMIT 25`           |
+| who writes in a given venue                          | `MATCH (author:Author)-[:AUTHOR_OF]->(p:Publication)-[:PUBLISHED_IN]->(v:Venue) WHERE v.full_name = "Lecture Notes in Computer Science" RETURN author LIMIT 25` |
+| who writes for a given affiliation                   | `MATCH (a:Author)-[:WORKS_IN]-(af:Affiliation) WHERE af.name = "Princeton University" RETURN a LIMIT 25`                                                        |
 
-SCHEMA
+Getting a publication:
 
-The property graph diagram below shows entities of the database and their relationships. The entities are represented as nodes, the relationships are represented as directed edges, node properties are specified inside nodes, and edge properties are displayed as notes on a yellow background.
+| Question                            | Cypher Query                                                                                                                  |
+|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| cited by a given publication        | `MATCH (p:Publication)-[:CITED_BY]->(:Publication {publication_id: "44324"}) RETURN p LIMIT 25`                               |
+| cited by a given author             | `MATCH (p:Publication)-[:CITED_BY]->(:Publication)-[:AUTHOR_OF]-(a:Author {author_id: "6616"}) RETURN p LIMIT 25`             |
+| published in a given venue          | `MATCH (p:Publication)-[:PUBLISHED_IN]-(v:Venue {full_name: "Lecture Notes in Computer Science"}) RETURN p LIMIT 25`          |
+| affiliated with a given affiliation | `MATCH (p:Publication)-[:AUTHOR_OF]-(a:Author)-[:WORKS_IN]-(af:Affiliation {name: "Princeton University"}) RETURN p LIMIT 25` |
+| from a given scientific domain      | `MATCH (p:Publication)-[:BELONGS_TO]-(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" RETURN p LIMIT 25`             |
 
-All entities contain properties relevant to the queries above. One of the edges, (:Author)-[:works\_at {date}]-\>(:Affiliation), also contains a property to indicate that the relationship is temporal, and that might be important for some queries. Nodes like (:Author), (:Affiliation), and (:Publication) can have self-loops to indicate co-authorship, employment, and self-citations, respectively.
+Getting an affiliation:
 
-![](RackMultipart20230111-1-jtg7b3_html_7af70180e4783ad9.png)
+| Question                               | Cypher Query                                                                                                  |
+|----------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| that covers a given scientific domain  | `MATCH (a:Affiliation)-[:COVERS]-(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" RETURN a LIMIT 25` |
+| publishes in a given publication venue | `MATCH (a:Affiliation)-[:PUBLISHES_IN]-(v:Venue) WHERE v.full_name = "Physical Review D" RETURN a LIMIT 25`   |
+| employs a given author                 | `MATCH (a:Author)-[:WORKS_IN]->(af:Affiliation) WHERE a.full_name = "E. Bloomer" RETURN af LIMIT 25`          |
 
-**Figure 3** Schema of graph database
+Getting a scientific domain:
 
-In Table 2, the entities together with properties are given.
+| Question                                     | Cypher Query                                                                                                                       |
+|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| that is covered by a given affiliation       | `MATCH (:Affiliation {name: "Princeton University"})-[:COVERS]-(d:ScientificDomain) RETURN d LIMIT 25`                             |
+| that is covered by a given publication venue | `MATCH (d:ScientificDomain)-[:COVERS]-(:Affiliation)-[:PUBLISHES_IN]-(v:Venue {full_name: "Physical Review D"}) RETURN d LIMIT 25` |
+| that is covered by a given author            | `MATCH (:Author {author_id: "224"})-[:AUTHOR_OF]-(:Publication)-[:BELONGS_TO]-(d:ScientificDomain) RETURN d LIMIT 25`              |
 
-**Table 2** Entities and their properties that are used in the graph database
+Getting a publication venue:
 
-| **Entity** | **Properties** |
- |
-| --- | --- | --- |
-| Author | full\_name, h\_index |
-| --- | --- |
-| Affiliation | name, place |
-| Publication | doi, title, year |
-| ScientificDomain | major\_field, sub\_category, exact\_category, arxiv\_category |
-| Venue | issn, name, h\_index |
+| Question                               | Cypher Query                                                                                                                         |
+|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| that covers a given scientific domain  | `MATCH (:ScientificDomain {sub_category: "physical sciences"})-[:COVERS]-(:Affiliation)-[:PUBLISHES_IN]-(v:Venue) RETURN v LIMIT 25` |
+| that publishes for a given affiliation | `MATCH (a:Affiliation)-[:PUBLISHES_IN]-(v:Venue) WHERE a.name = "Iowa State University" RETURN v LIMIT 25`                           |
+| that publishes for a given author      | `MATCH (a:Author {author_id: "224"})-[:AUTHOR_OF]-(:Publication)-[:PUBLISHED_IN]-(v:Venue) RETURN v LIMIT 25`                        |
 
-Relationships in the graph database:
+#### Influential publications using PageRank
 
-- AUTHOR\_OF: (:Author)-[:AUTHOR\_OF]-\>(:Publication)
-- COLLABORATES\_WITH: (:Author)-[:COLLABORATES\_WITH]-\>(:Author)
-- WORKS\_AT: (:Author)-[:WORKS\_AT {date}]-\>(:Affiliation)
-- PUBLISHED\_IN: (:Publication)-[:PUBLISHED\_IN]-\>(:Venue)
-- BELONGS\_TO: (:Publication)-[:COVERS]-\>(:ScientificDomain)
-- CITED\_BY: (:Publication)-[:CITED\_BY]-\>(:Publication)
-- COVERS: (:Affiliation)-[:COVERS]-\>(:ScientificDomain)
-- PUBLISHES\_IN: (:Affiliation)-[:PUBLISHES\_IN]-\>(:Venue)
-- COLLABORATES\_WITH: (:Affiliation)-[:COLLABORATES\_WITH]-\>(:Affiliation)
-- COVERED\_BY: (:ScientificDomain)-[:COVERED\_BY]-\>(:Venue)
+To find the most influential publications, we use the [Page Rank](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/) algorithm.
 
-TECHNOLOGIES
+First, we create a graph projection to use with the the [Graph Data Science Library](https://neo4j.com/docs/graph-data-science/current/) v2.2 library:
 
-The Neo4j graph database engines with Cypher23 as the query language will be used to implement the graph model. Neo4j is an ACID-compliant transactional database widely used for graph data with native graph storage and processing. It supports the property graph model and has been widely used in the industry while being developed since 2007 by Neo4j, Inc24.
+```cypher
+CALL gds.graph.project.cypher('influential_publications', 'MATCH (p:Publication) RETURN id(p) AS id', 'MATCH (p1:Publication)-[:CITED_BY]->(p2:Publication) RETURN id(p1) AS source, id(p2) AS target')
+```
+
+Then, we run the algorithm:
+
+```cypher
+CALL gds.pageRank.stream('influential_publications') 
+YIELD nodeId, score 
+RETURN gds.util.asNode(nodeId).title AS title, score 
+ORDER BY score DESC 
+LIMIT 25
+```
+
+Resulting table:
+
+<img width="1285" alt="Screenshot 2023-01-15 at 12 47 26" src="https://user-images.githubusercontent.com/6259054/212536500-c62d98c9-cc7b-4783-bb8c-9cd489d1fcb9.png">
+
+#### Communities detection using Louvain
+
+To find communities of authors that cover a particular scientific domain, we use the [Louvain](https://neo4j.com/docs/graph-data-science/current/algorithms/louvain/#algorithms-louvain-examples-stream) method from GDS with the following Cypher queries.
+
+First, we project the graph:
+
+```cyper
+CALL gds.graph.project.cypher('community_by_domain', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:AUTHOR_OF]->(p:Publication)-[:BELONGS_TO]->(d:ScientificDomain) WHERE d.sub_category =~ "computer.*" MATCH (a2:Author)-[:AUTHOR_OF]->(p) WHERE a1 <> a2 RETURN id(a1) AS source, id(a2) AS target')
+```
+
+Then, we can write the community_by_domain ID to the authors' nodes as a property:
+
+```cyper
+CALL gds.louvain.stream('community_by_domain') 
+YIELD nodeId, communityId 
+WITH gds.util.asNode(nodeId) AS a, communityId AS communityId SET a.community_by_domain = communityId
+```
+
+After that, we query a community where the amount of authors is greater than 1:
+
+```cyper
+MATCH (a:Author) 
+WHERE a.community_by_domain IS NOT NULL 
+WITH a.community_by_domain AS communityId, COUNT(a) AS amount WHERE amount > 1 
+RETURN communityId, amount 
+ORDER BY amount DESC
+```
+
+<img width="1427" alt="Screenshot 2023-01-15 at 12 53 51" src="https://user-images.githubusercontent.com/6259054/212536634-e642feee-d8af-4147-a47f-1549aafd6ee0.png">
+
+Finally, we can take the biggest community and display it with the query:
+```cyper
+MATCH (a:Author {community_by_domain: 35739}) RETURN a LIMIT 25
+```
+
+<img width="1429" alt="Screenshot 2023-01-15 at 12 54 21" src="https://user-images.githubusercontent.com/6259054/212536657-9f554d2c-cc29-431b-9721-297ca293ff79.png">
+
+#### Missing links between authors using Delta-Stepping Single-Source Shortest Path
+
+To search for a missing link between two authors, we use the [Single-Source Shortest Path](https://neo4j.com/docs/graph-data-science/current/algorithms/delta-single-source/) from GDS.
+
+First, we create a projection:
+
+```cypher
+CALL gds.graph.project.cypher('missing_link', 'MATCH (a:Author) RETURN id(a) AS id', 'MATCH (a1:Author)-[:COLLABORATES_WITH]-(a2:Author) RETURN id(a1) AS source, id(a2) AS target')
+```
+
+Then, we pick two authors who have not collaborated with each other, e.g., "T. Nagao" and "T.H. Puzia":
+
+<img width="1427" alt="Screenshot 2023-01-15 at 12 36 55" src="https://user-images.githubusercontent.com/6259054/212536677-2e474212-6ef5-49c9-8ffb-bca78ea301b3.png">
+
+Finally, we find the shortest path between the authors with author_id 36102 and 34512:
+
+```cypher
+MATCH (source:Author {author_id: "36102"})
+CALL gds.allShortestPaths.delta.stream('missing_link_2', {sourceNode: source})
+YIELD index, sourceNode, targetNode, path
+WHERE gds.util.asNode(targetNode).author_id = "34512"
+RETURN index, gds.util.asNode(sourceNode).full_name AS sourceNodeName, gds.util.asNode(targetNode).full_name AS targetNodeName, nodes(path) as path
+ORDER BY index
+LIMIT 25
+```
+
+<img width="1431" alt="Screenshot 2023-01-15 at 12 29 56" src="https://user-images.githubusercontent.com/6259054/212536728-d1640553-c8f7-4963-a635-bdc5d03e895a.png">
+
 
 ## Guidelines for running the overall pipeline
 

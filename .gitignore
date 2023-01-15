@@ -4,7 +4,8 @@
 __pycache__
 venv
 data
-Transformation_pipeline/data
-Transformation_pipeline/logs
-Transformation_pipeline/neo4j/*
-!Transformation_pipeline/neo4j/plugins
+ETL/airflow/data
+ETL/airflow/logs
+ETL/airflow/inputs/*.json
+ETL/neo4j/*
+!ETL/neo4j/plugins
