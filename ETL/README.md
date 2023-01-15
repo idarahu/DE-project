@@ -22,7 +22,7 @@ python split_dataset.py --arxiv_path <path-to-arxiv-dataset-json> --output_dir .
 
 1. Airflow connection to PostgreSQL database:
    ```
-   connection_id: citus-warehouse
+   connection_id: citus_warehouse
    conn_type: Postgres
    host: citus-db
    schema: warehouse
