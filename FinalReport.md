@@ -1,22 +1,16 @@
-DATA ENGINEERING (LTAT.02.007)
-
-GROUP 12
-
-Timofei Ganjušev,
-
-Siim Karel Koger,
-
-Ida Rahu,
-
-Ihar Suvorau
+<div dir="rtl">DATA ENGINEERING (LTAT.02.007)</div>
+<div dir="rtl">GROUP 12</div>
+<div dir="rtl">Timofei Ganjušev,</div>
+<div dir="rtl">Siim Karel Koger,</div>
+<div dir="rtl">Ida Rahu,</div>
+<div dir="rtl">Ihar Suvorau</div>
 
 # FINAL REPORT
 
-"_Data is like garbage. You'd better know what_
+<div dir="rtl">Data is like garbage. You'd better know what</div>
+<div dir="rtl">you are going to do with it before you collect it.</div>
+<div dir="rtl">— Mark Twain</div>
 
-_you are going to do with it before you collect it._"
-
-— Mark Twain
 
 In this project, a data pipeline to analyse data about scientific publications was built. In figure 1, the overall pipeline design is shown. As one can see, the pipeline can be divided into three main parts/stages and the first part additionally into two subparts (1A so-called transformation pipeline and 1B so-called updating pipeline). In the first part, 1A, the new raw data in JSON format is ingested into the pipeline, where it is transformed and enriched and then loaded into the up-to-date database. In subpart 1B, the data in the up-to-date database is updated periodically. Also, in the first part of the pipeline, the data is prepared in the correct form (the CSV files are written), so it can be uploaded into the data warehouse (DWH) (part 2) and the graph database (DB) (part 3). In the final report, all these stages are thoroughly covered, including the DWH and graph DB designs, together with relevant queries that DWH and graph DB will answer. And last but not least, the guidelines for running the built data pipeline are given.
 
@@ -185,29 +179,33 @@ Similarly to the transformation pipeline, updating the pipeline ends with copyin
 
 After thoroughly investigating the data to understand what parts of it are usable for the project, it is possible to phrase the BI queries that would be the basis for developing a data warehouse. In the subsequent sections, the BI queries, the schema of DWH and the technologies that will be used are discussed.
 
-### Data Warehouse BI queries
+QUERIES
 
-#### [Ranking authors](https://github.com/idarahu/DE-project/tree/main/queries_dwh/authors)
-- With the most publications in a given year, scientific domain and/or publication venue
-- With the most citations in a given year, scientific domain and/or publication venue
-- With the highest h-index in a given time period
-- With the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
-#### [Ranking institutions](https://github.com/idarahu/DE-project/tree/main/queries_dwh/institutions)
-- With the most publications in a given year, scientific domain and/or publication venue
-- That have the highest impact in the scientific world (institutions that have papers which have been cited the most in a given year, scientific domain and/or publication venue)
-#### [Ranking publications](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publications)
-- With the most citations in a given year, scientific domain and/or publication venue
-#### [Ranking journals](https://github.com/idarahu/DE-project/tree/main/queries_dwh/venues)
-- With the highest h-index in a given year and/or scientific domain 
-#### [Hot topics](https://github.com/idarahu/DE-project/tree/main/queries_dwh/hottest_topics)
-- What are the year's hottest topics (categories of scientific disciplines)? 
-#### [Publications over time](https://github.com/idarahu/DE-project/tree/main/queries_dwh/change_in_num_of_publications) 
-- How does the number of publications on a given topic change during a given time frame?
-#### [Publish speed](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publishing_speed)
-- Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
-#### [Change in H-index](https://github.com/idarahu/DE-project/tree/main/queries_dwh/hottest_topics)
-- Who is the author whose h-index has increased the most during the given time?
-- Which journal's h-index has increased the most during the given time?
+1. Getting authors (or ranking them)
+
+- with the most publications in a given year, scientific domain and/or publication venue
+- with the most citations in a given year, scientific domain and/or publication venue
+- with the highest h-index in a given time period
+- with the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
+
+1. Getting institutions (or ranking them)
+
+- with the most publications in a given year, scientific domain and/or publication venue
+- that have the highest impact in the scientific world (institutions that have papers which have been cited the most in a given year, scientific domain and/or publication venue)
+
+1. Getting publications (or ranking them)
+
+- with the most citations in a given year, scientific domain and/or publication venue
+
+1. Getting journals (or ranking them)
+
+- with the highest h-index in a given year and/or scientific domain
+
+1. What are the year's hottest topics (categories of scientific disciplines)?
+2. How does the number of publications on a given topic change during a given time frame (histograms of the number of publications on a given topic over a given period of time)?
+3. Who is the author whose h-index has increased the most during the given time?
+4. Which journal's h-index has increased the most during the given time?
+5. Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
 
 SCHEMA
 
