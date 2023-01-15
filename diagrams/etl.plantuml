@@ -1,0 +1,42 @@
+@startuml ETL
+
+scale 2
+
+package Extract {
+    file arxiv as "arXiv dataset"
+    usecase split as "Split into 50k chunks"
+    usecase read as "Extract data \nfrom chunk"
+
+    arxiv --> split
+    split --> read
+}
+
+package Transform {
+    usecase create as "Create PostgreSQL tables"
+    usecase citations as "Enrich publications with citations \nusing OpenCitations API"
+    usecase affiliations as "Enrich with affiliations \nusing Crossref API"
+    usecase venues as "Enrich with venues' names and places"
+    usecase domains as "Enrich with scientific domains"
+    file csv as "Injection CSVs"
+
+    create --> citations
+    create --> affiliations
+    create --> venues
+    create --> domains
+
+    citations --> csv
+    affiliations --> csv
+    venues --> csv
+    domains --> csv
+}
+
+package Load {
+    database graph as "Graph Database (Neo4j)"
+    database dwh as "DWH (PostgreSQL + Citus)"
+}
+
+read --> create
+csv --> graph
+csv --> dwh
+
+@enduml

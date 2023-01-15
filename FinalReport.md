@@ -323,7 +323,7 @@ The initial design of the graph database has not been changed significantly. The
 * WORKS_IN `data` attribute has been dropped to simplify the graph and reduce the team's workload. However, that information still can be retrieved by querying the author's publications that have the `year` attribute.
 * COVERED_BY relationship between ScientificDomain and Venue has been dropped. Venues for scientific domains can be retrieved by querying publications or affiliations that have direct relationships with venues.
 
-![](graph_diagram/out/graph/GraphFinal.png)
+![](diagrams/out/graph/GraphFinal.png)
 
 **Figure 1**. Schema of the graph database
 

@@ -9,7 +9,8 @@ from datetime import datetime, timedelta, timezone
 
 from airflow import DAG 
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.bash_operator import BashOperator 
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.sensors.external_task import ExternalTaskMarker, ExternalTaskSensor
 from airflow.utils.task_group import TaskGroup
@@ -740,5 +741,20 @@ prepare_update_no_citations_sql = PythonOperator(
     }
 )
 
-step4 >> prepare_updated_publications_sql >> create_updated_publications_sql
-step4 >> prepare_update_no_citations_sql
+end = EmptyOperator(task_id='end')
+
+next_trigger = TriggerDagRunOperator(
+    task_id='transform_articles',
+    trigger_dag_id='transform_articles',
+    dag=create_DB_tables_and_SQL_statements_dag,
+)
+
+step4 >> prepare_updated_publications_sql >> create_updated_publications_sql >> end
+step4 >> prepare_update_no_citations_sql >> end
+
+end >> next_trigger
+
+
+
+
+
