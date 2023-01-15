@@ -220,28 +220,26 @@ The fact table "PUBLICATIONS" will store the primary keys of dimension tables (o
 
 **Table 1** Attributes of the fact table together with explanations
 
-| **Attribute**                                                 | **Explanation** |
-|---------------------------------------------------------------| --- |
-| venue\_id                                                     | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published |
+| **Attribute**                                                 | **Explanation**                                                                                                                                                                                              |
+|---------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                                                            | generated primary key for fact table                                                                                                                                                                         |
+| venue\_id                                                     | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published                                                                               |
 | time\_id                                                      | the primary key of the "TIME" dimension; is required to query when the publication was published (time information about the last version in the arXiv dataset at the moment when data was added to the DWH) |
-| doi                                                           | Digital Object Identifier (DOI) of the paper |
-| title                                                         | the title of the publication |
-| type                                                          | type ("journal article", "conference material", _etc._) of the publication |
-| number\_of\_authors                                           | number of authors |
-| submitter                                                     | the name of the person who submitted the paper/corresponding author |
-| language                                                      | the language of the publication |
-| volume                                                        | volume number; applicable when the paper is published in the journala |
-| issue                                                         | issue number; applicable when the paper is published in the journala |
-| page\_numbers                                                 | publication page numbers in the journal or the other published scientific papers collectiona |
-| number\_of\_pages                                             | total number of pages of the publication |
-| number\_of\_references                                        | number of publications that present publication cites |
-| no\_versions\_arXiv                                           | number of versions of the current publication in the arXiv dataset; since the arXiv dataset is updated frequently, this field may change – a new version of the publication may be published |
-| date\_of\_first\_version                                      | date when the first version (version v1 in arXiv) was created; is required for measuring the time interval between the first and current version of the publication |
-| number\_of\_citations                                         | number of publications that cite the present publication; this field may change over time |
+| doi                                                           | Digital Object Identifier (DOI) of the paper                                                                                                                                                                 |
+| title                                                         | the title of the publication                                                                                                                                                                                 |
+| number\_of\_authors                                           | number of authors                                                                                                                                                                                            |
+| submitter                                                     | the name of the person who submitted the paper/corresponding author                                                                                                                                          |
+| lang                                                          | the language of the publication                                                                                                                                                                              |
+| volume                                                        | volume number; applicable when the paper is published in the journala                                                                                                                                        |
+| issue                                                         | issue number; applicable when the paper is published in the journala                                                                                                                                         |
+| page\_numbers                                                 | publication page numbers in the journal or the other published scientific papers collectiona                                                                                                                 |
+| number\_of\_references                                        | number of publications that present publication cites                                                                                                                                                        |
+| no\_ver\_arxiv                                                | number of versions of the current publication in the arXiv dataset; since the arXiv dataset is updated frequently, this field may change – a new version of the publication may be published                 |
+| date\_of\_first\_version                                      | date when the first version (version v1 in arXiv) was created; is required for measuring the time interval between the first and current version of the publication                                          |
+| number\_of\_citations                                         | number of publications that cite the present publication; this field may change over time                                                                                                                    |
 | _The following attributes are added for historical tracking._ |
-| is\_current\_snapshot                                         | the flag to indicate if the row represents the current state of the fact; is updated when a new row is added |
-| snapshot\_valid\_from                                         | the date this row became effective |
-| snapshot\_valid\_to                                           | the date this row expired; is updated when a new row is added |
+| snapshot\_valid\_from                                         | the date this row became effective                                                                                                                                                                           |
+| snapshot\_valid\_to                                           | the date this row expired; is updated when a new row is added                                                                                                                                                |
 
 It is important to note that not all additional information fields are applicable in all cases. For example, workshop materials do not have an issue number. In these situations, the field will be filled as not-applicable.
 
