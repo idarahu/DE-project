@@ -25,7 +25,6 @@ JOIN warehouse.scientific_domain scientific_domain
 JOIN warehouse.publication_time pub_time
 	ON pub.pub_time_id = pub_time.id
 WHERE
-	pub_time.year = '2023'
 	-- could do the filtering by major field, sub cat, or id, or exact cat if desired
 	-- but in project preparation we mostly talked about major_field
 	-- additional queries could easily be added in few clicks
