@@ -185,33 +185,29 @@ Similarly to the transformation pipeline, updating the pipeline ends with copyin
 
 After thoroughly investigating the data to understand what parts of it are usable for the project, it is possible to phrase the BI queries that would be the basis for developing a data warehouse. In the subsequent sections, the BI queries, the schema of DWH and the technologies that will be used are discussed.
 
-QUERIES
+### Data Warehouse BI queries
 
-1. Getting authors (or ranking them)
-
-- with the most publications in a given year, scientific domain and/or publication venue
-- with the most citations in a given year, scientific domain and/or publication venue
-- with the highest h-index in a given time period
-- with the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
-
-1. Getting institutions (or ranking them)
-
-- with the most publications in a given year, scientific domain and/or publication venue
-- that have the highest impact in the scientific world (institutions that have papers which have been cited the most in a given year, scientific domain and/or publication venue)
-
-1. Getting publications (or ranking them)
-
-- with the most citations in a given year, scientific domain and/or publication venue
-
-1. Getting journals (or ranking them)
-
-- with the highest h-index in a given year and/or scientific domain
-
-1. What are the year's hottest topics (categories of scientific disciplines)?
-2. How does the number of publications on a given topic change during a given time frame (histograms of the number of publications on a given topic over a given period of time)?
-3. Who is the author whose h-index has increased the most during the given time?
-4. Which journal's h-index has increased the most during the given time?
-5. Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
+#### [Ranking authors](https://github.com/idarahu/DE-project/tree/main/queries_dwh/authors)
+- With the most publications in a given year, scientific domain and/or publication venue
+- With the most citations in a given year, scientific domain and/or publication venue
+- With the highest h-index in a given time period
+- With the broadest horizon (authors who have written papers in the largest amount of different scientific domains)
+#### [Ranking institutions](https://github.com/idarahu/DE-project/tree/main/queries_dwh/institutions)
+- With the most publications in a given year, scientific domain and/or publication venue
+- That have the highest impact in the scientific world (institutions that have papers which have been cited the most in a given year, scientific domain and/or publication venue)
+#### [Ranking publications](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publications)
+- With the most citations in a given year, scientific domain and/or publication venue
+#### [Ranking journals](https://github.com/idarahu/DE-project/tree/main/queries_dwh/venues)
+- With the highest h-index in a given year and/or scientific domain 
+#### [Hot topics](https://github.com/idarahu/DE-project/tree/main/queries_dwh/hottest_topics)
+- What are the year's hottest topics (categories of scientific disciplines)? 
+#### [Publications over time](https://github.com/idarahu/DE-project/tree/main/queries_dwh/change_in_num_of_publications) 
+- How does the number of publications on a given topic change during a given time frame?
+#### [Publish speed](https://github.com/idarahu/DE-project/tree/main/queries_dwh/publishing_speed)
+- Which papers have the most prolonged period between the first and last version? Are there any journals where publishing takes much more time compared to others?
+#### [Change in H-index](https://github.com/idarahu/DE-project/tree/main/queries_dwh/hottest_topics)
+- Who is the author whose h-index has increased the most during the given time?
+- Which journal's h-index has increased the most during the given time?
 
 SCHEMA
 
