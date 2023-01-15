@@ -3,6 +3,6 @@
 Timofei Ganjušev, Siim Karel Koger, Ida Rahu, and Ihar Suvorau
 
 - [Assignment](Assignment.md)
-- [Design](Design.md)
+- [Design Document](Design.md)
 - [Final Report](FinalReport.md)
 - [Getting started with ETL](ETL/README.md)
