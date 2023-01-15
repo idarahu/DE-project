@@ -1,5 +1,4 @@
 -- How does the number of publications on a given topic change during a given time frame
--- (histograms of the number of publications on a given topic over a given period of time)?
 SELECT
 	pub_time.year,
 	COUNT(DISTINCT pub.pub_doi) AS num_of_publications
