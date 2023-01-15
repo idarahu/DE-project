@@ -1,6 +1,7 @@
 -- Ranking authors with the most publications in a given year
 SELECT
 	aut.full_name,
+	aut.first_name,
 	COUNT(DISTINCT pub.doi) AS num_of_publications
 FROM warehouse.publications pub
 JOIN warehouse.publication_time pub_time

@@ -1,6 +1,7 @@
 -- Ranking authors with the most publications in publication venue
 SELECT
 	aut.full_name,
+	aut.first_name,
 	COUNT(DISTINCT pub.doi) AS num_of_publications
 FROM warehouse.publications pub
 -- join authors with publications
