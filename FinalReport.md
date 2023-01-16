@@ -184,6 +184,10 @@ After thoroughly investigating the data to understand what parts of it are usabl
 
 ### QUERIES
 
+The DWH has been designed to answer many BI queries (see the folder queries_dwh on the
+project's GitHub page). This chapter gives two examples: one basic and one more
+challenging query, together with the results (figures 12 and 13).
+
 #### [Ranking authors](https://github.com/idarahu/DE-project/tree/main/queries_dwh/authors)
 - With the most publications in a given year, scientific domain and/or publication venue
 - With the most citations in a given year, scientific domain and/or publication venue
@@ -204,24 +208,6 @@ After thoroughly investigating the data to understand what parts of it are usabl
 - Which papers have the most prolonged period between the first and last version? 
 - Are there any journals where publishing takes much more time compared to others?
 
-### Queries examples
-SQL for all the queries are available on GitHub.
-https://github.com/idarahu/DE-project/tree/main/queries_dwh
-
-
-
-#### "Authors with most publications in given year (2022)."
-SQL:
-https://github.com/idarahu/DE-project/blob/main/queries_dwh/authors/authors_with_most_pubs_in_year.sql
-
-INSERT PIC 1
-
-
-#### "Hottest topics (major field) in year 2022"
-SQL:
-https://github.com/idarahu/DE-project/blob/main/queries_dwh/hottest_topics/hottest_topics_major_field_by_time.sql
-
-INSERT PIC 2
 
 ### SCHEMA
 
