@@ -306,7 +306,8 @@ it also has separate fields for year, month and day.
 To build the described DWH where the slowly changing dimensions (SCD) approach is
 supported while data is updated, the load_dwh_db Airflow DAG was generated.
 
-[dwh DAG](https://user-images.githubusercontent.com/102286655/212682375-9f9c05cc-bdda-4b56-a2bb-514444410f2e.png)
+![dwh DAG](https://user-images.githubusercontent.com/102286655/212682664-9f086f6a-4278-4ff9-9af7-3d959a04fdca.png)
+
 
 This DAG consists of 6 "real" tasks and one connector task and guarantees that the data is
 saved to the database without duplicates with entity relations in 'UTF-8' format. All the
