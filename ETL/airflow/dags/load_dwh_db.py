@@ -241,7 +241,7 @@ def get_domain_id(domain, connection) -> int:
 def insert_publication_domain(publication_domain, connection) -> None:
     try:
         domain_db_id = int(publication_domain['domain_db_id'])
-        publication_db_id = int(publication_domain['db_id'])
+        publication_db_id = int(publication_domain['db_id_x'])
         params = {}
         params['domain_id'] = domain_db_id
         params['publication_id'] = publication_db_id
