@@ -131,16 +131,20 @@ def get_affiliation_id(affiliation, connection):
 
 
 def insert_affiliation_publication(publication_affiliation, affiliations_df, publications_df, connection) -> None:
-    affiliation_id = int(publication_affiliation['affiliation_id'])
-    affiliation_db_id = int(affiliations_df.query('affiliation_id == {}'.format(affiliation_id)).iloc[0]['db_id'])
-    publication_id = int(publication_affiliation['publication_id'])
-    publication_db_id = int(publications_df.query('publication_id == {}'.format(publication_id)).iloc[0]['db_id'])
-    params = {}
-    params['institution_id'] = affiliation_db_id
-    params['publication_id'] = publication_db_id
-    query = open('/tmp/data/wh_sql/insert_publication_affiliation.sql', 'r')
-    connection.cursor().execute(query.read().format(**params))
-    connection.commit()
+    try:
+        affiliation_id = int(publication_affiliation['affiliation_id'])
+        affiliation_db_id = int(affiliations_df.query('affiliation_id == {}'.format(affiliation_id)).iloc[0]['db_id'])
+        publication_id = int(publication_affiliation['publication_id'])
+        publication_db_id = int(publications_df.query('publication_id == {}'.format(publication_id)).iloc[0]['db_id'])
+        params = {}
+        params['institution_id'] = affiliation_db_id
+        params['publication_id'] = publication_db_id
+        query = open('/tmp/data/wh_sql/insert_publication_affiliation.sql', 'r')
+        connection.cursor().execute(query.read().format(**params))
+        connection.commit()
+    except:
+        print(publication_affiliation)
+        return
 
 
 def update_warehouse_affiliations(prepared_publication_path: Path, affiliations_path: Path,
