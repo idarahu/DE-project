@@ -355,16 +355,15 @@ extension does not support the ARM64 platform, and the emulator decreases the ov
 performance. Thus, this project used the official Postgres with indexes without the Citus
 extension.
 
+PostgreSQL is an open-source object-relational database solution with a solid background, up-to-date documentation, popularity across top-tech companies and a strong community.
+
+The database supports various data types, including JSON/JSONB; all the innovations come from Postgres extensions. It has different optimisation tools for analytical queries, such as indexes and table partitioning.
+
+
 **Swifter**
 
 [Swifter](https://github.com/jmcarpenter2/swifter) library was used in pair with Pandas library for loading and transforming the datasets.
 It adds multicore usage for different pandas dataframe core transformation functions.
-
-**PostgreSQL**
-
-PostgreSQL is an open-source object-relational database solution with a solid background, up-to-date documentation, popularity across top-tech companies and a strong community.
-
-The database supports various data types, including JSON/JSONB; all the innovations come from Postgres extensions. It has different optimisation tools for analytical queries, such as indexes12 and table partitioning13.
 
 ## Part 3. Graph Database
 
