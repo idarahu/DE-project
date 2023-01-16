@@ -15,7 +15,6 @@ FROM
         JOIN warehouse.publication_time pub_time
             ON pu.time_id = pub_time.id
 		WHERE pu.snapshot_valid_to is NULL
-		LIMIT 1
 	) pub
 -- join institutions with publications
 JOIN warehouse.publication_institution pub_inst

@@ -17,7 +17,6 @@ FROM
 			pu.doi AS pub_doi
 		FROM warehouse.publications pu
 		WHERE pu.snapshot_valid_to is NULL
-		LIMIT 1
 	) pub
 -- join scientific domains with publications
 JOIN warehouse.publication_domain pub_domain
@@ -28,6 +27,6 @@ JOIN warehouse.scientific_domain scientific_domain
 JOIN warehouse.publication_time pub_time
 	ON pub.pub_time_id = pub_time.id
 WHERE
-	pub_time.year = '2023'
+	pub_time.year = '2022'
 GROUP BY scientific_domain.major_field
 ORDER BY num_of_publications DESC;

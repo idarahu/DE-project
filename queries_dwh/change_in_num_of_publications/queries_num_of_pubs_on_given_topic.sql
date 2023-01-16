@@ -14,7 +14,6 @@ FROM
 			pu.doi AS pub_doi
 		FROM warehouse.publications pu
 		WHERE pu.snapshot_valid_to is NULL
-		LIMIT 1
 	) pub
 -- join scientific domains with publications
 JOIN warehouse.publication_domain pub_domain

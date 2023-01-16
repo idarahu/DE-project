@@ -12,7 +12,6 @@ FROM
 			pu.number_of_citations AS pub_num_of_citations
 		FROM warehouse.publications pu
 		WHERE pu.snapshot_valid_to is NULL
-		LIMIT 1
 	) pub
 -- join authors with publications
 JOIN warehouse.publication_author pub_auth

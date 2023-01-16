@@ -15,7 +15,6 @@ FROM
 			pu.doi AS pub_doi
 		FROM warehouse.publications pu
 		WHERE pu.snapshot_valid_to is NULL
-		LIMIT 1
 	) pub
 -- join time with publications
 JOIN warehouse.publication_time pub_time

@@ -12,7 +12,6 @@ FROM
 			pu.venue_id AS pub_venue_id
 		FROM warehouse.publications pu
 		WHERE pu.snapshot_valid_to is NULL
-		LIMIT 1
 	) pub
 -- join institutions with publications
 JOIN warehouse.publication_institution pub_inst

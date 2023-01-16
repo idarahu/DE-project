@@ -13,7 +13,6 @@ FROM
 			pu.venue_id AS pub_venue_id
 		FROM warehouse.publications pu
 		WHERE pu.snapshot_valid_to is NULL
-		LIMIT 1
 	) pub
 -- join authors with publications
 JOIN warehouse.publication_author pub_auth
