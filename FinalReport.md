@@ -219,7 +219,7 @@ and five dimension tables: "AUTHORS", "INSTITUTION", "PUBLICATION VENUES", "SCIE
 
 ![image](https://user-images.githubusercontent.com/102286655/212561550-19ccaa1d-65f1-444c-b745-3ff64944dde9.png)
 
-**Figure 2** Schema of DWH
+**Figure 10** Schema of DWH
 
 The fact table "PUBLICATIONS" will store the primary keys of dimension tables (or dimension group keys in cases where bridge tables are used) as foreign keys together with additional information about the record (see Table 1 for more details).
 
@@ -310,7 +310,7 @@ it also has separate fields for year, month and day.
 To build the described DWH where the slowly changing dimensions (SCD) approach is
 supported while data is updated, the load_dwh_db Airflow DAG was generated.
 
-..IMAGE..
+[dwh DAG](https://user-images.githubusercontent.com/102286655/212682375-9f9c05cc-bdda-4b56-a2bb-514444410f2e.png)
 
 This DAG consists of 6 "real" tasks and one connector task and guarantees that the data is
 saved to the database without duplicates with entity relations in 'UTF-8' format. All the
