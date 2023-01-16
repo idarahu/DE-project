@@ -10,7 +10,6 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
 
-DATA2DB_DIR = Path('/tmp/data/data2db')
 SQL_DIR = Path('/tmp/data/sql')
 FINAL_DATA_DIR = Path('/tmp/data/final_data')
 PREPARED_DATA_FILE = Path('/tmp/data/wh-data/prepared_publications.csv')
@@ -70,7 +69,7 @@ def get_venue_id(venue, connection) -> int:
 
 
 def get_publication_id(publication, venues_df, connection) -> int:
-    venue_db_id = venues_df.query('venue_ID == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if (
+    venue_db_id = venues_df.query('venue_id == {}'.format(publication['venue_id'])).iloc[0]['db_id'] if (
                 publication['venue_id'] not in [0, 1]) else 'null'
     params = {}
     params['doi'] = prepare_string_value(publication.get('doi', default=''))
@@ -112,7 +111,7 @@ update_publication = PythonOperator(
     task_id='update_warehouse_data',
     python_callable=update_warehouse,
     op_kwargs={
-        'venues_path': get_latest_filename(DATA2DB_DIR, 'venues_'),
+        'venues_path': get_latest_filename(FINAL_DATA_DIR, 'venues_'),
         'publications_path': get_latest_filename(FINAL_DATA_DIR, 'publications_'),
         'output_prepared_publication_path': PREPARED_DATA_FILE
     },
@@ -185,17 +184,21 @@ def get_author_id(author, connection) -> int:
 
 
 def insert_author_publication(publication_author, authors_df, publications_df, connection) -> None:
-    author_id = int(publication_author['author_id'])
-    author_db_id = int(authors_df.query('author_id == {}'.format(author_id)).iloc[0]['db_id'])
-    publication_id = int(publication_author['publication_id'])
-    publication_db_id = int(publications_df.query('publication_id == {}'.format(publication_id)).iloc[0]['db_id'])
-    params = {}
-    params['author_id'] = author_db_id
-    params['publication_id'] = publication_db_id
-    query = open('/tmp/data/wh_sql/insert_publication_author.sql', 'r')
-    connection.cursor().execute(query.read().format(**params))
-    connection.commit()
-    query.close()
+    try:
+        author_id = int(publication_author['author_id'])
+        author_db_id = int(authors_df.query('author_id == {}'.format(author_id)).iloc[0]['db_id'])
+        publication_id = int(publication_author['publication_id'])
+        publication_db_id = int(publications_df.query('publication_id == {}'.format(publication_id)).iloc[0]['db_id'])
+        params = {}
+        params['author_id'] = author_db_id
+        params['publication_id'] = publication_db_id
+        query = open('/tmp/data/wh_sql/insert_publication_author.sql', 'r')
+        connection.cursor().execute(query.read().format(**params))
+        connection.commit()
+        query.close()
+    except:
+        print("Error on ", publication_author)
+        return
 
 
 def update_warehouse_authors(prepared_publication_path: Path, authors_path: Path, author_to_publications_path: Path):
@@ -235,27 +238,30 @@ def get_domain_id(domain, connection) -> int:
     return int(domain_id)
 
 
-def insert_publication_domain(publication_domain, publications_df, connection) -> None:
-    domain_db_id = int(publication_domain['domain_db_id'])
-    publication_id = int(publication_domain['publication_id'])
-    publication_db_id = int(publications_df.query('publication_id == {}'.format(publication_id)).iloc[0]['db_id'])
-    params = {}
-    params['domain_id'] = domain_db_id
-    params['publication_id'] = publication_db_id
-    query = open('/tmp/data/wh_sql/insert_publication_domain.sql', 'r')
-    connection.cursor().execute(query.read().format(**params))
-    connection.commit()
-    query.close()
+def insert_publication_domain(publication_domain, connection) -> None:
+    try:
+        domain_db_id = int(publication_domain['domain_db_id'])
+        publication_db_id = int(publication_domain['db_id'])
+        params = {}
+        params['domain_id'] = domain_db_id
+        params['publication_id'] = publication_db_id
+        query = open('/tmp/data/wh_sql/insert_publication_domain.sql', 'r')
+        connection.cursor().execute(query.read().format(**params))
+        connection.commit()
+        query.close()
+    except:
+        print("Error on ", publication_domain)
+        return
 
 
 def update_warehouse_domains(prepared_publication_path: Path, publication_domains_path: Path):
     publication_df = pd.read_csv(prepared_publication_path, sep=infer_separator(prepared_publication_path))
     publication_domains_df = pd.read_csv(publication_domains_path, sep=infer_separator(publication_domains_path))
     connection = PostgresHook(postgres_conn_id='citus_warehouse', schema='warehouse').get_conn()
-    publication_domains_df['domain_db_id'] = publication_domains_df.swifter.apply(
-        lambda domain: get_domain_id(domain, connection), axis=1)
-    publication_domains_df.swifter.apply(
-        lambda publication_author: insert_publication_domain(publication_author, publication_df, connection), axis=1)
+    publication_df = publication_df.loc[:, publication_df.columns.intersection(['publication_id', 'db_id'])]
+    publication_domains_df['domain_db_id'] = publication_domains_df.swifter.apply(lambda domain: get_domain_id(domain, connection), axis=1)
+    publication_domains_df = publication_domains_df.merge(publication_df, on='publication_id')
+    publication_domains_df.merge(publication_df, on='publication_id').apply(lambda publication_author: insert_publication_domain(publication_author, connection), axis=1)
 
 
 update_domain_data = PythonOperator(
@@ -295,11 +301,10 @@ update_venues_h_index_calculated = PostgresOperator(
     dag=dag
 )
 
-
 commit_task = EmptyOperator(
-        task_id='commit',
-        dag=dag
-    )
+    task_id='commit',
+    dag=dag
+)
 
 
 publication_affiliations = [update_authors_data, update_affiliations_data, update_domain_data]
