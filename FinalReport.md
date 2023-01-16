@@ -318,11 +318,13 @@ It contains saves data mentioned in star schema with duplicate safe technique:
 
 ### TECHNOLOGIES
 
-**PostreSQL with Citus extension**
+**PostreSQL**
 
-The Postgres with Citus extension is chosen as a data warehouse database.
-However, the Official container for postgres extension does not support ARM64 platform and the overall performance is decreased by emulator.
-Because of that fact, the official Postgres without citus extension was used with indexes.
+The Postgres with Citus extension was originally chosen as a data warehouse database
+(see "Design Document – GROUP 12"). However, the Official container for the Postgres
+extension does not support the ARM64 platform, and the emulator decreases the overall
+performance. Thus, this project used the official Postgres with indexes without the Citus
+extension.
 
 **Swifter**
 
@@ -334,18 +336,6 @@ It adds multicore usage for different pandas dataframe core transformation funct
 PostgreSQL is an open-source object-relational database solution with a solid background, up-to-date documentation, popularity across top-tech companies and a strong community.
 
 The database supports various data types, including JSON/JSONB; all the innovations come from Postgres extensions. It has different optimisation tools for analytical queries, such as indexes12 and table partitioning13.
-
-**Citus**
-
-However, the PostgresSQL build-in features deliver a powerful tool, but for better analytical query processing and potential database growth, the Citus14 extension would also be used in the solution. Citus is a Postgres extension that supports sharding, paralleling SQL across multiple nodes supported and owned by Microsoft15. It delivers insanely fast performance. Even with real-time data ingest and billions of rows of data. The idea of Citus extension was initially designed as an OLAP solution based on PostgreSQL. Moreover, the focus of development is changes, and today Citus does either: OLTP and HTAP16.
-
-**ClickHouse benchmark (Citus vs MariaDB with ColumnStore)**
-
-According to the ClickHouse benchmark, the main SQL competitor is MariaDB with ColumnStore extension. However, it does not support all SQL operations. The Citus outperforms the MariaDB in DB storage size and loading the data to the database but is less performant in cold and hot data retrieving. In the benchmark, the indexes optimisation was not used for Postgres solution, but with them, it would outperform the main competitor in many scenarios.
-
-**Production implementation facts**
-
-Postgres with Citus extension is used on Azure for a petabyte-scale analytical solution17.
 
 ## Part 3. Graph Database
 
