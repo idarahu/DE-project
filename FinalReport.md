@@ -204,6 +204,25 @@ After thoroughly investigating the data to understand what parts of it are usabl
 - Which papers have the most prolonged period between the first and last version? 
 - Are there any journals where publishing takes much more time compared to others?
 
+### Queries examples
+SQL for all the queries are available on GitHub.
+https://github.com/idarahu/DE-project/tree/main/queries_dwh
+
+
+
+#### "Authors with most publications in given year (2022)."
+SQL:
+https://github.com/idarahu/DE-project/blob/main/queries_dwh/authors/authors_with_most_pubs_in_year.sql
+
+INSERT PIC 1
+
+
+#### "Hottest topics (major field) in year 2022"
+SQL:
+https://github.com/idarahu/DE-project/blob/main/queries_dwh/hottest_topics/hottest_topics_major_field_by_time.sql
+
+INSERT PIC 2
+
 ### SCHEMA
 
 
@@ -220,48 +239,87 @@ The fact table "PUBLICATIONS" will store the primary keys of dimension tables (o
 
 **Table 1** Attributes of the fact table together with explanations
 
-| **Attribute**                                                 | **Explanation** |
-|---------------------------------------------------------------| --- |
-| venue\_id                                                     | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published |
+| **Attribute**                                                 | **Explanation**                                                                                                                                                                                              |
+|---------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                                                            | generated primary key for fact table                                                                                                                                                                         |
+| venue\_id                                                     | the primary key of the "PUBLICATION VENUES" dimension; is required to retrieve data about venues where the paper was published                                                                               |
 | time\_id                                                      | the primary key of the "TIME" dimension; is required to query when the publication was published (time information about the last version in the arXiv dataset at the moment when data was added to the DWH) |
-| doi                                                           | Digital Object Identifier (DOI) of the paper |
-| title                                                         | the title of the publication |
-| type                                                          | type ("journal article", "conference material", _etc._) of the publication |
-| number\_of\_authors                                           | number of authors |
-| submitter                                                     | the name of the person who submitted the paper/corresponding author |
-| language                                                      | the language of the publication |
-| volume                                                        | volume number; applicable when the paper is published in the journala |
-| issue                                                         | issue number; applicable when the paper is published in the journala |
-| page\_numbers                                                 | publication page numbers in the journal or the other published scientific papers collectiona |
-| number\_of\_pages                                             | total number of pages of the publication |
-| number\_of\_references                                        | number of publications that present publication cites |
-| no\_versions\_arXiv                                           | number of versions of the current publication in the arXiv dataset; since the arXiv dataset is updated frequently, this field may change – a new version of the publication may be published |
-| date\_of\_first\_version                                      | date when the first version (version v1 in arXiv) was created; is required for measuring the time interval between the first and current version of the publication |
-| number\_of\_citations                                         | number of publications that cite the present publication; this field may change over time |
+| doi                                                           | Digital Object Identifier (DOI) of the paper                                                                                                                                                                 |
+| title                                                         | the title of the publication                                                                                                                                                                                 |
+| number\_of\_authors                                           | number of authors                                                                                                                                                                                            |
+| submitter                                                     | the name of the person who submitted the paper/corresponding author                                                                                                                                          |
+| lang                                                          | the language of the publication                                                                                                                                                                              |
+| volume                                                        | volume number; applicable when the paper is published in the journala                                                                                                                                        |
+| issue                                                         | issue number; applicable when the paper is published in the journala                                                                                                                                         |
+| page\_numbers                                                 | publication page numbers in the journal or the other published scientific papers collectiona                                                                                                                 |
+| number\_of\_references                                        | number of publications that present publication cites                                                                                                                                                        |
+| no\_ver\_arxiv                                                | number of versions of the current publication in the arXiv dataset; since the arXiv dataset is updated frequently, this field may change – a new version of the publication may be published                 |
+| date\_of\_first\_version                                      | date when the first version (version v1 in arXiv) was created; is required for measuring the time interval between the first and current version of the publication                                          |
+| number\_of\_citations                                         | number of publications that cite the present publication; this field may change over time                                                                                                                    |
 | _The following attributes are added for historical tracking._ |
-| is\_current\_snapshot                                         | the flag to indicate if the row represents the current state of the fact; is updated when a new row is added |
-| snapshot\_valid\_from                                         | the date this row became effective |
-| snapshot\_valid\_to                                           | the date this row expired; is updated when a new row is added |
+| snapshot\_valid\_from                                         | the date this row became effective                                                                                                                                                                           |
+| snapshot\_valid\_to                                           | the date this row expired; is updated when a new row is added                                                                                                                                                |
 
-It is important to note that not all additional information fields are applicable in all cases. For example, workshop materials do not have an issue number. In these situations, the field will be filled as not-applicable.
+It is important to note that not all additional information fields are applicable in all cases.
+In these situations, the field will be filled as not-applicable.
 
-As one can notice, the timestamped accumulating snapshots concept5,6 is used for historical tracking of the data. This approach is suitable because the data will change infrequently. For example, the number of citations of one publication may increase very often during some period, but at the same time, there may be long time intervals during which this value remains the same.
+As one can notice, the timestamped accumulating snapshots concept is used for 
+historical tracking of the data. 
+This approach is suitable because the data will change infrequently. 
+For example, the number of citations of one publication may increase very often during some period, 
+but at the same time, there may be long time intervals during which this value remains the same.
 
-In the dimension table "AUTHORS", all the relevant data about the publications' authors (name and h-index) will be stored. The difference between fields "h\_index\_real" and "h\_index\_calculated" is that the first h-index is retrieved by an API call and refers to the real-life h-index that the author has. The second h-index is calculated based on the data added to the DWH. The reason to keep both is that it is one way to immediately see if there is an error in the data pipeline – a calculated h-index could never be higher than a real-life one.
+In the dimension table "AUTHORS", all the relevant data about the publications' 
+authors (name and h-index) will be stored. 
+The difference between fields "h_index_real" and "h_index_calculated" 
+is that the first h-index is retrieved by an API call and refers to the real-life h-index 
+that the author has. The second h-index is calculated based on the data added to the DWH. 
+The reason to keep both is that it is one way to immediately see if there is an error 
+in the data pipeline – a calculated h-index could never be higher than a real-life one.
 
-Since one author can have several publications and one publication can have several authors (many-to-many relationship), the bridge table7 will be used to connect the author's dimension with specific facts. Additionally, an author's h-index (both of them) is a variable that changes over time. For BI queries (for example, getting the author whose h-index increased the most during the last year), tracking that change is essential. Therefore, the type 2 slowly changing dimensions concept8,9 is used – when the author's h-index changes, a new dimension record is generated. At the same time, the old record will be assigned a non-active effective date, and the new record will be assigned an active effective date. The bridge table will also contain effective and expiration timestamps to avoid incorrect linkages between authors and publications10.
+Since one author can have several publications and one publication can have several authors 
+(many-to-many relationship), the bridge table will be used to connect the author's dimension 
+with specific facts. Additionally, an author's h-index (both of them) is a 
+variable that changes over time. For BI queries (for example, getting the author whose 
+h-index increased the most during the last year), tracking that change is essential. 
+Therefore, the type 2 slowly changing dimensions concept is used – when the author's 
+h-index changes, a new dimension record is generated. 
+At the same time, the old record will be assigned a non-active effective date (valid_to =/= NULL), 
+and the new record will be assigned an active effective date (valid_to == NULL).
 
-In the dimension table "INSTITUTIONS", information about the institutions (name and location) of the authors of the publications will be gathered. Similarly to the authors' dimension, in this case, there could be a many-to-many relationship between the dimension and fact. In other words, there could be many publications from one institution, and authors of the same publication can have different affiliations. Therefore, the bridge table will be used to connect the dimension table records with the fact table records.
+In the dimension table "INSTITUTION", information about the institutions (name and location) of the 
+authors of the publications will be gathered. Similarly to the authors' dimension, in this case, 
+there could be a many-to-many relationship between the dimension and fact. 
+In other words, there could be many publications from one institution, and authors of the 
+same publication can have different affiliations. 
+Therefore, the bridge table will be used to connect the dimension table records with the fact 
+table records.
 
-In this step, one may notice that there is no connection between the authors and the affiliations. (For example, in the authors' dimension table, there is no information about the author's affiliation.) The reasoning behind this decision is that BI queries (see the previous section) do not require author-level information about affiliations. Based on the current schema, it is possible to fulfil all the queries requiring affiliations information.
+In this step, one may notice that there is no connection between the authors and the institutions. 
+(For example, in the authors' dimension table, there is no information about the author's institution.) 
+The reasoning behind this decision is that BI queries (see the previous section) 
+do not require author-level information about affiliations. 
+Based on the current schema, it is possible to fulfil all the queries requiring 
+institutions information.
 
-Dimension table "PUBLICATION VENUES" will store data about the venues of the publications. In this table, there could be many fields that do not apply to all the records. For example, if the type is "book", the field "h\_index\_calculated" is irrelevant. However, if the field h-index is applicable (for journals), similarly to the "AUTHORS" dimension table, tracking its changes is essential from the BI point of view. Therefore, this table will also use the type 2 slowly changing dimensions concept.
+Dimension table "PUBLICATION VENUES" will store data about the venues of the publications. 
+In this table, there could be many fields that do not apply to all the records. 
+For example, if the type is "book", the field "h_index_calculated" is irrelevant. 
+However, if the field h-index is applicable (for journals), similarly to the "AUTHORS" 
+dimension table, tracking its changes is essential from the BI point of view. 
+Therefore, this table will also use the type 2 slowly changing dimensions concept.
 
-In the dimension table "SCIENTIFIC DOMAINS", the categories (in three levels besides the arXiv tag) of scientific disciplines of publications will be gathered. Again, the bridge table will be used to overcome the shortcomings related to many-to-many relationships between publications and scientific domains (one publication can belong to many scientific domains, and many publications can have the same domain).
+In the dimension table "SCIENTIFIC DOMAINS", the categories
+of scientific disciplines of publications will be gathered. 
+Again, the bridge table will be used to overcome the shortcomings related to 
+many-to-many relationships between publications and scientific domains 
+(one publication can belong to many scientific domains, and many publications can have the same domain).
 
-The "TIME" dimension will hold all the relevant (from the BI point of view) time information about the publications. Besides the timestamp of the publication, it also has separate fields for year, month and day.
+The "TIME" dimension will hold all the relevant (from the BI point of view) time information 
+about the publications. Besides the timestamp of the publication, 
+it also has separate fields for year, month and day.
 
-PIPELINE
+### PIPELINE
 
 ![DWH Pipeline](https://user-images.githubusercontent.com/44499317/212545590-812f3af2-a3b9-4918-b1fd-3bf44b93db12.png)
 
@@ -272,7 +330,7 @@ It contains saves data mentioned in star schema with duplicate safe technique:
 - returning inserted or saved for every entity
 - calculated the h index based in stored data after data loading is complete
 
-TECHNOLOGIES
+### TECHNOLOGIES
 
 **PostreSQL with Citus extension**
 
