@@ -184,10 +184,6 @@ After thoroughly investigating the data to understand what parts of it are usabl
 
 ### QUERIES
 
-The DWH has been designed to answer many BI queries (see the folder queries_dwh on the
-project's GitHub page). This chapter gives two examples: one basic and one more
-challenging query, together with the results (figures 12 and 13).
-
 #### [Ranking authors](https://github.com/idarahu/DE-project/tree/main/queries_dwh/authors)
 - With the most publications in a given year, scientific domain and/or publication venue
 - With the most citations in a given year, scientific domain and/or publication venue
